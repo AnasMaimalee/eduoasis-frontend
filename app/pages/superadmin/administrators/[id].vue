@@ -107,7 +107,7 @@ const fetchTransactions = async () => {
 const fetchLoginAudits = async () => {
   auditsLoading.value = true
   try {
-    const res = await $api(`/login-audits`)
+    const res = await $api(`/login-audits/user/${userId}`)
     loginAudits.value = res?.data?.data || res?.data || []
     paginationAudits.value.total = res?.data?.total || loginAudits.value.length
   } catch (err: any) {
