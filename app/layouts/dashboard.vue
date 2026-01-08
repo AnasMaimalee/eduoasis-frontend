@@ -7,16 +7,17 @@ import { LeftOutlined, RightOutlined, UserOutlined, SettingOutlined, LogoutOutli
 // All icons from backend
 import {
   DashboardOutlined,
+  WalletOutlined,
+  BankOutlined,
   UserOutlined as UserIcon,
-  UserSwitchOutlined,
-  AppstoreAddOutlined,
-  DollarOutlined,
+  TeamOutlined,
+  SettingOutlined as SettingIcon,
   AppstoreOutlined,
+  FileSearchOutlined,
   FileTextOutlined,
-  ProfileOutlined,
+  IdcardOutlined,
   CheckCircleOutlined,
-  NotificationOutlined,
-  FileDoneOutlined,
+  BellOutlined,
   BoxPlotOutlined,
 } from '@ant-design/icons-vue'
 
@@ -26,20 +27,26 @@ const route = useRoute()
 
 const collapsed = ref(false)
 
-// Icon mapping
+// ✅ PERFECT ICON MAPPING
 const iconComponents: Record<string, any> = {
-  DashboardOutlined,
-  UserOutlined: UserIcon,
-  UserSwitchOutlined,
-  AppstoreAddOutlined,
-  DollarOutlined,
-  AppstoreOutlined,
-  FileTextOutlined,
-  ProfileOutlined,
-  CheckCircleOutlined,
-  NotificationOutlined,
-  FileDoneOutlined,
-  BoxPlotOutlined,
+  'DashboardOutlined': DashboardOutlined,
+  'WalletOutlined': WalletOutlined,
+  'BankOutlined': BankOutlined,
+  'UserOutlined': UserIcon,
+  'TeamOutlined': TeamOutlined,
+  'SettingOutlined': SettingIcon,
+  'AppstoreOutlined': AppstoreOutlined,
+  'FileSearchOutlined': FileSearchOutlined,
+  'FileTextOutlined': FileTextOutlined,
+  'IdcardOutlined': IdcardOutlined,
+  'CheckCircleOutlined': CheckCircleOutlined,
+  'BellOutlined': BellOutlined,
+  'BoxPlotOutlined': BoxPlotOutlined,
+  'UserSwitchOutlined': TeamOutlined, // Fallback
+  'AppstoreAddOutlined': SettingIcon,  // Fallback
+  'DollarOutlined': WalletOutlined,    // Fallback
+  'NotificationOutlined': BellOutlined, // Fallback
+  'FileDoneOutlined': FileTextOutlined, // Fallback
 }
 
 const firstName = computed(() => {
