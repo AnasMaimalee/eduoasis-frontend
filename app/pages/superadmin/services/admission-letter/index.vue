@@ -54,7 +54,7 @@ const pagination = ref({
 const fetchRequests = async () => {
   loading.value = true
   try {
-    const res = await $api('/services/jamb-result/all')
+    const res = await $api('/services/jamb-admission-letter/all')
     requests.value = Array.isArray(res) ? res : res.data || []
     pagination.value.total = requests.value.length
   } catch (err) {
@@ -74,7 +74,7 @@ const handleApprove = async () => {
   if (!currentApproveId.value) return
 
   try {
-    await $api(`/services/jamb-result/${currentApproveId.value}/approve`, { 
+    await $api(`/services/jamb-admission-letter/${currentApproveId.value}/approve`, { 
       method: 'POST' 
     })
     message.success('Request approved successfully')
@@ -100,7 +100,7 @@ const handleReject = async () => {
   }
 
   try {
-    await $api(`/services/jamb-result/${currentRejectId.value}/reject`, {
+    await $api(`/services/jamb-admission-letter/${currentRejectId.value}/reject`, {
       method: 'POST',
       body: { reason: rejectReason.value },
     })
@@ -115,7 +115,7 @@ const handleReject = async () => {
 }
 
 /* ✅ FIXED PDF DOWNLOAD */
-const downloadResultPDF = async (filePath: string, filename = 'jamb-result.pdf') => {
+const downloadResultPDF = async (filePath: string, filename = 'jamb-admission-letter.pdf') => {
   if (!filePath) {
     message.warning('No result file available')
     return
@@ -189,7 +189,7 @@ onMounted(fetchRequests)
     <div class="flex justify-between items-center">
       <div>
         <Typography.Title level="2" class="!m-0">
-          JAMB Result Requests
+          JAMB Admission Letter Requests
         </Typography.Title>
         <Typography.Text type="secondary">
           {{ pagination.total }} total requests
@@ -283,7 +283,8 @@ onMounted(fetchRequests)
             v-if="record.result_file"
             type="primary"
             size="small"
-            @click="downloadResultPDF(record.result_file, `jamb-result-${record.registration_number || record.id}.pdf`)"
+            :icon="DownloadOutlined"
+            @click="downloadResultPDF(record.result_file, `jamb-admission-${record.registration_number || record.id}.pdf`)"
           >
             Download PDF
           </Button>
@@ -297,11 +298,11 @@ onMounted(fetchRequests)
           </span>
         </template>
 
-        <!-- Actions - NOW WITH MODALS (NO POPCONFIRM) -->
+        <!-- Actions - NOW WITH MODALS -->
         <template #actionsCell="{ record }">
           <div class="flex justify-center gap-2">
             <template v-if="record.status === 'pending'">
-              <!-- APPROVE BUTTON - OPENS MODAL -->
+              <!-- APPROVE BUTTON -->
               <Button
                 type="primary"
                 size="small"
@@ -310,7 +311,7 @@ onMounted(fetchRequests)
                 <CheckOutlined /> Approve
               </Button>
 
-              <!-- REJECT BUTTON - OPENS MODAL -->
+              <!-- REJECT BUTTON -->
               <Button
                 danger
                 size="small"
@@ -342,8 +343,9 @@ onMounted(fetchRequests)
       ok-text="Approve Request"
       cancel-text="Cancel"
       @ok="handleApprove"
+      ok-button-props="{ icon: 'check' }"
     >
-      <p>Are you sure you want to approve this JAMB Result request?</p>
+      <p>Are you sure you want to approve this JAMB Admission Letter request?</p>
       <p class="text-sm text-gray-500 mt-2">
         This action cannot be undone.
       </p>
