@@ -271,7 +271,7 @@ onUnmounted(() => {
             Meet Your Developer
           </div>
           <h2 class="text-5xl lg:text-6xl font-black bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
-            Anas Maimalee
+            Anas Maimalee <span class="text-sm"> <br>(Founder and CEO of CodeBridge Technology)</span>
           </h2>
           <p class="text-2xl font-semibold text-gray-700 mb-6">Founder & Lead Developer</p>
           <p class="text-xl text-gray-600 leading-relaxed">
@@ -318,44 +318,77 @@ onUnmounted(() => {
             </form>
           </div>
         </div>
-    <!-- ✅ FOOTER BACK -->
-    <footer class="relative z-10 bg-gradient-to-r from-gray-900 to-blue-900 text-white py-16 px-6">
-      <div class="max-w-6xl mx-auto text-center space-y-8">
-        <div class="space-y-4">
-          <h3 class="text-4xl font-black bg-gradient-to-r from-white to-gray-200 bg-clip-text">EDUOASIS</h3>
-          <p class="text-xl opacity-90 max-w-2xl mx-auto">
-            Your gateway to stress-free JAMB services. Secure. Fast. Reliable.
-          </p>
-        </div>
-        
-        <div class="grid md:grid-cols-3 gap-8 pt-12 border-t border-white/10">
-          <div>
-            <h4 class="text-lg font-bold mb-4">Quick Links</h4>
-            <div class="space-y-2 text-sm opacity-80">
-              <NuxtLink to="/register" class="hover:text-blue-400 transition-colors">Register</NuxtLink>
-              <NuxtLink to="/login" class="hover:text-blue-400 transition-colors block">Login</NuxtLink>
-              <NuxtLink to="/services" class="hover:text-blue-400 transition-colors block">Services</NuxtLink>
-            </div>
-          </div>
-          <div>
-            <h4 class="text-lg font-bold mb-4">Support</h4>
-            <div class="space-y-2 text-sm opacity-80">
-              <a href="tel:+234" class="hover:text-blue-400 transition-colors">+234 Support</a>
-              <a href="mailto:support@eduosais.com" class="hover:text-blue-400 transition-colors block">support@eduosais.com</a>
-              <span>24/7 Live Chat</span>
-            </div>
-          </div>
-          <div>
-            <h4 class="text-lg font-bold mb-4">Nigeria</h4>
-            <p class="text-sm opacity-80">Trusted by students nationwide</p>
-          </div>
-        </div>
-
-        <div class="pt-8 border-t border-white/10">
-          <p class="opacity-75">&copy; 2026 EDUOASIS. Built with ❤️ by Anas Maimalee.</p>
+  <!-- ✅ UPDATED FULL FOOTER with WhatsApp + Email -->
+<footer class="relative z-10 bg-gradient-to-r from-gray-900 to-blue-900 text-white py-16 px-6">
+  <div class="max-w-6xl mx-auto text-center space-y-8">
+    <div class="space-y-4">
+      <h3 class="text-4xl font-black bg-gradient-to-r from-white to-gray-200 bg-clip-text">EDUOASIS</h3>
+      <p class="text-xl opacity-90 max-w-2xl mx-auto">
+        Your gateway to stress-free JAMB services. Secure. Fast. Reliable.
+      </p>
+    </div>
+    
+    <div class="grid md:grid-cols-3 gap-8 pt-12 border-t border-white/10">
+      <div>
+        <h4 class="text-lg font-bold mb-4">Quick Links</h4>
+        <div class="space-y-2 text-sm opacity-80">
+          <NuxtLink to="/register" class="hover:text-blue-400 transition-colors">Register</NuxtLink>
+          <NuxtLink to="/login" class="hover:text-blue-400 transition-colors block">Login</NuxtLink>
+          <NuxtLink to="/services" class="hover:text-blue-400 transition-colors block">Services</NuxtLink>
         </div>
       </div>
-    </footer>
+      <div>
+        <h4 class="text-lg font-bold mb-4">Get Help Fast</h4>
+        <div class="space-y-3 text-sm">
+          <!-- ✅ WHATSAPP LINK -->
+          <a 
+            href="https://wa.me/2348123442014" 
+            class="flex items-center justify-center gap-3 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-300 hover:text-green-200 p-3 rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg group"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Chat on WhatsApp"
+          >
+            <Icon name="heroicons:phone" class="w-5 h-5 group-hover:animate-bounce" />
+            <span>+234 812 344 2014</span>
+            <Icon name="heroicons:arrow-up-right" class="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+          </a>
+          
+          <!-- EMAIL LINK -->
+          <a 
+            href="mailto:support@eduosais.com" 
+            class="flex items-center gap-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-300 hover:text-blue-200 p-3 rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg"
+            title="Send Email"
+          >
+            <Icon name="heroicons:envelope" class="w-5 h-5" />
+            <span>support@eduosais.com</span>
+          </a>
+          
+          <div class="text-xs opacity-75 pt-2">24/7 Live Support</div>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-lg font-bold mb-4">Nigeria</h4>
+        <p class="text-sm opacity-80">Trusted by students nationwide across all universities</p>
+      </div>
+    </div>
+
+    <!-- Copyright with CodeBridge Email -->
+    <div class="pt-8 border-t border-white/10">
+      <p class="opacity-75 text-sm">
+        &copy; 2026 EDUOASIS. Built with ❤️ by 
+        <a 
+          href="mailto:anasment@gmail.com" 
+          class="text-blue-400 hover:text-blue-300 underline hover:no-underline transition-all duration-300 font-medium ml-1"
+          title="Email CodeBridge Technology"
+        >
+          CodeBridge Technology
+        </a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+
   </div>
 </template>
 
