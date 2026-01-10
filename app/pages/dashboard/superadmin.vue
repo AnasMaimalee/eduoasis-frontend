@@ -86,20 +86,20 @@ onMounted(fetchDashboardData)
     <div class="max-w-7xl mx-auto px-6 flex items-center justify-center h-96">
       <div class="text-center">
         <div class="w-24 h-24 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-8"></div>
-        <h2 class="text-2xl font-bold text-gray-700 mb-2">Loading CodeBridge Dashboard</h2>
+        <h2 class="text-2xl font-bold text-gray-700 mb-2">Loading EduOasis Dashboard</h2>
         <p class="text-lg text-gray-500">Fetching platform stats from all JAMB services...</p>
       </div>
     </div>
   </div>
 
   <!-- MAIN DASHBOARD - CODEBRIDGE THEME -->
-  <div v-else class="max-w-7xl px-6 space-y-8 py-8">
+  <div v-else class="w-full px-6 space-y-8 py-8">
     <!-- HERO HEADER - CODEBRIDGE GRADIENT -->
     <div class="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 text-white p-10 rounded-3xl shadow-2xl border border-emerald-500/30">
       <div class="flex flex-col lg:flex-row lg:items-center gap-8 justify-between">
         <div>
           <h1 class="text-5xl font-black mb-6 leading-tight">
-            CodeBridge Command Center
+            EduOasis Command Center
           </h1>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-2xl mb-6">
             <div>

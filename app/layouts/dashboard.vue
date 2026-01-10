@@ -197,7 +197,7 @@ const logout = () => {
               {{ firstName.charAt(0).toUpperCase() }}
             </a-avatar>
             <div class="hidden lg:block min-w-0">
-              <p class="font-semibold text-gray-800 dark:text-white truncate">{{ firstName }}</p>
+              
               <p class="text-sm text-emerald-600 font-medium">{{ auth.userRole }}</p>
             </div>
           </div>
@@ -210,7 +210,7 @@ const logout = () => {
                 <SettingOutlined class="mr-3 text-emerald-600" /> Settings
               </a-menu-item>
               <a-menu-divider class="my-0 bg-emerald-100/50" />
-              <a-menu-item key="logout" danger class="px-6 py-4">
+              <a-menu-item key="logout" danger class="px-6 py-4" @click="logout">
                 <LogoutOutlined class="mr-3" /> Logout
               </a-menu-item>
             </a-menu>

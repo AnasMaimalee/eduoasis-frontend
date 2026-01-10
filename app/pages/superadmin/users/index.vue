@@ -452,9 +452,29 @@ onMounted(() => {
 
     <!-- All your existing slot templates stay the same -->
     <template #trashIndexCell="{ index }">
-      {{ (trashPagination.current - 1) * trashPagination.pageSize + index + 1 }}
+      {{ (trashPagination.current - 1) * trashPagination.pageSize + index + 1 }} 
     </template>
-    <!-- ... rest unchanged ... -->
+    <template #trashActionsCell="{ record }">
+          <Dropdown trigger="click" placement="bottomRight">
+            <Button type="text" size="small" shape="circle" class="!w-8 !h-8 !p-0 action-dots">⋯</Button>
+            <template #overlay>
+              <div class="action-menu p-2 min-w-[140px]">
+               
+                <Button block type="link" danger size="small" class="text-left py-1" @click="openRestoreModal(record)">
+                  <class="mr-2" />Restore
+                </Button>
+              </div>
+            </template>
+          </Dropdown>
+        </template>
+         <template #trashBalanceCell="{ record }">
+          <div class="text-right text-sm font-medium text-emerald-600">
+            ₦{{ Number(record.wallet?.balance || 0).toLocaleString() }}
+          </div>
+        </template>
+        <template #deletedCell="{ record }">
+          <div class="text-sm">{{ new Date(record.deleted_at).toLocaleDateString() }}</div>
+        </template>
   </Table>
 </Card>
 
