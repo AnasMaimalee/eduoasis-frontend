@@ -8,7 +8,9 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
     'nuxt-icon',
-  ],vite: {
+    'pinia-plugin-persistedstate/nuxt'
+  ],
+  vite: {
   server: {
     host: true,
     strictPort: true,

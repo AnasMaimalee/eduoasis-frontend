@@ -11,7 +11,9 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   // This enables cookie persistence automatically
-  persist: true,
+  persist: {
+      pick: ['token', 'user', 'menus'], // Only persist these fields
+    },
 
   getters: {
     isAuthenticated: (state) => !!state.token && !!state.user,

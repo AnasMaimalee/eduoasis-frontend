@@ -424,9 +424,9 @@ onMounted(async () => {
             { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' }, fixed: 'left' },
             { title: 'Type', dataIndex: 'type', key: 'type', width: 110, slots: { customRender: 'typeCell' }, fixed: 'left' },
             { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
-            { title: 'Before', key: 'balanceBefore', width: 140, align: 'right', slots: { customRender: 'balanceBeforeCell' } },
-            { title: 'Amount', key: 'amount', width: 140, align: 'right', slots: { customRender: 'amountCell' } },
-            { title: 'After', key: 'balanceAfter', width: 140, align: 'right', slots: { customRender: 'balanceAfterCell' } },
+            { title: 'Before', key: 'balanceBefore', width: 200, align: 'right', slots: { customRender: 'balanceBeforeCell' } },
+            { title: 'Amount', key: 'amount', width: 200, align: 'right', slots: { customRender: 'amountCell' } },
+            { title: 'After', key: 'balanceAfter', width: 200, align: 'right', slots: { customRender: 'balanceAfterCell' } },
             { title: 'Date', dataIndex: 'created_at', key: 'created_at', width: 160, slots: { customRender: 'dateCell' } }
           ]"
           :data-source="transactions"
