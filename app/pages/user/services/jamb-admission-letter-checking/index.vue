@@ -98,7 +98,7 @@ const fetchRequests = async () => {
       per_page: pagination.value.pageSize
     }
     
-    const res = await $api('/services/jamb-admission-result-notification/my', { 
+    const res = await $api('/services/jamb-admission-letter/my', { 
       method: 'GET',
       params 
     })

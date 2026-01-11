@@ -98,7 +98,7 @@ const fetchRequests = async () => {
       per_page: pagination.value.pageSize
     }
     
-    const res = await $api('/services/jamb-upload-status/my', { 
+    const res = await $api('/services/jamb-admission-result-notification/my', { 
       method: 'GET',
       params 
     })
@@ -121,7 +121,7 @@ const submitRequest = async () => {
   try {
     submitting.value = true
 
-    await $api('/services/jamb-upload-status', {
+    await $api('/services/jamb-admission-result-notification', {
       method: 'POST',
       body: form.value
     })
@@ -174,7 +174,7 @@ onMounted(fetchRequests)
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
       <div>
         <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">
-          JAMB Uplaod Status Requests
+          JAMB Result Notification Requests
         </h1>
         <div class="flex items-center gap-2 mt-1">
           <span class="text-sm font-semibold text-emerald-700">
