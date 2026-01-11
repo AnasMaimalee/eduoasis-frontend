@@ -6,8 +6,8 @@ definePageMeta({
 })
 
 import { ref, onMounted } from 'vue'
-import { 
-  UserOutlined, TeamOutlined, DollarCircleOutlined, 
+import {
+  UserOutlined, TeamOutlined, DollarCircleOutlined,
   ProfileOutlined, CheckCircleOutlined, TimeCircleOutlined,
   ClockCircleOutlined, BarChartOutlined, WalletOutlined
 } from '@ant-design/icons-vue'
@@ -60,7 +60,7 @@ onMounted(fetchDashboardData)
 </script>
 
 <template>
-  <!-- ERROR STATE - CODEBRIDGE GREEN -->
+  <!-- ERROR STATE -->
   <div v-if="error" class="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
     <div class="max-w-4xl mx-auto px-6">
       <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-emerald-200/50 p-12 text-center">
@@ -69,9 +69,9 @@ onMounted(fetchDashboardData)
         </div>
         <h1 class="text-4xl font-black text-gray-900 mb-4">Dashboard Unavailable</h1>
         <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">{{ error }}</p>
-        <a-button 
-          type="primary" 
-          size="large" 
+        <a-button
+          type="primary"
+          size="large"
           @click="refreshData"
           class="px-12 py-6 text-xl font-bold shadow-2xl bg-emerald-600 hover:bg-emerald-700 border-emerald-600"
         >
@@ -81,7 +81,7 @@ onMounted(fetchDashboardData)
     </div>
   </div>
 
-  <!-- LOADING STATE - CODEBRIDGE GREEN -->
+  <!-- LOADING STATE -->
   <div v-else-if="loading" class="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
     <div class="max-w-7xl mx-auto px-6 flex items-center justify-center h-96">
       <div class="text-center">
@@ -92,46 +92,44 @@ onMounted(fetchDashboardData)
     </div>
   </div>
 
-  <!-- MAIN DASHBOARD - CODEBRIDGE THEME -->
+  <!-- MAIN DASHBOARD -->
   <div v-else class="w-full px-6 space-y-8 py-8">
-    <!-- HERO HEADER - CODEBRIDGE GRADIENT -->
-    <div class="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 text-white p-10 rounded-3xl shadow-2xl border border-emerald-500/30">
-      <div class="flex flex-col lg:flex-row lg:items-center gap-8 justify-between">
+    <!-- ✅ FIXED: Smaller, lighter header -->
+    <div class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-8 rounded-2xl shadow-xl border border-emerald-400/50">
+      <div class="flex flex-col lg:flex-row lg:items-center gap-6 justify-between">
         <div>
-          <h1 class="text-5xl font-black mb-6 leading-tight">
-            EduOasis Command Center
-          </h1>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-2xl mb-6">
+          <h1 class="text-3xl lg:text-4xl font-black mb-4 leading-tight">EduOasis Command Center</h1>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xl">
             <div>
-              <div class="text-4xl font-black mb-1">{{ dashboardData.overview.total_jobs.toLocaleString() }}</div>
+              <div class="text-3xl font-black mb-1">{{ dashboardData.overview.total_jobs.toLocaleString() }}</div>
               <div class="opacity-90 text-sm">Total Jobs</div>
             </div>
             <div>
-              <div class="text-4xl font-black mb-1">{{ dashboardData.overview.approval_rate }}%</div>
+              <div class="text-3xl font-black mb-1">{{ dashboardData.overview.approval_rate }}%</div>
               <div class="opacity-90 text-sm">Approval Rate</div>
             </div>
             <div>
-              <div class="text-4xl font-black mb-1">₦{{ Number(dashboardData.overview.total_revenue).toLocaleString() }}</div>
+              <div class="text-3xl font-black mb-1">₦{{ Number(dashboardData.overview.total_revenue).toLocaleString() }}</div>
               <div class="opacity-90 text-sm">Total Revenue</div>
             </div>
             <div>
-              <div class="text-4xl font-black mb-1">{{ dashboardData.overview.total_users }}</div>
+              <div class="text-3xl font-black mb-1">{{ dashboardData.overview.total_users }}</div>
               <div class="opacity-90 text-sm">Users</div>
             </div>
           </div>
         </div>
-        <a-button 
-          type="primary" 
-          size="large" 
+        <a-button
+          type="primary"
+          size="large"
           @click="refreshData"
-          class="px-12 h-16 text-xl font-bold shadow-2xl hover:shadow-3xl bg-emerald-500 hover:bg-emerald-600 border-emerald-500"
+          class="px-8 h-14 text-lg font-bold shadow-xl hover:shadow-2xl bg-white/20 hover:bg-white/30 backdrop-blur-sm border-white/30"
         >
           <BarChartOutlined class="mr-2" /> Refresh Data
         </a-button>
       </div>
     </div>
 
-    <!-- KEY METRICS GRID - CODEBRIDGE COLORS -->
+    <!-- KEY METRICS GRID -->
     <a-row :gutter="[24, 24]">
       <a-col :xs="24" :sm="12" :lg="6">
         <a-card class="border-0 shadow-xl h-full hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200/50">
@@ -223,7 +221,7 @@ onMounted(fetchDashboardData)
 
     <!-- SERVICES BREAKDOWN -->
     <a-card title="Services Performance" class="border-0 shadow-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200/50">
-      <a-table 
+      <a-table
         :data-source="dashboardData.jobs_by_service"
         :columns="tableColumns.services"
         :loading="loading"
@@ -237,7 +235,7 @@ onMounted(fetchDashboardData)
     <a-row :gutter="[24, 24]">
       <a-col :lg="16" :xs="24">
         <a-card title="Admin Leaderboard" class="border-0 shadow-2xl bg-gradient-to-r from-emerald-50/80 to-teal-50/80 border-emerald-200/30">
-          <a-table 
+          <a-table
             :data-source="dashboardData.admin_leaderboard"
             :columns="tableColumns.leaderboard"
             :loading="loading"
@@ -249,7 +247,7 @@ onMounted(fetchDashboardData)
       </a-col>
 
       <a-col :lg="8" :xs="24">
-        <a-card title="CodeBridge Health" class="border-0 shadow-2xl h-full bg-gradient-to-b from-teal-50 to-emerald-50 border-teal-200/50">
+        <a-card title="System Health" class="border-0 shadow-2xl h-full bg-gradient-to-b from-teal-50 to-emerald-50 border-teal-200/50">
           <a-descriptions :column="1" :bordered="true" class="mt-4 bg-white/60 backdrop-blur-sm rounded-2xl">
             <a-descriptions-item label="Inactive Admins">
               <span class="font-bold text-emerald-600">{{ dashboardData.system_health?.admins_with_zero_jobs || 0 }}</span>
@@ -283,12 +281,21 @@ onMounted(fetchDashboardData)
   font-size: 1.25rem !important;
 }
 
+/* ✅ FIXED: Plain green table headers, no middle radius */
 :deep(.ant-table-thead > tr > th) {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  background: #10b981 !important;
   color: white !important;
   font-weight: 700 !important;
-  border-radius: 16px 16px 0 0 !important;
+  border-radius: 0 !important;
   text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+:deep(.ant-table-thead > tr:first-child th:first-child) {
+  border-top-left-radius: 16px !important;
+}
+
+:deep(.ant-table-thead > tr:first-child th:last-child) {
+  border-top-right-radius: 16px !important;
 }
 
 :deep(.ant-table-tbody > tr:hover > td) {
