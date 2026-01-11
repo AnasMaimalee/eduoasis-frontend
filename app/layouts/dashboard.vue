@@ -1,24 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
-import { LeftOutlined, RightOutlined, UserOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue'
-
-// All icons from backend
-import {
-  DashboardOutlined,
-  WalletOutlined,
-  BankOutlined,
-  UserOutlined as UserIcon,
-  TeamOutlined,
-  SettingOutlined as SettingIcon,
-  AppstoreOutlined,
-  FileSearchOutlined,
-  FileTextOutlined,
-  IdcardOutlined,
-  CheckCircleOutlined,
-  BellOutlined,
-  BoxPlotOutlined,
+import { 
+  LeftOutlined, RightOutlined, UserOutlined, SettingOutlined, LogoutOutlined, 
+  DashboardOutlined, WalletOutlined, BankOutlined, UserOutlined as UserIcon,
+  TeamOutlined, SettingOutlined as SettingIcon, AppstoreOutlined,
+  FileSearchOutlined, FileTextOutlined, IdcardOutlined, CheckCircleOutlined,
+  BellOutlined, BoxPlotOutlined
 } from '@ant-design/icons-vue'
 
 const auth = useAuthStore()
@@ -26,8 +15,17 @@ const router = useRouter()
 const route = useRoute()
 
 const collapsed = ref(false)
+const sidebarOpen = ref(false) // mobile overlay state
 
-// ✅ PERFECT ICON MAPPING
+// Detect mobile width
+const isMobile = ref(false)
+onMounted(() => {
+  isMobile.value = window.innerWidth < 1024
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 1024
+  })
+})
+
 const iconComponents: Record<string, any> = {
   'DashboardOutlined': DashboardOutlined,
   'WalletOutlined': WalletOutlined,
@@ -42,35 +40,24 @@ const iconComponents: Record<string, any> = {
   'CheckCircleOutlined': CheckCircleOutlined,
   'BellOutlined': BellOutlined,
   'BoxPlotOutlined': BoxPlotOutlined,
-  'UserSwitchOutlined': TeamOutlined,
-  'AppstoreAddOutlined': SettingIcon,
-  'DollarOutlined': WalletOutlined,
-  'NotificationOutlined': BellOutlined,
-  'FileDoneOutlined': FileTextOutlined,
 }
 
-const firstName = computed(() => {
-  if (!auth.user?.name) return 'Admin'
-  return auth.user.name.split(' ')[0]
-})
-
+const firstName = computed(() => auth.user?.name?.split(' ')[0] || 'Admin')
 const currentRoute = computed(() => route.path)
-
-const currentPageTitle = computed(() => {
-  return (route.meta?.title as string) || 'Dashboard'
-})
-
-const menus = computed(() => {
-  return (auth.menus || []).map((menu: any) => ({
+const currentPageTitle = computed(() => (route.meta?.title as string) || 'Dashboard')
+const menus = computed(() =>
+  (auth.menus || []).map((menu: any) => ({
     title: menu.name,
     route: menu.route,
     icon: menu.icon || 'BoxPlotOutlined',
   }))
-})
+)
 
 const navigate = (path: string) => {
   if (route.path !== path) {
     router.push(path)
+    // Close sidebar on mobile after clicking a menu
+    if (isMobile.value) sidebarOpen.value = false
   }
 }
 
@@ -78,20 +65,35 @@ const logout = () => {
   auth.logout()
   router.push('/login')
 }
+
+// Toggle sidebar
+const toggleSidebar = () => {
+  if (isMobile.value) {
+    sidebarOpen.value = !sidebarOpen.value
+  } else {
+    collapsed.value = !collapsed.value
+  }
+}
 </script>
 
 <template>
-  <div class="min-h-screen flex bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-gray-900 dark:to-gray-800">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar Overlay for Mobile -->
+    <div
+      v-if="isMobile"
+      class="fixed inset-0 bg-black/20 z-40"
+      @click="sidebarOpen = false"
+      :class="sidebarOpen ? 'block' : 'hidden'"
+    ></div>
+
     <!-- Sidebar -->
     <aside
       :class="[
-        'flex flex-col shadow-2xl transition-all duration-500 ease-out border-r border-emerald-200/50 dark:border-emerald-900/50 backdrop-blur-xl',
-        collapsed ? 'w-24' : 'w-76'
+        'fixed lg:relative z-50 flex flex-col transition-all duration-300 ease-out border-r border-emerald-200/50 backdrop-blur-xl h-screen',
+        collapsed ? 'w-24' : 'w-76',
+        isMobile ? sidebarOpen ? 'translate-x-0' : '-translate-x-full' : 'translate-x-0'
       ]"
-      :style="{
-        background: 'rgba(255, 255, 255, 0.9)',
-        'border-right': '1px solid rgba(16, 185, 129, 0.2)'
-      }"
+      :style="{ background: 'rgba(255, 255, 255, 0.95)' }"
     >
       <!-- Logo & Collapse Toggle -->
       <div class="h-20 flex items-center justify-between px-6 border-b border-emerald-100/50 bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
@@ -103,7 +105,7 @@ const logout = () => {
             EduOasis
           </span>
         </div>
-        <button @click="collapsed = !collapsed" class="p-2 rounded-xl hover:bg-emerald-100/50 dark:hover:bg-emerald-900/50 transition-all">
+        <button @click="toggleSidebar" class="p-2 rounded-xl hover:bg-emerald-100/50 dark:hover:bg-emerald-900/50 transition-all">
           <component :is="collapsed ? RightOutlined : LeftOutlined" class="w-6 h-6 text-emerald-600" />
         </button>
       </div>
@@ -115,7 +117,7 @@ const logout = () => {
             {{ firstName.charAt(0).toUpperCase() }}
           </a-avatar>
           <div class="flex-1 min-w-0">
-            <p class="font-bold text-xl text-gray-800 dark:text-white truncate bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text">
+            <p class="font-bold text-xl text-gray-800 dark:text-white truncate">
               {{ auth.user?.name || 'Loading...' }}
             </p>
             <p class="text-sm text-emerald-700 dark:text-emerald-400 truncate">{{ auth.user?.email || '' }}</p>
@@ -137,7 +139,6 @@ const logout = () => {
           :inline-collapsed="collapsed"
           :selected-keys="[currentRoute]"
           class="border-none bg-transparent"
-          :style="{ '--ant-primary-color': '#10b981' }"
         >
           <a-menu-item
             v-for="menu in menus"
@@ -181,23 +182,29 @@ const logout = () => {
     </aside>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col min-h-screen overflow-hidden lg:ml-0" :class="isMobile ? 'ml-0' : ''">
       <!-- Header -->
-      <header class="h-20 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-lg border-b border-emerald-100/50 flex items-center justify-between px-8">
+      <header class="h-20 lg:h-24 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-lg border-b border-emerald-100/50 flex items-center justify-between px-6 lg:px-8">
         <div class="flex items-center gap-6">
-          <h1 class="text-3xl font-black bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 bg-clip-text text-transparent drop-shadow-lg">
+          <button
+            v-if="isMobile"
+            @click="toggleSidebar"
+            class="p-2 rounded-lg hover:bg-emerald-100/50 dark:hover:bg-emerald-900/50 transition-all"
+          >
+            <LeftOutlined class="w-6 h-6 text-emerald-600" />
+          </button>
+          <h1 class="text-2xl lg:text-3xl font-black bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 bg-clip-text text-transparent drop-shadow-lg">
             {{ currentPageTitle }}
           </h1>
         </div>
 
         <!-- User Dropdown -->
         <a-dropdown placement="bottomRight">
-          <div class="flex items-center gap-4 cursor-pointer px-6 py-3 rounded-2xl hover:bg-emerald-50/80 dark:hover:bg-emerald-900/50 transition-all duration-300 shadow-sm border border-emerald-200/50 hover:border-emerald-300/70">
+          <div class="flex items-center gap-4 cursor-pointer px-4 py-2 rounded-2xl hover:bg-emerald-50/80 dark:hover:bg-emerald-900/50 transition-all duration-300 shadow-sm border border-emerald-200/50 hover:border-emerald-300/70">
             <a-avatar size="large" :style="{ background: 'linear-gradient(135deg, #10b981, #34d399)' }">
               {{ firstName.charAt(0).toUpperCase() }}
             </a-avatar>
             <div class="hidden lg:block min-w-0">
-              
               <p class="text-sm text-emerald-600 font-medium">{{ auth.userRole }}</p>
             </div>
           </div>
@@ -219,12 +226,13 @@ const logout = () => {
       </header>
 
       <!-- Page Content -->
-      <main class="flex-1 overflow-y-auto p-10">
+      <main class="flex-1 overflow-y-auto p-6 lg:p-10 min-h-[calc(100vh-5rem)]">
         <slot />
       </main>
     </div>
   </div>
 </template>
+
 
 <style scoped>
 /* Enhanced Menu Styling */
