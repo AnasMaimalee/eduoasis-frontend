@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { Form, notification } from 'ant-design-vue'
+import { reactive, ref } from 'vue'
+import { Form, notification, Alert } from 'ant-design-vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
 
 const auth = useAuthStore()
 const router = useRouter()
 
-/* ---------------- FORM STATE ---------------- */
+/* ---------------- STATE ---------------- */
 const modelRef = reactive({
   email: '',
   password: '',
 })
 
+const lockedMessage = ref<string | null>(null)
+
+/* ---------------- RULES ---------------- */
 const rulesRef = reactive({
   email: [
     { required: true, message: 'Please enter your email', trigger: 'blur' },
@@ -27,6 +30,8 @@ const { validate, validateInfos } = Form.useForm(modelRef, rulesRef)
 
 /* ---------------- LOGIN HANDLER ---------------- */
 const handleLogin = async () => {
+  lockedMessage.value = null
+
   try {
     await validate()
 
@@ -39,7 +44,6 @@ const handleLogin = async () => {
       placement: 'topRight',
     })
 
-    // ✅ CORRECT ROLE SOURCE
     const role = auth.user?.roles?.[0]?.name
 
     if (role === 'superadmin') {
@@ -52,11 +56,33 @@ const handleLogin = async () => {
   } catch (err: any) {
     if (err?.errorFields) return
 
+    const response = err?.response
+    const status = response?.status
+
+    /* 🚫 TOO MANY ATTEMPTS */
+    if (status === 429) {
+      const retryAfter = response?.headers?.['retry-after']
+      const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null
+
+      lockedMessage.value = minutes
+        ? `Too many failed login attempts. Your account is temporarily locked for ${minutes} minute(s).`
+        : 'Too many failed login attempts. Please wait or reset your password.'
+
+      notification.error({
+        message: 'Account Temporarily Locked',
+        description: lockedMessage.value,
+        placement: 'topRight',
+        duration: 6,
+      })
+
+      return
+    }
+
+    /* ❌ NORMAL ERROR */
     notification.error({
       message: 'Login Failed',
       description:
-        err?.response?.data?.message ||
-        err?.message ||
+        response?.data?.message ||
         'Invalid email or password',
       placement: 'topRight',
     })
@@ -64,17 +90,26 @@ const handleLogin = async () => {
     auth.loading = false
   }
 }
-
 </script>
 
 <template>
   <div
-    class="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4"
+    class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4"
   >
     <a-card
       title="Login to JAMB Portal"
-      class="w-full max-w-md shadow-xl"
+      class="w-full max-w-md shadow-xl rounded-xl"
     >
+      <!-- 🚨 LOCK WARNING -->
+      <a-alert
+        v-if="lockedMessage"
+        type="error"
+        show-icon
+        class="mb-4"
+        :message="lockedMessage"
+        description="For your security, please wait or reset your password."
+      />
+
       <a-form
         layout="vertical"
         :model="modelRef"
@@ -86,6 +121,7 @@ const handleLogin = async () => {
             type="email"
             placeholder="Enter your email"
             size="large"
+            autocomplete="email"
           />
         </a-form-item>
 
@@ -94,6 +130,7 @@ const handleLogin = async () => {
             v-model:value="modelRef.password"
             placeholder="Enter your password"
             size="large"
+            autocomplete="current-password"
           />
         </a-form-item>
 
@@ -110,13 +147,20 @@ const handleLogin = async () => {
         </a-form-item>
       </a-form>
 
-      <div class="text-center mt-6 space-y-2">
-        <NuxtLink to="/forgot-password" class="block">
+      <!-- LINKS -->
+      <div class="text-center mt-6 space-y-2 text-sm">
+        <NuxtLink
+          to="/forgot-password"
+          class="block text-blue-600 hover:underline"
+        >
           Forgot Password?
         </NuxtLink>
+
         <div>
-          Don't have an account?
-          <NuxtLink to="/register">Register</NuxtLink>
+          Don’t have an account?
+          <NuxtLink to="/register" class="text-blue-600 hover:underline">
+            Register
+          </NuxtLink>
         </div>
       </div>
     </a-card>

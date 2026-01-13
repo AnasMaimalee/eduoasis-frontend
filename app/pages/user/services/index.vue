@@ -89,15 +89,6 @@ const handleTableChange = (paginationConfig: any) => {
   applyFilters()
 }
 
-const openUpdateModal = (service: any) => {
-  currentService.value = { ...service }
-  formData.customer_price = service.customer_price || service.price || null
-  formData.admin_payout = service.admin_payout || null
-  updateModalVisible.value = true
-}
-
-
-
 onMounted(fetchServices)
 </script>
 
@@ -174,7 +165,7 @@ onMounted(fetchServices)
         </template>
         <template #description="{ record }">
           <div>
-            <div class="text-xs text-gray-500 truncate max-w-[350px]" :title="record.description">
+            <div class="text-xl truncate max-w-[350px]" :title="record.description">
               {{ record.description }}
             </div>
           </div>
@@ -186,9 +177,7 @@ onMounted(fetchServices)
             <div class="text-xl font-black text-emerald-600 mb-1">
               ₦{{ Number(record.price || 0).toLocaleString() }}
             </div>
-            <div class="text-xs text-gray-500 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">
-              Admin
-            </div>
+            
           </div>
         </template>
         <template #status="{ record }">
@@ -214,25 +203,38 @@ onMounted(fetchServices)
 
 <style scoped>
 /* ✅ PLAIN HEADER - NO SHADOW, NO GRADIENT */
+.service-table :deep(.ant-table) {
+  @apply border border-emerald-200/30 rounded-xl overflow-hidden;
+}
+
 .service-table :deep(.ant-table-thead th) {
-  @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
-  box-shadow: none !important;
-  border: none;
+  @apply !bg-emerald-500 !text-white !font-bold !py-4 !px-6 text-sm uppercase tracking-wide border-none;
 }
 
 .service-table :deep(.ant-table-thead) {
-  box-shadow: none !important;
+  @apply border-b-0;
 }
 
 .service-table :deep(.ant-table-tbody td) {
-  @apply !py-3 !px-4 border-b border-gray-50;
+  @apply !py-4 !px-6 border-b border-gray-100/50;
 }
 
-.service-table :deep(.ant-table-row:hover > td) {
-  @apply bg-emerald-50/50;
+.service-table :deep(.ant-table-tbody tr:hover > td) {
+  @apply bg-emerald-50/70;
 }
 
-.font-mono {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+.service-table :deep(.ant-table-tbody tr:last-child td) {
+  @apply border-b-0;
+}
+
+.half-screen-modal :deep(.ant-modal) {
+  max-width: 50vw !important;
+  width: 50vw !important;
+}
+
+.half-screen-modal :deep(.ant-modal-content) {
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 </style>

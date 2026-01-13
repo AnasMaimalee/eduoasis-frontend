@@ -10,6 +10,10 @@ export default defineNuxtConfig({
     'nuxt-icon',
     'pinia-plugin-persistedstate/nuxt'
   ],
+  tailwindcss: {
+    configPath: 'tailwind.config.ts', // optional if using custom config
+    viewer: false // disable viewer popup
+  },
   vite: {
   server: {
     host: true,
@@ -71,7 +75,9 @@ export default defineNuxtConfig({
       ],
     },
   },
-
+  generate: {
+    fallback: true  // Creates 404.html automatically
+  },
   tailwindcss: {
     cssPath: '~/assets/css/main.css',
     configPath: 'tailwind.config.ts',

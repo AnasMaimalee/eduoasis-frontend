@@ -1,14 +1,23 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import ServiceConfirmModal from '@/components/user/ServiceConfirmModal.vue'
+
 import { message, Table, Button, Input, Typography, Tag, Modal, Form } from 'ant-design-vue'
 import dayjs from 'dayjs'
 
 definePageMeta({
   layout: 'dashboard',
-  middleware: 'auth'
+  middleware: 'auth',
+  roles: ['user']
 })
 
 const { $api } = useNuxtApp()
+
+const showConfirmModal = ref(false)
+
+const preparingConfirmation = ref(false) // Loader while preparing modal
+const submittingRequest = ref(false)     // Loader while submitting
+const confirming = ref(false)    
 
 /* ===================== STATE ===================== */
 const loading = ref(false)
@@ -97,7 +106,7 @@ const fetchRequests = async () => {
       per_page: pagination.value.pageSize
     }
     
-    const res = await $api('/services/jamb-result/my', { 
+    const res = await $api('/services/jamb-admission-letter/my', { 
       method: 'GET',
       params 
     })
@@ -115,17 +124,56 @@ const fetchRequests = async () => {
 
 const submitting = ref(false)
 
-/* ===================== SUBMIT ===================== */
+/* ===================== CONFIRMATION DATA ===================== */
+const serviceName = ref('')
+const serviceAmount = ref(0)
+const walletBalance = ref(0)
+const SERVICE_NAME = 'Checking Admission Status'
+
+/* ===================== PREPARE CONFIRMATION ===================== */
+const prepareConfirmation = async () => {
+  try {
+    preparingConfirmation.value = true
+
+    // Fetch wallet
+    const walletRes = await $api('/wallet', { method: 'GET' })
+    walletBalance.value = Number(walletRes.balance)
+
+    // Fetch services
+    const servicesRes = await $api('/services', { method: 'GET' })
+    const services = servicesRes.data
+    const service = services.find((s: any) => s.name === SERVICE_NAME)
+
+    if (!service) {
+      message.error('Service not configured')
+      return
+    }
+
+    serviceName.value = service.name
+    serviceAmount.value = Number(service.price)
+
+    showConfirmModal.value = true
+  } catch (e) {
+    console.error('Prepare confirmation error:', e)
+    message.error('Unable to prepare confirmation')
+  } finally {
+    preparingConfirmation.value = false
+  }
+}
+
+/* ===================== SUBMIT REQUEST ===================== */
 const submitRequest = async () => {
   try {
-    submitting.value = true
+    submittingRequest.value = true
 
-    await $api('/services/jamb-result', {
+    await $api('/services/jamb-admission-letter', {
       method: 'POST',
       body: form.value
     })
 
     message.success('Request submitted successfully')
+
+    showConfirmModal.value = false
     showModal.value = false
 
     Object.assign(form.value, {
@@ -135,16 +183,11 @@ const submitRequest = async () => {
       profile_code: ''
     })
 
-    pagination.value.current = 1
     fetchRequests()
   } catch (e: any) {
-    message.error(
-      e?.data?.message ||
-      e?.response?.data?.message ||
-      'Submission failed'
-    )
+    message.error(e?.data?.message || 'Submission failed')
   } finally {
-    submitting.value = false
+    submittingRequest.value = false
   }
 }
 
@@ -162,8 +205,6 @@ const debouncedSearch = () => {
   }, 500)
 }
 
-
-
 watch(() => searchText.value, debouncedSearch)
 onMounted(fetchRequests)
 </script>
@@ -171,12 +212,13 @@ onMounted(fetchRequests)
 <template>
   <div class="min-h-screen bg-gradient-to-br from-emerald-50/50 to-teal-50/50 p-4 lg:p-8 space-y-8">
     
+    <!-- PAGE HEADER -->
    <!-- PAGE HEADER -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
       <!-- Title & Summary -->
       <div class="flex-1 min-w-0">
         <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-          JAMB Result Requests
+          JAMB Admission Letter Requests
         </h1>
         <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 mt-1 text-sm">
           <span class="font-semibold text-emerald-700 truncate">
@@ -211,8 +253,9 @@ onMounted(fetchRequests)
         </Button>
       </div>
     </div>
-<!-- ✅ FULLY SCROLLABLE JAMB TABLE - COMPLETE REPLACEMENT -->
-<div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
+
+    <!-- Table Section -->
+  <div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
   <div class="min-w-[1600px]">
     <a-table
       :columns="[
@@ -290,8 +333,6 @@ onMounted(fetchRequests)
   </div>
 </div>
 
-
-
     <!-- Half-screen Modal -->
     <Modal
       v-model:visible="showModal"
@@ -300,7 +341,7 @@ onMounted(fetchRequests)
       :confirm-loading="submitting"
       ok-text="Submit"
       cancel-text="Cancel"
-      @ok="submitRequest"
+      @ok="prepareConfirmation"
       class="half-screen-modal"
     >
       <Form ref="formRef" :model="form" layout="vertical">
@@ -322,7 +363,20 @@ onMounted(fetchRequests)
       </Form>
     </Modal>
   </div>
+   <!-- Confirmation Modal -->
+    <ServiceConfirmModal
+      :visible="showConfirmModal"
+      :service-name="serviceName"
+      :amount="serviceAmount"
+      :wallet-balance="walletBalance"
+      :loading="submittingRequest"
+      :preparing="preparingConfirmation"
+      @confirm="submitRequest"
+      @cancel="showConfirmModal = false"
+    />
+
 </template>
+
 <style scoped>
 /* 🔥 FULL SCROLLABLE TABLE + COLORS */
 .service-table {

@@ -30,7 +30,7 @@ const form = ref({
 /* ===================== PAGINATION ===================== */
 const pagination = ref({
   current: 1,
-  pageSize: 10,
+  pageSize: 100,
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
@@ -170,125 +170,124 @@ onMounted(fetchRequests)
 <template>
   <div class="min-h-screen bg-gradient-to-br from-emerald-50/50 to-teal-50/50 p-4 lg:p-8 space-y-8">
     
-    <!-- PAGE HEADER -->
+  <!-- PAGE HEADER -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">
-          JAMB Uplaod Status Requests
+      <!-- Title & Summary -->
+      <div class="flex-1 min-w-0">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
+          JAMB Olevel Status Requests
         </h1>
-        <div class="flex items-center gap-2 mt-1">
-          <span class="text-sm font-semibold text-emerald-700">
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 mt-1 text-sm">
+          <span class="font-semibold text-emerald-700 truncate">
             {{ filteredRequests.length.toLocaleString() }} of {{ pagination.total.toLocaleString() }}
           </span>
-          <span class="text-sm text-gray-500">
+          <span class="text-gray-500 truncate">
             total requests • Real-time search enabled
           </span>
         </div>
       </div>
 
-      <div class="flex gap-3 w-full lg:w-auto">
+      <!-- Search & Buttons -->
+      <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full lg:w-auto mt-2 lg:mt-0">
         <Input.Search
           v-model:value="searchText"
           placeholder="Search email, phone, reg no, profile code, status..."
-          class="w-full lg:w-80"
+          class="flex-1 min-w-[150px] sm:w-64 lg:w-80"
           allow-clear
           enter-button="Search"
         />
-
-        <Button
-          @click="fetchRequests"
-          :loading="loading"
-          type="default"
-        >
+        
+        <Button @click="fetchRequests" :loading="loading" type="default" class="flex-shrink-0">
           Refresh
         </Button>
-
+        
         <Button
           type="primary"
           @click="showModal = true"
-          class="bg-emerald-600 hover:bg-emerald-700 border-none"
+          class="bg-emerald-600 hover:bg-emerald-700 border-none flex-shrink-0"
         >
           Create Request
         </Button>
       </div>
     </div>
 
-    <!-- Table Section -->
-    <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-emerald-100/50 shadow-sm">
-      <a-table
-        :columns="[
-          { title: '#', dataIndex: 'index', key: 'index', width: 100, fixed: 'left' },
-          { title: 'Email', dataIndex: 'email', key: 'email', ellipsis: true },
-          { title: 'Phone', dataIndex: 'phone_number', key: 'phone_number', ellipsis: true },
-          { title: 'Reg No', dataIndex: 'registration_number', key: 'registration_number', ellipsis: true },
-          { title: 'Profile Code', dataIndex: 'profile_code', key: 'profile_code', ellipsis: true },
-          { title: 'Status', dataIndex: 'status', key: 'status', width: 160 },
-          { title: 'Result', dataIndex: 'result', key: 'result', width: 180 },
-          { title: 'Date', dataIndex: 'created_at', key: 'created_at', width: 180 }
-        ]"
-        :data-source="filteredRequests"
-        :loading="loading"
-        :pagination="pagination"
-        @change="handleTableChange"
-        :scroll="{ x: 1200 }"
-        row-key="id"
-        class="service-table"
-        bordered
-      >
-        <template #bodyCell="{ column, record, index }">
-          <template v-if="column.key === 'index'">
-            <div class="font-black text-xl text-emerald-600">
-              {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
-            </div>
-          </template>
-          
-          <template v-else-if="column.dataIndex === 'email'">
-            <span class="font-semibold text-gray-800">{{ record.email }}</span>
-          </template>
-          
-          <template v-else-if="column.dataIndex === 'phone_number'">
-            <span class="font-medium text-gray-700">{{ record.phone_number }}</span>
-          </template>
-          
-          <template v-else-if="column.dataIndex === 'registration_number'">
-            <span class="font-bold text-gray-900">{{ record.registration_number }}</span>
-          </template>
-          
-          <template v-else-if="column.dataIndex === 'profile_code'">
-            <span class="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full text-sm">{{ record.profile_code }}</span>
-          </template>
-          
-          <template v-else-if="column.dataIndex === 'status'">
-            <Tag 
-              :color="record.status === 'approved' ? 'success' : record.status === 'processing' ? 'blue' : record.status === 'completed' ? 'purple' : 'orange'"
-              class="!font-bold px-4 py-2 text-sm rounded-full shadow-sm border-2"
-            >
-              {{ record.status?.toUpperCase() || 'PENDING' }}
-            </Tag>
-          </template>
-          
-          <template v-else-if="column.dataIndex === 'result'">
-            <Button
-              v-if="record.result_file"
-              type="primary"
-              size="small"
-              :loading="downloadingId === record.id"
-              @click="downloadFile(record.result_file, record.id)"
-              class="bg-emerald-600 hover:bg-emerald-700 border-none"
-            >
-             📥 Download
-            </Button>
-            <Tag v-else color="default">Not ready</Tag>
-          </template>
-          
-          <template v-else-if="column.dataIndex === 'created_at'">
-            <div class="font-semibold text-gray-800 text-sm">
-              {{ dayjs(record.created_at).format('DD MMM • hh:mm A') }}
-            </div>
-          </template>
+    <div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
+  <div class="min-w-[1600px]">
+    <a-table
+      :columns="[
+        { title: '#', dataIndex: 'index', key: 'index', width: 80, fixed: 'left' },
+        { title: 'Email', dataIndex: 'email', key: 'email', ellipsis: true, width: 220 },
+        { title: 'Phone', dataIndex: 'phone_number', key: 'phone_number', ellipsis: true, width: 150 },
+        { title: 'Reg No', dataIndex: 'registration_number', key: 'registration_number', ellipsis: true, width: 170 },
+        { title: 'Profile Code', dataIndex: 'profile_code', key: 'profile_code', ellipsis: true, width: 150 },
+        { title: 'Status', dataIndex: 'status', key: 'status', width: 160 },
+        { title: 'Result', dataIndex: 'result', key: 'result', width: 160 },
+        { title: 'Date', dataIndex: 'created_at', key: 'created_at', width: 170 }
+      ]"
+      :data-source="filteredRequests"
+      :loading="loading"
+      :pagination="pagination"
+      @change="handleTableChange"
+      :scroll="{ x: 1600, y: 600 }"
+      row-key="id"
+      class="service-table"
+      bordered
+    >
+      <template #bodyCell="{ column, record, index }">
+        <template v-if="column.key === 'index'">
+          <div class="font-black text-xl text-emerald-600">
+            {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
+          </div>
         </template>
-      </a-table>
-    </div>
+        
+        <template v-else-if="column.dataIndex === 'email'">
+          <span class="font-semibold text-gray-800">{{ record.email }}</span>
+        </template>
+        
+        <template v-else-if="column.dataIndex === 'phone_number'">
+          <span class="font-medium text-gray-700">{{ record.phone_number }}</span>
+        </template>
+        
+        <template v-else-if="column.dataIndex === 'registration_number'">
+          <span class="font-bold text-gray-900">{{ record.registration_number }}</span>
+        </template>
+        
+        <template v-else-if="column.dataIndex === 'profile_code'">
+          <span class="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full text-sm">{{ record.profile_code }}</span>
+        </template>
+        
+        <template v-else-if="column.dataIndex === 'status'">
+          <Tag 
+            :color="record.status === 'approved' ? 'success' : record.status === 'processing' ? 'blue' : record.status === 'completed' ? 'purple' : 'orange'"
+            class="!font-bold px-4 py-2 text-sm rounded-full shadow-sm border-2"
+          >
+            {{ record.status?.toUpperCase() || 'PENDING' }}
+          </Tag>
+        </template>
+        
+        <template v-else-if="column.dataIndex === 'result'">
+          <Button
+            v-if="record.result_file"
+            type="primary"
+            size="small"
+            :loading="downloadingId === record.id"
+            @click="downloadFile(record.result_file, record.id)"
+            class="bg-emerald-600 hover:bg-emerald-700 border-none"
+          >
+           📥 Download
+          </Button>
+          <Tag v-else color="default">Not ready</Tag>
+        </template>
+        
+        <template v-else-if="column.dataIndex === 'created_at'">
+          <div class="font-semibold text-gray-800 text-sm">
+            {{ dayjs(record.created_at).format('DD MMM • hh:mm A') }}
+          </div>
+        </template>
+      </template>
+    </a-table>
+  </div>
+</div>
 
     <!-- Half-screen Modal -->
     <Modal
@@ -321,12 +320,21 @@ onMounted(fetchRequests)
     </Modal>
   </div>
 </template>
-
 <style scoped>
-.service-table :deep(.ant-table) {
-  @apply border border-emerald-200/30 rounded-xl overflow-hidden;
+/* 🔥 FULL SCROLLABLE TABLE + COLORS */
+.service-table {
+  @apply w-full;
 }
 
+.service-table :deep(.ant-table-container) {
+  @apply w-full;
+}
+
+.service-table :deep(.ant-table) {
+  @apply w-full min-w-[1600px];
+}
+
+/* HEADER */
 .service-table :deep(.ant-table-thead th) {
   @apply !bg-emerald-500 !text-white !font-bold !py-4 !px-6 text-sm uppercase tracking-wide border-none;
 }
@@ -335,6 +343,28 @@ onMounted(fetchRequests)
   @apply border-b-0;
 }
 
+/* ✅ STATUS COLORS */
+.service-table :deep(.ant-table-tbody tr[data-status="approved"]),
+.service-table :deep(.ant-table-tbody tr[data-status="completed"]) {
+  background-color: rgb(236 253 245 / 0.9) !important; /* LIGHT GREEN */
+}
+
+.service-table :deep(.ant-table-tbody tr[data-status="approved"]:hover > td),
+.service-table :deep(.ant-table-tbody tr[data-status="completed"]:hover > td) {
+  background-color: rgb(209 250 229 / 0.9) !important; /* LIGHTER GREEN */
+}
+
+.service-table :deep(.ant-table-tbody tr[data-status="processing"]),
+.service-table :deep(.ant-table-tbody tr[data-status="rejected"]) {
+  background-color: rgb(254 242 242 / 0.9) !important; /* LIGHT RED */
+}
+
+.service-table :deep(.ant-table-tbody tr[data-status="processing"]:hover > td),
+.service-table :deep(.ant-table-tbody tr[data-status="rejected"]:hover > td) {
+  background-color: rgb(254 226 226 / 0.9) !important; /* LIGHTER RED */
+}
+
+/* CELLS */
 .service-table :deep(.ant-table-tbody td) {
   @apply !py-4 !px-6 border-b border-gray-100/50;
 }
@@ -347,6 +377,30 @@ onMounted(fetchRequests)
   @apply border-b-0;
 }
 
+/* SCROLLBAR */
+.service-table :deep(.ant-table-body::-webkit-scrollbar),
+.service-table :deep(.ant-table-container::-webkit-scrollbar) {
+  height: 8px;
+}
+
+.service-table :deep(.ant-table-body::-webkit-scrollbar-track),
+.service-table :deep(.ant-table-container::-webkit-scrollbar-track) {
+  background: rgb(248 250 252 / 0.5);
+  border-radius: 4px;
+}
+
+.service-table :deep(.ant-table-body::-webkit-scrollbar-thumb),
+.service-table :deep(.ant-table-container::-webkit-scrollbar-thumb) {
+  background: rgb(16 185 129 / 0.7);
+  border-radius: 4px;
+}
+
+.service-table :deep(.ant-table-body::-webkit-scrollbar-thumb:hover),
+.service-table :deep(.ant-table-container::-webkit-scrollbar-thumb:hover) {
+  background: rgb(5 150 105 / 0.9);
+}
+
+/* MODAL */
 .half-screen-modal :deep(.ant-modal) {
   max-width: 50vw !important;
   width: 50vw !important;

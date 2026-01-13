@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import { 
@@ -10,12 +11,15 @@ import {
   BellOutlined, BoxPlotOutlined
 } from '@ant-design/icons-vue'
 
+const pageLoading = ref(true)
+
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
 const collapsed = ref(false)
 const sidebarOpen = ref(false) // mobile overlay state
+const loggingOut = ref(false)
 
 // Detect mobile width
 const isMobile = ref(false)
@@ -25,6 +29,22 @@ onMounted(() => {
     isMobile.value = window.innerWidth < 1024
   })
 })
+
+onMounted(() => {
+  setTimeout(() => {
+    pageLoading.value = false
+  }, 300) // small delay for smooth UX
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    pageLoading.value = true
+    setTimeout(() => {
+      pageLoading.value = false
+    }, 400)
+  }
+)
 
 const iconComponents: Record<string, any> = {
   'DashboardOutlined': DashboardOutlined,
@@ -61,9 +81,16 @@ const navigate = (path: string) => {
   }
 }
 
-const logout = () => {
-  auth.logout()
-  router.push('/login')
+const logout = async () => {
+  loggingOut.value = true
+
+  try {
+    await auth.logout() // assuming logout is async
+    router.push('/login')
+  } catch (e) {
+    console.error('Logout failed', e)
+    loggingOut.value = false
+  }
 }
 
 // Toggle sidebar
@@ -78,7 +105,22 @@ const toggleSidebar = () => {
 
 <template>
   <div class="flex h-screen overflow-hidden">
-    <!-- Sidebar Overlay for Mobile -->
+    <!-- FULL PAGE LOADER -->
+    <div
+      v-if="pageLoading"
+      class="fixed inset-0 z-[9998] bg-white/70 backdrop-blur-md flex items-center justify-center"
+    >
+      <a-spin size="large" />
+    </div>
+
+
+    <!-- Full-page loader overlay -->
+  <div
+    v-if="loggingOut"
+    class="fixed inset-0 z-[9999] bg-black/30 flex items-center justify-center backdrop-blur-sm"
+  >
+    <a-spin size="large" tip="Logging out..." />
+  </div>
     <div
       v-if="isMobile"
       class="fixed inset-0 bg-black/20 z-40"

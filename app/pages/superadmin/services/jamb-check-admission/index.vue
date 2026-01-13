@@ -5,7 +5,7 @@ definePageMeta({
   roles: ['superadmin'],
 })
 
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import {
   Table,
   Button,
@@ -30,7 +30,7 @@ const config = useRuntimeConfig()
 /* ================= STATE ================= */
 const requests = ref<any[]>([])
 const loading = ref(false)
-const searchText = ref('')
+const searchText = ref('')  // ✅ COMPACT SEARCH
 
 /* Approve modal */
 const approveModalVisible = ref(false)
@@ -46,7 +46,7 @@ const rejectLoading = ref(false)
 /* Pagination */
 const pagination = ref({
   current: 1,
-  pageSize: 15,
+  pageSize: 1000,
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
@@ -72,7 +72,7 @@ const filteredRequests = computed(() => {
 const fetchRequests = async () => {
   loading.value = true
   try {
-    const res = await $api('/services/jamb-admission-result-notification/all')
+    const res = await $api('/services/jamb-admission-status/all')
     requests.value = Array.isArray(res) ? res : res.data || []
     pagination.value.total = filteredRequests.value.length
   } catch (err) {
@@ -94,7 +94,7 @@ const handleApprove = async () => {
   approveLoading.value = true
 
   try {
-    await $api(`/services/jamb-admission-result-notification/${currentApproveId.value}/approve`, { 
+    await $api(`/services/jamb-admission-status/${currentApproveId.value}/approve`, { 
       method: 'POST' 
     })
     message.success('Request approved successfully')
@@ -124,7 +124,7 @@ const handleReject = async () => {
   rejectLoading.value = true
 
   try {
-    await $api(`/services/jamb-admission-result-notification/${currentRejectId.value}/reject`, {
+    await $api(`/services/jamb-admission-status/${currentRejectId.value}/reject`, {
       method: 'POST',
       body: { reason: rejectReason.value },
     })
@@ -139,7 +139,7 @@ const handleReject = async () => {
     rejectLoading.value = false
   }
 }
-/* ✅ UNIVERSAL $api DOWNLOAD - NO HARDCODING */
+
 const downloadFile = async (filePath: string, filename = 'document') => {
   if (!filePath) {
     message.warning('No result file available')
@@ -185,8 +185,6 @@ const downloadFile = async (filePath: string, filename = 'document') => {
   }
 }
 
-
-
 const columns = [
   { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
   { title: 'Customer', key: 'user', width: 260, slots: { customRender: 'userCell' } },
@@ -209,7 +207,7 @@ onMounted(fetchRequests)
     <div class="flex justify-between items-center">
       <div>
         <Typography.Title level="2" class="!m-0">
-          JAMB Admission Result Notification Requests
+          JAMB Admission Status Requests
         </Typography.Title>
         <Typography.Text type="secondary">
           {{ filteredRequests.length }} total requests
@@ -245,7 +243,7 @@ onMounted(fetchRequests)
         :pagination="pagination"
         row-key="id"
         :scroll="{ x: 1600 }"
-        class="notification-table"
+        class="status-table"
       >
         <!-- ✅ GREEN NUMBERING -->
         <template #indexCell="{ index }">
@@ -326,7 +324,7 @@ onMounted(fetchRequests)
             v-if="record.result_file"
             type="primary"
             size="small"
-            @click="downloadFile(record.result_file, `jamb-notification-${record.registration_number || record.id}`)"
+            @click="downloadFile(record.result_file, `jamb-admission-status-${record.registration_number || record.id}`)"
           >
             <DownloadOutlined /> Download
           </Button>
@@ -387,7 +385,7 @@ onMounted(fetchRequests)
       :ok-button-props="{ loading: approveLoading }"
       @ok="handleApprove"
     >
-      <p>Are you sure you want to approve this JAMB Admission Result Notification request?</p>
+      <p>Are you sure you want to approve this JAMB Admission Status request?</p>
       <p class="text-sm text-gray-500 mt-2">
         This action cannot be undone.
       </p>
@@ -417,15 +415,15 @@ onMounted(fetchRequests)
 
 <style scoped>
 /* ✅ GREEN EMERALD HEADER */
-.notification-table :deep(.ant-table-thead th) {
+.status-table :deep(.ant-table-thead th) {
   @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
 }
 
-.notification-table :deep(.ant-table-tbody td) {
+.status-table :deep(.ant-table-tbody td) {
   @apply !py-3 !px-4;
 }
 
-.notification-table :deep(.ant-table-row:hover > td) {
+.status-table :deep(.ant-table-row:hover > td) {
   @apply bg-emerald-50;
 }
 

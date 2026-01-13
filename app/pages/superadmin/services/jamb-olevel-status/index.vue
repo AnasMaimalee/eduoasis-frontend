@@ -45,7 +45,7 @@ const rejectLoading = ref(false)
 /* Pagination */
 const pagination = ref({
   current: 1,
-  pageSize: 15,
+  pageSize: 1000,
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,

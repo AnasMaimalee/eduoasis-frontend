@@ -15,23 +15,9 @@ export default <Partial<Config>>{
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#1e3a8a',
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e3a8a',
-        },
-        secondary: {
-          DEFAULT: '#6b7280',
-        },
+        // Your custom colors
+        primary: '#0F3D2E',   // dark green
+        secondary: '#6BAF92', // light green
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -39,11 +25,6 @@ export default <Partial<Config>>{
       },
     },
   },
-    extend: {
-    colors: {
-        primary: '#0F3D2E',   // dark green
-        secondary: '#6BAF92', // light green
-    },
-    },
+
   plugins: [],
 }

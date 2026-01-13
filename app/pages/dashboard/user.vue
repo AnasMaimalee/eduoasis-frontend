@@ -220,7 +220,7 @@ onUnmounted(() => {
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Services Table -->
         <Card class="!shadow-2xl !border-2 border-emerald-200/50 bg-white/90 backdrop-blur-xl rounded-3xl">
-          <Typography.Title level="3" class="!m-0 mb-8 text-2xl font-black text-gray-900 flex items-center gap-3">
+          <Typography.Title level="3" class="!m-0 mb-8 text-2xl p-3 font-black text-gray-900 flex items-center gap-3">
             📋 Service History
             <span class="text-sm bg-emerald-100 text-emerald-800 px-4 py-1 rounded-2xl font-semibold">
               {{ serviceData.length }} Services

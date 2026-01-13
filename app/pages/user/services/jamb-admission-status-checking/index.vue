@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { message, Table, Button, Input, Typography, Tag, Modal, Form } from 'ant-design-vue'
+import { message, Button, Input, Tag, Modal, Form, Spin } from 'ant-design-vue'
 import dayjs from 'dayjs'
+import ServiceConfirmModal from '@/components/user/ServiceConfirmModal.vue'
 
 definePageMeta({
   layout: 'dashboard',
-  middleware: 'auth'
+  middleware: 'auth',
+  roles: ['user']
 })
 
 const { $api } = useNuxtApp()
@@ -13,9 +15,15 @@ const { $api } = useNuxtApp()
 /* ===================== STATE ===================== */
 const loading = ref(false)
 const showModal = ref(false)
-const requests = ref([])
+const showConfirmModal = ref(false)
+
+const preparingConfirmation = ref(false) // Loader while preparing modal
+const submittingRequest = ref(false)     // Loader while submitting
+const confirming = ref(false)            // Pay / confirm loader
+
+const requests = ref<any[]>([])
 const searchText = ref('')
-const searchTimeout = ref(null)
+const searchTimeout = ref<any>(null)
 
 /* ===================== FORM ===================== */
 const formRef = ref()
@@ -33,22 +41,123 @@ const pagination = ref({
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total.toLocaleString()} requests`
+  showTotal: (total: number, range: number[]) =>
+    `${range[0]}-${range[1]} of ${total.toLocaleString()} requests`
 })
 
-/* ===================== CLIENT-SIDE SEARCH ===================== */
+/* ===================== FILTER ===================== */
 const filteredRequests = computed(() => {
   if (!searchText.value.trim()) return requests.value
-  
-  const query = searchText.value.toLowerCase()
-  return requests.value.filter(request => 
-    request.email?.toLowerCase().includes(query) ||
-    request.phone_number?.toLowerCase().includes(query) ||
-    request.registration_number?.toLowerCase().includes(query) ||
-    request.profile_code?.toLowerCase().includes(query) ||
-    request.status?.toLowerCase().includes(query)
+  const q = searchText.value.toLowerCase()
+  return requests.value.filter(r =>
+    r.email?.toLowerCase().includes(q) ||
+    r.phone_number?.toLowerCase().includes(q) ||
+    r.registration_number?.toLowerCase().includes(q) ||
+    r.profile_code?.toLowerCase().includes(q) ||
+    r.status?.toLowerCase().includes(q)
   )
 })
+
+/* ===================== FETCH REQUESTS ===================== */
+const fetchRequests = async () => {
+  try {
+    loading.value = true
+    const res = await $api('/services/jamb-admission-status/my', {
+      method: 'GET',
+      params: {
+        page: pagination.value.current,
+        per_page: pagination.value.pageSize
+      }
+    })
+    requests.value = res.data || res
+    pagination.value.total = res.total || requests.value.length
+  } catch {
+    message.error('Failed to fetch requests')
+  } finally {
+    loading.value = false
+  }
+}
+
+/* ===================== CONFIRMATION DATA ===================== */
+const serviceName = ref('')
+const serviceAmount = ref(0)
+const walletBalance = ref(0)
+const SERVICE_NAME = 'Checking Admission Status'
+
+/* ===================== PREPARE CONFIRMATION ===================== */
+const prepareConfirmation = async () => {
+  try {
+    preparingConfirmation.value = true
+
+    // Fetch wallet
+    const walletRes = await $api('/wallet', { method: 'GET' })
+    walletBalance.value = Number(walletRes.balance)
+
+    // Fetch services
+    const servicesRes = await $api('/services', { method: 'GET' })
+    const services = servicesRes.data
+    const service = services.find((s: any) => s.name === SERVICE_NAME)
+
+    if (!service) {
+      message.error('Service not configured')
+      return
+    }
+
+    serviceName.value = service.name
+    serviceAmount.value = Number(service.price)
+
+    showConfirmModal.value = true
+  } catch (e) {
+    console.error('Prepare confirmation error:', e)
+    message.error('Unable to prepare confirmation')
+  } finally {
+    preparingConfirmation.value = false
+  }
+}
+
+/* ===================== SUBMIT REQUEST ===================== */
+const submitRequest = async () => {
+  try {
+    submittingRequest.value = true
+
+    await $api('/services/jamb-admission-status', {
+      method: 'POST',
+      body: form.value
+    })
+
+    message.success('Request submitted successfully')
+
+    showConfirmModal.value = false
+    showModal.value = false
+
+    Object.assign(form.value, {
+      email: '',
+      phone_number: '',
+      registration_number: '',
+      profile_code: ''
+    })
+
+    fetchRequests()
+  } catch (e: any) {
+    message.error(e?.data?.message || 'Submission failed')
+  } finally {
+    submittingRequest.value = false
+  }
+}
+
+/* ===================== EVENTS ===================== */
+const handleTableChange = (pag: any) => {
+  pagination.value.current = pag.current
+  pagination.value.pageSize = pag.pageSize
+  fetchRequests()
+}
+
+const debouncedSearch = () => {
+  clearTimeout(searchTimeout.value)
+  searchTimeout.value = setTimeout(() => {
+    pagination.value.current = 1
+  }, 500)
+}
 
 const downloadingId = ref<string | null>(null)
 
@@ -88,95 +197,24 @@ const downloadFile = async (filePath: string, id: string) => {
   }
 }
 
-/* ===================== FETCH ===================== */
-const fetchRequests = async () => {
-  try {
-    loading.value = true
-    const params = {
-      page: pagination.value.current,
-      per_page: pagination.value.pageSize
-    }
-    
-    const res = await $api('/services/jamb-result/my', { 
-      method: 'GET',
-      params 
-    })
-    
-    requests.value = res.data || res
-    pagination.value.total = res.total || res.length || 0
-    
-  } catch (e) {
-    message.error('Failed to fetch requests')
-    requests.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-const submitting = ref(false)
-
-/* ===================== SUBMIT ===================== */
-const submitRequest = async () => {
-  try {
-    submitting.value = true
-
-    await $api('/services/jamb-result', {
-      method: 'POST',
-      body: form.value
-    })
-
-    message.success('Request submitted successfully')
-    showModal.value = false
-
-    Object.assign(form.value, {
-      email: '',
-      phone_number: '',
-      registration_number: '',
-      profile_code: ''
-    })
-
-    pagination.value.current = 1
-    fetchRequests()
-  } catch (e: any) {
-    message.error(
-      e?.data?.message ||
-      e?.response?.data?.message ||
-      'Submission failed'
-    )
-  } finally {
-    submitting.value = false
-  }
-}
-
-/* ===================== EVENTS ===================== */
-const handleTableChange = (pagConfig) => {
-  pagination.value.current = pagConfig.current
-  pagination.value.pageSize = pagConfig.pageSize
-  fetchRequests()
-}
-
-const debouncedSearch = () => {
-  if (searchTimeout.value) clearTimeout(searchTimeout.value)
-  searchTimeout.value = setTimeout(() => {
-    pagination.value.current = 1
-  }, 500)
-}
-
-
-
-watch(() => searchText.value, debouncedSearch)
+watch(searchText, debouncedSearch)
 onMounted(fetchRequests)
+
+/* ===================== VALIDATE SUBMIT ===================== */
+const canSubmit = computed(() => {
+  return form.value.registration_number.trim() !== '' && form.value.profile_code.trim() !== ''
+})
 </script>
 
 <template>
   <div class="min-h-screen bg-gradient-to-br from-emerald-50/50 to-teal-50/50 p-4 lg:p-8 space-y-8">
-    
-   <!-- PAGE HEADER -->
+
+  <!-- PAGE HEADER -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
       <!-- Title & Summary -->
       <div class="flex-1 min-w-0">
         <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-          JAMB Result Requests
+          JAMB Admission Status Requests
         </h1>
         <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 mt-1 text-sm">
           <span class="font-semibold text-emerald-700 truncate">
@@ -211,8 +249,10 @@ onMounted(fetchRequests)
         </Button>
       </div>
     </div>
-<!-- ✅ FULLY SCROLLABLE JAMB TABLE - COMPLETE REPLACEMENT -->
-<div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
+
+
+    <!-- Table Section -->
+    <div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
   <div class="min-w-[1600px]">
     <a-table
       :columns="[
@@ -290,39 +330,52 @@ onMounted(fetchRequests)
   </div>
 </div>
 
-
-
-    <!-- Half-screen Modal -->
+    <!-- Modal -->
     <Modal
       v-model:visible="showModal"
       title="New JAMB Request"
-      :width="600"
-      :confirm-loading="submitting"
+      :ok-button-props="{ disabled: !canSubmit || preparingConfirmation }"
+      :confirm-loading="preparingConfirmation"
       ok-text="Submit"
       cancel-text="Cancel"
-      @ok="submitRequest"
+      @ok="prepareConfirmation"
       class="half-screen-modal"
     >
       <Form ref="formRef" :model="form" layout="vertical">
         <Form.Item label="Email" name="email" required>
-          <Input v-model:value="form.email" placeholder="your.email@example.com"  class="large"/>
+          <Input v-model:value="form.email" placeholder="your.email@example.com"/>
         </Form.Item>
 
         <Form.Item label="Phone Number" name="phone_number" required>
-          <Input v-model:value="form.phone_number" placeholder="08012345678"  class="large"/>
+          <Input v-model:value="form.phone_number" placeholder="08012345678"/>
         </Form.Item>
 
         <Form.Item label="Registration Number" name="registration_number" required>
-          <Input v-model:value="form.registration_number" placeholder="JAMBREG123456" class="large" />
+          <Input v-model:value="form.registration_number" placeholder="JAMBREG123456"/>
         </Form.Item>
 
         <Form.Item label="Profile Code" name="profile_code" required>
-          <Input v-model:value="form.profile_code" placeholder="Enter profile code"  class="large"/>
+          <Input v-model:value="form.profile_code" placeholder="Enter profile code"/>
         </Form.Item>
       </Form>
     </Modal>
+
+    <!-- Confirmation Modal -->
+    <ServiceConfirmModal
+      :visible="showConfirmModal"
+      :service-name="serviceName"
+      :amount="serviceAmount"
+      :wallet-balance="walletBalance"
+      :loading="submittingRequest"
+      :preparing="preparingConfirmation"
+      @confirm="submitRequest"
+      @cancel="showConfirmModal = false"
+    />
+
   </div>
 </template>
+
+
 <style scoped>
 /* 🔥 FULL SCROLLABLE TABLE + COLORS */
 .service-table {

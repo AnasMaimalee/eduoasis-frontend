@@ -9,11 +9,11 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import {
-  Table, Card, Button, Input, Select, Typography, Dropdown, message, Tag
+  Table, Card, Button, Input, Select, Typography, Dropdown, message, Tag, Pagination
 } from 'ant-design-vue'
 import { 
   EyeOutlined, EyeInvisibleOutlined, FilterOutlined, FilePdfOutlined, ReloadOutlined,
-  WalletOutlined, CheckCircleOutlined, ArrowUpOutlined, ArrowDownOutlined
+  WalletOutlined, CheckCircleOutlined
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
@@ -27,19 +27,20 @@ const hideBalance = ref(true)
 const walletBalance = ref(0)
 const currency = ref('NGN')
 
-/* ✅ FIXED PAGINATION - DEFAULT 50 */
+/* ✅ FIXED PAGINATION */
 const transactions = ref<any[]>([])
 const pagination = ref({
   current: 1,
-  pageSize: 50,  // ✅ DEFAULT 50 RECORDS
+  pageSize: 100,
   total: 0,
-  pageSizeOptions: ['10', '20', '50', '100'],
+  pageSizeOptions: ['50', '100', '200', '500'],
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: (total: number, range: number[]) => `${range[0]}-${range[1]} of ${total.toLocaleString()} transactions`
+  showTotal: (total: number, range: number[]) => 
+    `${range[0]}-${range[1]} of ${total.toLocaleString()} transactions`
 })
 
-/* ✅ FIXED SEARCH & FILTERS */
+/* ✅ FILTERS */
 const searchText = ref('')
 const monthFilter = ref<number | null>(null)
 const yearFilter = ref<string | null>(null)
@@ -50,9 +51,16 @@ const balanceText = computed(() =>
   hideBalance.value ? '••••••' : `₦${walletBalance.value.toLocaleString()}`
 )
 
+const formatNaira = (amount: number) => {
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 0
+  }).format(amount)
+}
+
 const getRowClassName = (record: any) => {
-  if (!record || !record.type) return ''
-  return record.type === 'credit' ? 'credit-row' : 'debit-row'
+  return record?.type === 'credit' ? 'credit-row' : 'debit-row'
 }
 
 /* ================= API ================= */
@@ -60,7 +68,7 @@ const fetchWallet = async () => {
   try {
     walletLoading.value = true
     const res = await $api('/wallet/me')
-    walletBalance.value = Number(res.balance || 0)
+    walletBalance.value = Number(res.current_balance || res.balance || 0)
     currency.value = res.currency || 'NGN'
   } catch (err) {
     console.error('Wallet error:', err)
@@ -69,11 +77,9 @@ const fetchWallet = async () => {
   }
 }
 
-/* ✅ FIXED SEARCH + PAGINATION */
-const fetchTransactions = async (forceRefresh = false) => {
+const fetchTransactions = async () => {
   loading.value = true
   
-  // Clear previous timeout
   if (searchTimeout.value) {
     clearTimeout(searchTimeout.value)
     searchTimeout.value = null
@@ -82,43 +88,39 @@ const fetchTransactions = async (forceRefresh = false) => {
   try {
     const params: any = {
       page: pagination.value.current,
-      per_page: pagination.value.pageSize,  // ✅ SERVER GETS pageSize
-      _limit: pagination.value.pageSize     // ✅ BACKUP param
+      per_page: pagination.value.pageSize,
     }
     
-    // ✅ FIXED SEARCH - Only send if not empty
     if (searchText.value.trim()) {
       params.search = searchText.value.trim()
-      params.q = searchText.value.trim()     // ✅ Multiple search params
+      params.q = searchText.value.trim()
     }
     
     if (monthFilter.value) params.month = monthFilter.value
     if (yearFilter.value) params.year = yearFilter.value
 
-    console.log('🔍 API CALL:', params) // Debug
-    
+    console.log('🔍 API PARAMS:', params)
+
     const res = await $api('/wallet/transactions', { params })
     
-    // ✅ SUPER ROBUST data handling
-    transactions.value = Array.isArray(res.data?.data) ? res.data.data :
-                       Array.isArray(res.data) ? res.data :
-                       Array.isArray(res.transactions?.data) ? res.transactions.data :
-                       Array.isArray(res) ? res : []
+    // ✅ PERFECTLY MATCHES YOUR API STRUCTURE
+    const txMeta = res.transactions || {}
+    transactions.value = Array.isArray(txMeta.data) ? txMeta.data : []
     
-    // ✅ SUPER ROBUST pagination
-    const meta = res.data || res || res.meta || {}
-    pagination.value.total = Number(meta.total || meta.total_count || meta.count || 0)
+    // ✅ FIXED PAGINATION
+    pagination.value.total = Number(txMeta.total || 0)
+    pagination.value.current = Number(txMeta.current_page || 1)
+    pagination.value.pageSize = Math.max(Number(txMeta.per_page || 100), 50)
     
-    // ✅ ONLY update current/pageSize from SERVER if they exist
-    if (meta.current_page) pagination.value.current = Number(meta.current_page)
-    if (meta.per_page || meta.page_size) {
-      pagination.value.pageSize = Number(meta.per_page || meta.page_size)
-    }
-    
-    console.log('✅ LOADED:', transactions.value.length, 'Total:', pagination.value.total)
+    console.log('✅ TRANSACTIONS LOADED:', {
+      count: transactions.value.length,
+      total: pagination.value.total,
+      page: pagination.value.current,
+      perPage: pagination.value.pageSize
+    })
     
   } catch (error) {
-    console.error('❌ ERROR:', error)
+    console.error('❌ FETCH ERROR:', error)
     transactions.value = []
     pagination.value.total = 0
   } finally {
@@ -146,33 +148,25 @@ const exportPdf = async () => {
 }
 
 const refreshAll = async () => {
-  await Promise.all([fetchWallet(), fetchTransactions(true)])
+  await Promise.all([fetchWallet(), fetchTransactions()])
   message.success('Refreshed successfully')
 }
 
-/* ✅ FIXED PAGINATION HANDLER */
-const handleTableChange = (paginationConfig: any, filters: any, sorter: any) => {
-  console.log('📊 TABLE CHANGE:', paginationConfig)
-  
-  // Update pagination state
-  pagination.value.current = paginationConfig.current || 1
-  pagination.value.pageSize = paginationConfig.pageSize || 50
-  
-  // Fetch new data
+const handlePaginationChange = (page: number, pageSize?: number) => {
+  pagination.value.current = page
+  if (pageSize) pagination.value.pageSize = pageSize
   fetchTransactions()
 }
 
-/* ✅ FIXED SEARCH DEBOUNCE */
+/* ✅ DEBOUNCED SEARCH */
 const debouncedSearch = () => {
   if (searchTimeout.value) clearTimeout(searchTimeout.value)
-  
   searchTimeout.value = setTimeout(() => {
-    pagination.value.current = 1  // Reset to page 1
+    pagination.value.current = 1
     fetchTransactions()
   }, 500)
 }
 
-/* ================= WATCHERS ================= */
 watch(searchText, debouncedSearch)
 watch([monthFilter, yearFilter], () => {
   pagination.value.current = 1
@@ -185,88 +179,76 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 space-y-6 lg:space-y-8 bg-gradient-to-br from-emerald-50/50 to-teal-50/50">
+  <div class="p-4 sm:p-6 lg:p-8 space-y-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 min-h-screen">
     
-    <!-- Compact Wallet Card -->
+    <!-- ✅ MOBILE WALLET HEADER -->
     <Card class="!shadow-xl !border border-emerald-200/30">
-      <div class="relative overflow-hidden rounded-2xl p-6 lg:p-8" 
-           :style="{
-             background: 'linear-gradient(135deg, #10b981 0%, #059669 70%, #34d399 100%)',
-             'box-shadow': '0 20px 40px -10px rgba(16, 185, 129, 0.4)'
-           }">
-        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 text-white">
-          <div class="flex-1 space-y-3">
+      <div class="p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl text-white">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+          <div class="flex-1 space-y-2 sm:space-y-3">
             <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-xl">
               <WalletOutlined class="text-xl" />
-              <Typography.Text class="text-xs uppercase tracking-wide font-bold opacity-90">
-                Wallet Balance
+              <Typography.Text class="text-xs uppercase tracking-wide font-bold">
+                Admin Wallet Balance
               </Typography.Text>
             </div>
-            <Typography.Title :level="2" class="text-4xl lg:text-5xl font-black !m-0 drop-shadow-xl mb-2">
+            <Typography.Title :level="2" class="text-3xl sm:text-4xl lg:text-5xl font-black !m-0 drop-shadow-lg">
               {{ balanceText }}
             </Typography.Title>
-            <div class="flex items-center gap-3 text-sm font-semibold opacity-90">
+            <div class="flex flex-wrap items-center gap-3 text-sm font-semibold opacity-90">
               <span class="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-lg">{{ currency }}</span>
-              <span class="flex items-center gap-1 text-xs">
-                <CheckCircleOutlined class="text-sm" />
-                Available
+              <span class="flex items-center gap-1">
+                <CheckCircleOutlined class="text-lg" />
+                Available Balance
               </span>
             </div>
           </div>
           <Button 
             type="text" 
             @click="hideBalance = !hideBalance"
-            class="px-6 py-2 font-semibold text-base !border-none bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl border border-white/30"
+            class="px-6 py-3 font-semibold !border-none bg-white/20 hover:bg-white/30 rounded-xl border border-white/30 h-14"
           >
-            <component :is="hideBalance ? EyeOutlined : EyeInvisibleOutlined" class="mr-1" />
+            <component :is="hideBalance ? EyeOutlined : EyeInvisibleOutlined" class="mr-2 text-lg" />
             {{ hideBalance ? 'Show' : 'Hide' }}
           </Button>
         </div>
       </div>
     </Card>
 
-    <!-- Transactions -->
-    <Card class="!shadow-xl border border-emerald-200/30 backdrop-blur-sm">
-      <div class="p-6 lg:p-8">
+    <!-- ✅ TRANSACTIONS SECTION -->
+    <Card class="!shadow-xl border border-emerald-200/30 backdrop-blur-sm rounded-3xl">
+      <div class="p-4 sm:p-6 lg:p-8">
+        <!-- Header -->
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
-            <Typography.Title level="3" class="!m-0 text-2xl lg:text-3xl font-black bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+            <Typography.Title level="3" class="!m-0 text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
               Transaction History
             </Typography.Title>
             <Typography.Text class="text-lg opacity-80">
-              {{ pagination.total.toLocaleString() }} total transactions • Page {{ pagination.current }}
+              {{ pagination.total.toLocaleString() }} total transactions
             </Typography.Text>
           </div>
-          <Button 
-            type="primary" 
-            @click="refreshAll" 
-            :loading="loading || walletLoading"
-            class="px-6 h-12 font-semibold shadow-lg flex items-center gap-2"
-            icon="ReloadOutlined"
-          >
-            Refresh
-          </Button>
+          
         </div>
 
-        <!-- ✅ FIXED Filters -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6 p-4 bg-emerald-50/30 rounded-2xl">
-          <!-- ✅ FIXED Search -->
+        <!-- Filters - Mobile Responsive -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6 p-4 bg-emerald-50/50 backdrop-blur-sm rounded-2xl border border-emerald-200/30">
           <Input.Search
             v-model:value="searchText"
-            placeholder="🔍 Search description, ID, reference..."
+            placeholder="🔍 Search ID, description, reference..."
             size="large"
-            class="!h-12 rounded-xl shadow-sm"
+            class="!h-12 rounded-xl shadow-sm border-emerald-300 w-full"
             @search="fetchTransactions"
-            enter-button
+            enter-button="Search"
           />
           
-          <div class="flex gap-2 lg:col-span-2">
-            <Dropdown trigger="click">
-              <Button size="large" class="!h-12 px-4 rounded-xl shadow-sm flex items-center gap-1">
+          <div class="flex gap-3 lg:col-span-2">
+            <Dropdown trigger="click" class="flex-1 lg:flex-none">
+              <Button size="large" class="!h-12 px-6 rounded-xl shadow-sm flex items-center gap-2 border-emerald-300 w-full lg:w-auto">
                 <FilterOutlined /> Filters
               </Button>
               <template #overlay>
-                <div class="p-4 w-72 space-y-3 bg-white shadow-xl rounded-2xl border">
+                <div class="p-4 w-80 space-y-3 bg-white shadow-2xl rounded-2xl border border-gray-200">
                   <Select 
                     v-model:value="monthFilter" 
                     placeholder="All Months" 
@@ -289,8 +271,8 @@ onMounted(async () => {
                       {{ 2025 - y }}
                     </Select.Option>
                   </Select>
-                  <div class="flex gap-2">
-                    <Button block @click="resetFilters" size="middle">Reset</Button>
+                  <div class="flex gap-2 pt-2">
+                    <Button block @click="resetFilters" size="middle">Reset All</Button>
                     <Button type="primary" block @click="fetchTransactions" size="middle">Apply</Button>
                   </div>
                 </div>
@@ -301,21 +283,32 @@ onMounted(async () => {
               ghost 
               size="large" 
               @click="exportPdf" 
-              class="!h-12 px-6 rounded-xl shadow-sm"
-              icon="FilePdfOutlined"
+              class="!h-12 px-8 rounded-xl shadow-sm border-emerald-300 "
             >
-              Export
+              <FilePdfOutlined class="mr-1" /> Export PDF
             </Button>
+            <Button 
+            type="primary" 
+            @click="refreshAll" 
+            :loading="loading || walletLoading"
+            class="h-12 px-8 font-semibold shadow-lg  flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl w-full lg:w-auto"
+          >
+            <ReloadOutlined /> Refresh
+          </Button>
           </div>
         </div>
 
-        <!-- ✅ FIXED Table - Default 50 records -->
-      <!-- ✅ GREEN HEADER + COLORED ROWS -->
+        <!-- ✅ MOBILE TABLE + CUSTOM PAGINATION -->
+       <!-- ✅ FULLY SCROLLABLE TABLE + PAGINATION -->
+<div class="space-y-4">
+  <!-- ✅ PERFECTLY SCROLLABLE TABLE -->
+  <div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
+    <div class="min-w-[1400px]">
       <Table
         :columns="[
           { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' }, fixed: 'left' },
-          { title: 'Type', dataIndex: 'type', key: 'type', width: 110, slots: { customRender: 'typeCell' }, fixed: 'left' },
-          { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
+          { title: 'Type', dataIndex: 'type', key: 'type', width: 100, slots: { customRender: 'typeCell' }, fixed: 'left' },
+          { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true, width: 280 },
           { title: 'Before', key: 'balanceBefore', width: 140, align: 'right', slots: { customRender: 'balanceBeforeCell' } },
           { title: 'Amount', key: 'amount', width: 140, align: 'right', slots: { customRender: 'amountCell' } },
           { title: 'After', key: 'balanceAfter', width: 140, align: 'right', slots: { customRender: 'balanceAfterCell' } },
@@ -324,89 +317,131 @@ onMounted(async () => {
         :data-source="transactions"
         :loading="loading"
         row-key="id"
-        :scroll="{ x: 1200 }"
-        :pagination="pagination"
-        @change="handleTableChange"
+        :scroll="{ x: 1400, y: 500 }" 
+        :pagination="false"
         :row-class-name="getRowClassName"
-        class="admin-table"  
->
+        class="admin-table w-full"
+      >
+        <template #indexCell="{ index }">
+          <div class="font-bold text-emerald-600 text-sm">
+            {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
+          </div>
+        </template>
+        
+        <template #typeCell="{ record }">
+          <Tag 
+            :color="record?.type === 'credit' ? 'success' : 'error'" 
+            class="!font-bold !px-4 !py-1.5 !text-sm rounded-full shadow-sm"
+          >
+            {{ record?.type?.toUpperCase() || '-' }}
+          </Tag>
+        </template>
+        
+        <template #balanceBeforeCell="{ record }">
+          <div class="font-mono text-sm font-medium text-gray-700">
+            {{ formatNaira(Number(record.balance_before || 0)) }}
+          </div>
+        </template>
+        
+        <template #amountCell="{ record }">
+          <span :class="[
+            'font-mono font-black text-lg inline-block px-2 py-1 rounded-lg shadow-sm',
+            record?.type === 'credit' ? 'text-emerald-600 bg-emerald-100/50' : 'text-red-600 bg-red-100/50'
+          ]">
+            {{ record?.type === 'credit' ? '+' : '-' }}{{ formatNaira(Number(record.amount || 0)) }}
+          </span>
+        </template>
+        
+        <template #balanceAfterCell="{ record }">
+          <div class="font-mono text-sm font-semibold text-emerald-600 bg-emerald-50/50 px-2 py-1 rounded-lg">
+            {{ formatNaira(Number(record.balance_after || 0)) }}
+          </div>
+        </template>
+        
+        <template #dateCell="{ record }">
+          <div class="text-sm font-medium text-gray-700">
+            {{ dayjs(record.created_at).format('DD MMM YYYY • hh:mm A') }}
+          </div>
+        </template>
+      </Table>
+    </div>
+  </div>
 
-          <!-- Templates unchanged -->
-          <template #indexCell="{ index }">
-            <div class="font-bold text-emerald-600">{{ (pagination.current - 1) * pagination.pageSize + index + 1 }}</div>
-          </template>
-          
-          <template #typeCell="{ record }">
-            <Tag :color="record?.type === 'credit' ? 'success' : 'error'" class="!font-bold !px-3 !py-1 !text-xs">
-              {{ record?.type?.toUpperCase() || '-' }}
-            </Tag>
-          </template>
-          
-          <template #balanceBeforeCell="{ record }">
-            <div class="font-mono text-sm font-medium text-gray-700">
-              ₦{{ Number(record.balance_before || 0).toLocaleString() }}
-            </div>
-          </template>
-          
-          <template #amountCell="{ record }">
-            <span :class="record?.type === 'credit' ? 'text-emerald-600 font-black text-lg' : 'text-red-600 font-black text-lg'">
-              {{ record?.type === 'credit' ? '+' : '-' }}₦{{ Number(record.amount || 0).toLocaleString() }}
-            </span>
-          </template>
-          
-          <template #balanceAfterCell="{ record }">
-            <div class="font-mono text-sm font-semibold text-emerald-600">
-              ₦{{ Number(record.balance_after || 0).toLocaleString() }}
-            </div>
-          </template>
-          
-          <template #dateCell="{ record }">
-            <div class="text-xs">
-              {{ dayjs(record.created_at).format('DD MMM • hh:mm A') }}
-            </div>
-          </template>
-        </Table>
+  <!-- ✅ CUSTOM PAGINATION - Mobile Responsive -->
+  <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-emerald-200/50 bg-white/50 rounded-b-2xl p-4">
+    <div class="text-sm text-gray-600 font-medium">
+      Showing {{ (pagination.current - 1) * pagination.pageSize + 1 }} to 
+      {{ Math.min(pagination.current * pagination.pageSize, pagination.total) }} of 
+      {{ pagination.total.toLocaleString() }} transactions
+    </div>
+    
+    <Pagination
+      v-model:current="pagination.current"
+      :page-size="pagination.pageSize"
+      :total="pagination.total"
+      :page-size-options="pagination.pageSizeOptions"
+      :show-size-changer="true"
+      :show-quick-jumper="true"
+      :show-total="(total, range) => `${range[0]}-${range[1]} of ${total.toLocaleString()}`"
+      @change="handlePaginationChange"
+      @show-size-change="(current, size) => { pagination.pageSize = size; pagination.current = 1; fetchTransactions() }"
+      class="flex-1 sm:flex-none"
+    />
+  </div>
+</div>
+
       </div>
     </Card>
   </div>
 </template>
+
+
 <style scoped>
-/* ✅ CLEAN GREEN TABLE HEADER - NO RADIUS, NO SHADOW */
+.admin-table :deep(.ant-table-thead) {
+  @apply !bg-gradient-to-r !from-emerald-500 !to-teal-600 !border-none rounded-t-xl;
+}
+
 .admin-table :deep(.ant-table-thead th) {
-  @apply !bg-gradient-to-r !from-emerald-500 !to-emerald-600 
-         !text-white !font-bold !py-4 !px-4 text-sm 
-         !border-none !rounded-none !shadow-none;
+  @apply !bg-transparent !text-white !font-black !py-4 !px-4 text-sm 
+         !border-none !shadow-none backdrop-blur-sm;
 }
 
-/* ✅ CREDIT ROWS - Light Green */
-.credit-row {
-  @apply !bg-emerald-50/80 hover:!bg-emerald-100/80;
-}
-
-/* ✅ DEBIT ROWS - Light Red */
-.debit-row {
-  @apply !bg-red-50/80 hover:!bg-red-100/80;
-}
-
-/* ✅ TABLE BODY ENHANCEMENT */
 .admin-table :deep(.ant-table-tbody td) {
-  @apply !py-3.5 !px-4 border-t border-emerald-100/30;
+  @apply !py-4 !px-4 border-t border-emerald-100/30 hover:!bg-emerald-50/50 transition-all duration-200;
 }
 
-/* ✅ HOVER EFFECTS */
 .admin-table :deep(.ant-table-row:hover > td) {
-  @apply bg-emerald-50/30;
+  @apply bg-gradient-to-r from-emerald-50/70 to-teal-50/70 shadow-sm;
 }
 
-/* ✅ STRIPED EFFECT */
-.admin-table :deep(.ant-table-row:nth-child(even)) {
-  @apply bg-white/30;
+/* 🔥 BULLETPROOF ROW COLORS - Higher Specificity */
+.admin-table :deep(.ant-table-tbody .credit-row) {
+  background-color: rgb(236 253 245 / 0.9) !important; /* emerald-50/90 */
 }
 
-/* ✅ FONT MONO FOR BALANCES */
+.admin-table :deep(.ant-table-tbody .credit-row:hover) {
+  background-color: rgb(209 250 229 / 0.9) !important; /* emerald-100/90 */
+}
+
+.admin-table :deep(.ant-table-tbody .debit-row) {
+  background-color: rgb(254 242 242 / 0.9) !important; /* red-50/90 */
+}
+
+.admin-table :deep(.ant-table-tbody .debit-row:hover) {
+  background-color: rgb(254 226 226 / 0.9) !important; /* red-100/90 */
+}
+
+/* Legacy fallback */
+.credit-row, .credit-row td {
+  background-color: rgb(236 253 245 / 0.9) !important;
+}
+
+.debit-row, .debit-row td {
+  background-color: rgb(254 242 242 / 0.9) !important;
+}
+
 .font-mono {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 </style>
-
 

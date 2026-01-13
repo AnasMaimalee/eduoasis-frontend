@@ -195,7 +195,7 @@ onMounted(() => {
         :pagination="paginationTransactions"
         @change="handleTransactionChange"
         row-key="id"
-        class="antdv-table-custom"
+        
         :scroll="{ x: 1400 }"
         :row-class-name="getTransactionRowClass" 
       >
@@ -285,7 +285,7 @@ onMounted(() => {
   :pagination="paginationAudits"
   @change="handleAuditChange"
   row-key="id"
-  class="antdv-table-custom login-audits-table" 
+   
   :scroll="{ x: 1400 }"
 >
         <template #auditIndexCell="{ index }">
@@ -374,4 +374,41 @@ onMounted(() => {
 }
 /* ... keep all your other existing styles exactly the same ... */
 
+
+.fund-modal :deep(.ant-modal-content) {
+  @apply rounded-xl border border-emerald-200/50 shadow-lg;
+}
+
+.credit-row {
+  @apply !bg-emerald-50/90 hover:!bg-emerald-100/90 transition-all duration-200;
+}
+
+.debit-row {
+  @apply !bg-red-50/90 hover:!bg-red-100/90 transition-all duration-200;
+}
+
+.antdv-table-custom :deep(.ant-table-thead) {
+  @apply !bg-gradient-to-r !from-emerald-500 !to-teal-600 !border-none rounded-t-2xl;
+}
+
+.antdv-table-custom :deep(.ant-table-thead th) {
+  @apply !bg-transparent !text-white !font-black !py-4 !px-4 text-sm 
+         !border-none !shadow-none backdrop-blur-sm;
+}
+
+.antdv-table-custom :deep(.ant-table-tbody td) {
+  @apply !py-4 !px-4 border-t border-emerald-100/30 hover:!bg-emerald-50/50 transition-all duration-200;
+}
+
+.antdv-table-custom :deep(.ant-table-row:hover > td) {
+  @apply bg-gradient-to-r from-emerald-50/70 to-teal-50/70 shadow-sm;
+}
+
+.antdv-table-custom :deep(.ant-table-row:nth-child(even)) {
+  @apply bg-white/30;
+}
+
+.font-mono {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
 </style>

@@ -2,7 +2,7 @@ export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: 'https://removing-till-beijing-footage.trycloudflare.com/api',
+    baseURL: 'https://haven-questions-planets-pizza.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {

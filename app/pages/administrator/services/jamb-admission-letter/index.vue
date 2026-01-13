@@ -42,7 +42,7 @@ const beforeUpload = (file: File) => {
 const fetchPending = async () => {
   loading.pending = true
   try {
-    const res = await $api('/services/jamb-admission-status/pending')
+    const res = await $api('/services/jamb-admission-letter/pending')
     pendingJobs.value = res.data?.data || res.data || []
   } catch (err: any) {
     message.error(err.data?.message || 'Failed to fetch pending jobs')
@@ -55,7 +55,7 @@ const fetchPending = async () => {
 const fetchMyJobs = async () => {
   loading.myJobs = true
   try {
-    const res = await $api('/services/jamb-admission-status/my-pending-job')
+    const res = await $api('/services/jamb-admission-letter/my-pending-job')
     myJobs.value = res.data?.data || res.data || []
   } catch (err: any) {
     message.error(err.data?.message || 'Failed to fetch my jobs')
@@ -68,7 +68,7 @@ const fetchMyJobs = async () => {
 const fetchCompleted = async () => {
   loading.completed = true
   try {
-    const res = await $api('/services/jamb-admission-status/administrator')
+    const res = await $api('/services/jamb-admission-letter/administrator')
     completedJobs.value = res.data?.data || res.data || []
   } catch (err: any) {
     message.error(err.data?.message || 'Failed to fetch completed jobs')
@@ -90,7 +90,7 @@ const takeJob = async (job: any) => {
   console.log("take")
   try {
     // $api behaves like $fetch
-    await $api(`/services/jamb-admission-status/${job.id}/take`, {
+    await $api(`/services/jamb-admission-letter/${job.id}/take`, {
       method: 'POST',   // <-- specify POST method
       body: {}          // empty body
     })
@@ -132,7 +132,7 @@ const completeJob = async () => {
 
   loading.complete = true
   try {
-    await $api(`/services/jamb-admission-status/${selectedJob.value.id}/complete`, {
+    await $api(`/services/jamb-admission-letter/${selectedJob.value.id}/complete`, {
       method: 'POST',
       body: fd
     })
@@ -178,37 +178,50 @@ onMounted(refreshAll)
 
 <template>
   <div class="p-6 lg:p-8 space-y-8 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen">
-    
-  <div class="flex items-center justify-between flex-wrap gap-4">
-  <div>
+<div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-4 sm:p-6">
+  <!-- Title Section - Responsive Typography -->
+  <div class="w-full lg:w-auto flex flex-col gap-2">
     <Typography.Title
       level="3"
-      class="!m-0 mb-2 flex items-center gap-3 text-emerald-800 font-black"
+      class="!m-0 mb-1 flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3 
+             text-emerald-800 font-black text-lg xs:text-xl sm:text-2xl lg:text-3xl xl:text-4xl leading-tight"
     >
-      🧾 JAMB Admission Status Processing
+      <span>🧾 JAMB Admission Letter Processing</span>
       <span
-        class="text-sm bg-white/80 px-3 py-1 rounded-full text-emerald-700 font-semibold"
+        class="text-xs xs:text-sm bg-white/80 px-2 py-1 rounded-full text-emerald-700 font-semibold 
+               whitespace-nowrap shadow-sm border border-emerald-200"
       >
         {{ pendingJobs.length + myJobs.length + completedJobs.length }} total jobs
       </span>
     </Typography.Title>
 
-    <Typography.Text type="secondary">
+    <Typography.Text 
+      type="secondary" 
+      class="text-xs xs:text-sm sm:text-base text-left lg:text-center leading-relaxed"
+    >
       Pending → Take → Complete → Track your work
     </Typography.Text>
   </div>
 
-  <!-- 🔄 REFRESH BUTTON -->
+  <!-- Refresh Button - Always prominent -->
   <Button
     type="primary"
     ghost
     :loading="loading.refresh"
     @click="refreshAll"
-    class="border-emerald-500 text-emerald-700"
+    class="border-emerald-500 text-emerald-700 hover:border-emerald-600 hover:text-emerald-600 
+           px-4 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base font-semibold shadow-md 
+           flex-shrink-0 whitespace-nowrap min-w-[120px]"
   >
-    🔄 Refresh
+    <span class="inline-block mr-1 animate-spin" v-if="loading.refresh">🔄</span>
+    <span v-else>🔄</span>
+    Refresh
   </Button>
 </div>
+
+
+
+
 
 
     <!-- MAIN CONTENT -->
@@ -285,76 +298,77 @@ onMounted(refreshAll)
           </Table>
         </Tabs.TabPane>
 
+        <!-- COMPLETED -->
       <Tabs.TabPane key="completed" :tab="`✅ Completed (${completedJobs.length})`">
-        <Table
-            class="green-table"
-            :data-source="completedJobs"
-            :loading="loading.completed"
-            row-key="id"
-            :scroll="{ x: 1100 }"
-            size="middle"
+  <Table
+    class="green-table"
+    :data-source="completedJobs"
+    :loading="loading.completed"
+    row-key="id"
+    :scroll="{ x: 1100 }"
+    size="middle"
+  >
+    <Table.Column title="#" width="60">
+      <template #default="{ index }">{{ index + 1 }}</template>
+    </Table.Column>
+
+    <!-- CUSTOMER -->
+    <Table.Column title="Customer" width="220">
+      <template #default="{ record }">
+        <div class="font-semibold">{{ record.user?.name }}</div>
+        <div class="text-xs text-gray-500">{{ record.user?.email }}</div>
+      </template>
+    </Table.Column>
+
+    <!-- SERVICE -->
+    <Table.Column title="Service" dataIndex="service" />
+
+    <!-- STATUS -->
+    <Table.Column title="Status" width="120" align="center">
+      <template #default="{ record }">
+        <Tag
+          :color="record.status === 'approved' ? 'green' : 'blue'"
         >
-            <Table.Column title="#" width="60">
-            <template #default="{ index }">{{ index + 1 }}</template>
-            </Table.Column>
+          {{ record.status?.toUpperCase() }}
+        </Tag>
+      </template>
+    </Table.Column>
 
-            <!-- CUSTOMER -->
-            <Table.Column title="Customer" width="220">
-            <template #default="{ record }">
-                <div class="font-semibold">{{ record.user?.name }}</div>
-                <div class="text-xs text-gray-500">{{ record.user?.email }}</div>
-            </template>
-            </Table.Column>
+    <!-- PAYMENT -->
+    <Table.Column title="Payment" width="140" align="center">
+      <template #default="{ record }">
+        <Tag v-if="record.payment?.is_paid" color="green">
+          💰 PAID
+        </Tag>
+        <Tag v-else color="red">
+          ⏳ UNPAID
+        </Tag>
+      </template>
+    </Table.Column>
 
-            <!-- SERVICE -->
-            <Table.Column title="Service" dataIndex="service" />
+    <!-- FILE -->
+    <Table.Column title="Result File" width="140" align="center">
+      <template #default="{ record }">
+        <a
+          v-if="record.result_file_url"
+          :href="record.result_file_url"
+          target="_blank"
+          class="text-emerald-700 font-medium"
+        >
+          📄 View
+        </a>
+        <span v-else class="text-gray-400">—</span>
+      </template>
+    </Table.Column>
 
-            <!-- STATUS -->
-            <Table.Column title="Status" width="120" align="center">
-            <template #default="{ record }">
-                <Tag
-                :color="record.status === 'approved' ? 'green' : 'blue'"
-                >
-                {{ record.status?.toUpperCase() }}
-                </Tag>
-            </template>
-            </Table.Column>
-
-            <!-- PAYMENT -->
-            <Table.Column title="Payment" width="140" align="center">
-            <template #default="{ record }">
-                <Tag v-if="record.payment?.is_paid" color="green">
-                💰 PAID
-                </Tag>
-                <Tag v-else color="red">
-                ⏳ UNPAID
-                </Tag>
-            </template>
-            </Table.Column>
-
-            <!-- FILE -->
-            <Table.Column title="Result File" width="140" align="center">
-            <template #default="{ record }">
-                <a
-                v-if="record.result_file_url"
-                :href="record.result_file_url"
-                target="_blank"
-                class="text-emerald-700 font-medium"
-                >
-                📄 View
-                </a>
-                <span v-else class="text-gray-400">—</span>
-            </template>
-            </Table.Column>
-
-            <!-- DATE -->
-            <Table.Column title="Processed At" width="180">
-            <template #default="{ record }">
-                {{ new Date(record.processed_at).toLocaleString() }}
-            </template>
-            </Table.Column>
-        </Table>
-        </Tabs.TabPane>
+    <!-- DATE -->
+    <Table.Column title="Processed At" width="180">
+      <template #default="{ record }">
+        {{ new Date(record.processed_at).toLocaleString() }}
+      </template>
+    </Table.Column>
+  </Table>
+</Tabs.TabPane>
 
 
       </Tabs>
