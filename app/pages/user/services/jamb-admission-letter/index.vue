@@ -338,7 +338,7 @@ onMounted(fetchRequests)
       v-model:visible="showModal"
       title="New JAMB Request"
       :width="600"
-      :confirm-loading="submitting"
+      :confirm-loading="preparingConfirmation"
       ok-text="Submit"
       cancel-text="Cancel"
       @ok="prepareConfirmation"

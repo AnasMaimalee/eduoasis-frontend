@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { message, Table, Button, Input, Typography, Tag, Modal, Form } from 'ant-design-vue'
+import ServiceConfirmModal from '@/components/user/ServiceConfirmModal.vue'
 import dayjs from 'dayjs'
 
 definePageMeta({
@@ -113,12 +114,56 @@ const fetchRequests = async () => {
   }
 }
 
+
 const submitting = ref(false)
 
-/* ===================== SUBMIT ===================== */
+const showConfirmModal = ref(false)
+
+const preparingConfirmation = ref(false) // Loader while preparing modal
+const submittingRequest = ref(false)     // Loader while submitting
+const confirming = ref(false)    
+
+/* ===================== CONFIRMATION DATA ===================== */
+const serviceName = ref('')
+const serviceAmount = ref(0)
+const walletBalance = ref(0)
+const SERVICE_NAME = 'Jamb Original Result'
+
+/* ===================== PREPARE CONFIRMATION ===================== */
+const prepareConfirmation = async () => {
+  try {
+    preparingConfirmation.value = true
+
+    // Fetch wallet
+    const walletRes = await $api('/wallet', { method: 'GET' })
+    walletBalance.value = Number(walletRes.balance)
+
+    // Fetch services
+    const servicesRes = await $api('/services', { method: 'GET' })
+    const services = servicesRes.data
+    const service = services.find((s: any) => s.name === SERVICE_NAME)
+
+    if (!service) {
+      message.error('Service not configured')
+      return
+    }
+
+    serviceName.value = service.name
+    serviceAmount.value = Number(service.price)
+
+    showConfirmModal.value = true
+  } catch (e) {
+    console.error('Prepare confirmation error:', e)
+    message.error('Unable to prepare confirmation')
+  } finally {
+    preparingConfirmation.value = false
+  }
+}
+
+/* ===================== SUBMIT REQUEST ===================== */
 const submitRequest = async () => {
   try {
-    submitting.value = true
+    submittingRequest.value = true
 
     await $api('/services/jamb-result', {
       method: 'POST',
@@ -126,6 +171,8 @@ const submitRequest = async () => {
     })
 
     message.success('Request submitted successfully')
+
+    showConfirmModal.value = false
     showModal.value = false
 
     Object.assign(form.value, {
@@ -135,18 +182,14 @@ const submitRequest = async () => {
       profile_code: ''
     })
 
-    pagination.value.current = 1
     fetchRequests()
   } catch (e: any) {
-    message.error(
-      e?.data?.message ||
-      e?.response?.data?.message ||
-      'Submission failed'
-    )
+    message.error(e?.data?.message || 'Submission failed')
   } finally {
-    submitting.value = false
+    submittingRequest.value = false
   }
 }
+
 
 /* ===================== EVENTS ===================== */
 const handleTableChange = (pagConfig) => {
@@ -297,10 +340,10 @@ onMounted(fetchRequests)
       v-model:visible="showModal"
       title="New JAMB Request"
       :width="600"
-      :confirm-loading="submitting"
+      :confirm-loading="preparingConfirmation"
       ok-text="Submit"
       cancel-text="Cancel"
-      @ok="submitRequest"
+       @ok="prepareConfirmation"
       class="half-screen-modal"
     >
       <Form ref="formRef" :model="form" layout="vertical">
@@ -322,6 +365,17 @@ onMounted(fetchRequests)
       </Form>
     </Modal>
   </div>
+   <!-- Confirmation Modal -->
+    <ServiceConfirmModal
+      :visible="showConfirmModal"
+      :service-name="serviceName"
+      :amount="serviceAmount"
+      :wallet-balance="walletBalance"
+      :loading="submittingRequest"
+      :preparing="preparingConfirmation"
+      @confirm="submitRequest"
+      @cancel="showConfirmModal = false"
+    />
 </template>
 <style scoped>
 /* 🔥 FULL SCROLLABLE TABLE + COLORS */
