@@ -326,15 +326,7 @@ onMounted(async () => {
               Page {{ pagination.current }} of {{ Math.ceil(pagination.total / pagination.pageSize) }}
             </Typography.Text>
           </div>
-          <Button 
-            type="primary" 
-            @click="refreshAll" 
-            :loading="loading || walletLoading"
-            class="px-4 sm:px-6 h-12 font-semibold shadow-lg flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl w-full sm:w-auto"
-            size="large"
-          >
-            <ReloadOutlined /> Refresh
-          </Button>
+         
         </div>
 
         <!-- Mobile-First Filters -->
@@ -387,12 +379,21 @@ onMounted(async () => {
             <Button 
               type="primary" 
               ghost 
-              size="large" 
+              size="smaill" 
               @click="exportPdf" 
               class="!h-12 px-4 sm:px-6 rounded-xl shadow-sm border-emerald-300 w-full sm:w-auto"
             >
               <FilePdfOutlined /> PDF
             </Button>
+             <Button 
+            type="primary" 
+            @click="refreshAll" 
+            :loading="loading || walletLoading"
+            class="px-4 sm:px-6 h-12 font-semibold shadow-lg flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl w-full sm:w-auto"
+            size="large"
+          >
+            <ReloadOutlined /> Refresh
+          </Button>
           </div>
         </div>
 

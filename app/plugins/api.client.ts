@@ -2,7 +2,7 @@ export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: 'https://haven-questions-planets-pizza.trycloudflare.com/api',
+    baseURL: 'https://complexity-worker-creation-several.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {

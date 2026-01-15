@@ -1,4 +1,4 @@
-// stores/auth.ts - ✅ FIXED COMPLETE VERSION (No persistedState error)
+// stores/auth.ts
 import { defineStore } from 'pinia'
 
 export const useAuthStore = defineStore('auth', {
@@ -10,9 +10,8 @@ export const useAuthStore = defineStore('auth', {
     error: '' as string,
   }),
 
-  // ✅ FIXED: Simple persist config (no persistedState reference)
   persist: {
-    pick: ['token', 'user', 'menus'], // Works with pinia-plugin-persistedstate/nuxt module
+    pick: ['token', 'user', 'menus'],
   },
 
   getters: {
@@ -25,10 +24,42 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+   
+    normalizeMenus(rawMenus: any[]) {
+      console.log('🔧 RAW API menus:', rawMenus); // DEBUG
+      
+      return (rawMenus || []).map((menu, index) => {
+        const normalizedMenu = {
+          label: menu.title || menu.label || menu.name || `Menu ${index + 1}`,
+          key: menu.route || menu.key || menu.title?.toLowerCase().replace(/\s+/g, '-') || `menu-${index}`,
+          icon: menu.icon || 'BoxPlotOutlined',
+          children: undefined as any[]
+        };
+
+        // Handle children (CBT Management etc.)
+        if (menu.children && Array.isArray(menu.children) && menu.children.length > 0) {
+          normalizedMenu.children = menu.children.map((child: any, childIndex: number) => ({
+            label: child.title || child.label || child.name || `Child ${childIndex + 1}`,
+            key: child.route || child.key || child.title?.toLowerCase().replace(/\s+/g, '-') || `child-${childIndex}`,
+            icon: child.icon || 'BoxPlotOutlined',
+          }));
+        }
+
+        console.log(`✅ Normalized menu ${index}:`, normalizedMenu); // DEBUG
+        return normalizedMenu;
+      });
+    },
+
+
+
+
+    /* =====================================================
+     * 🔐 LOGIN
+     * ===================================================== */
     async login(credentials: { email: string; password: string }) {
       this.loading = true
       this.error = ''
-      
+
       try {
         const { $api } = useNuxtApp()
         const res = await $api('/auth/login', {
@@ -36,15 +67,16 @@ export const useAuthStore = defineStore('auth', {
           body: credentials,
         })
 
-        // ✅ NORMALIZED: Handle both nested & flat responses
         this.token = res.token
         this.user = res.user || res.me?.user || res.data?.user
-        this.menus = res.menus || res.me?.menus || res.data?.menus || []
-        
+
+        const rawMenus = res.menus || res.me?.menus || res.data?.menus || []
+        this.menus = this.normalizeMenus(rawMenus)
+
         console.log('✅ Login success:', {
           hasUser: !!this.user,
           userRole: this.userRole,
-          menusCount: this.menus.length
+          menusCount: this.menus.length,
         })
 
         return res
@@ -57,30 +89,30 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // ✅ FIXED: Match login response structure exactly
+    /* =====================================================
+     * 👤 FETCH USER (/me)
+     * ===================================================== */
     async fetchUser() {
       console.log('🔍 fetchUser called, token exists:', !!this.token)
-      
-      if (!this.token) {
-        console.log('❌ No token, skipping fetchUser')
-        return
-      }
+
+      if (!this.token) return
 
       const { $api } = useNuxtApp()
-      
+
       try {
         const res = await $api('/me')
         console.log('📡 /me raw response:', res)
 
-        // ✅ NORMALIZED: Handle ALL possible API response structures
         this.user = res.user || res.me?.user || res.data?.user || res
-        this.menus = res.menus || res.me?.menus || res.data?.menus || []
-        
+
+        const rawMenus = res.menus || res.me?.menus || res.data?.menus || []
+        this.menus = this.normalizeMenus(rawMenus)
+
         console.log('✅ fetchUser success:', {
           hasUser: !!this.user,
           userRole: this.userRole,
           roles: this.user?.roles,
-          menusCount: this.menus.length
+          menusCount: this.menus.length,
         })
       } catch (err: any) {
         console.error('❌ fetchUser failed:', err?.status, err?.data)
@@ -88,17 +120,22 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    /* =====================================================
+     * 🔐 LOGOUT
+     * ===================================================== */
     logout() {
       console.log('🔐 Logging out...')
-      this.$reset()  // Clears everything
+      this.$reset()
     },
 
-    // ✅ BONUS: Auto-refresh if token exists but user missing
+    /* =====================================================
+     * 🔁 ENSURE USER
+     * ===================================================== */
     async ensureUserLoaded() {
       if (this.token && !this.user) {
         await this.fetchUser()
       }
       return this.isAuthenticated
-    }
+    },
   },
 })

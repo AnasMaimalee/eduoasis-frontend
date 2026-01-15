@@ -7,11 +7,11 @@ import {
   LeftOutlined, RightOutlined, UserOutlined, SettingOutlined, LogoutOutlined, 
   DashboardOutlined, WalletOutlined, BankOutlined, UserOutlined as UserIcon,
   TeamOutlined, SettingOutlined as SettingIcon, AppstoreOutlined,
-  FileSearchOutlined, FileTextOutlined, IdcardOutlined, CheckCircleOutlined,
-  BellOutlined, BoxPlotOutlined
+  FileSearchOutlined, FileTextOutlined, IdcardOutlined, CheckCircleOutlined,BookOutlined,FormOutlined,
+  BellOutlined, BoxPlotOutlined, ClockCircleOutlined,BarChartOutlined,PlayCircleOutlined
 } from '@ant-design/icons-vue'
 
-const pageLoading = ref(true)
+
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -30,21 +30,7 @@ onMounted(() => {
   })
 })
 
-onMounted(() => {
-  setTimeout(() => {
-    pageLoading.value = false
-  }, 300) // small delay for smooth UX
-})
 
-watch(
-  () => route.fullPath,
-  () => {
-    pageLoading.value = true
-    setTimeout(() => {
-      pageLoading.value = false
-    }, 400)
-  }
-)
 
 const iconComponents: Record<string, any> = {
   'DashboardOutlined': DashboardOutlined,
@@ -60,6 +46,11 @@ const iconComponents: Record<string, any> = {
   'CheckCircleOutlined': CheckCircleOutlined,
   'BellOutlined': BellOutlined,
   'BoxPlotOutlined': BoxPlotOutlined,
+  'BookOutlined': BookOutlined,
+  'FormOutlined' : FormOutlined,
+  'ClockCircleOutlined' : ClockCircleOutlined,
+  'BarChartOutlined' : BarChartOutlined,
+  'PlayCircleOutlined' : PlayCircleOutlined
 }
 
 const firstName = computed(() => auth.user?.name?.split(' ')[0] || 'Admin')
@@ -67,17 +58,39 @@ const currentRoute = computed(() => route.path)
 const currentPageTitle = computed(() => (route.meta?.title as string) || 'Dashboard')
 const menus = computed(() =>
   (auth.menus || []).map((menu: any) => ({
-    title: menu.name,
-    route: menu.route,
+    title: menu.label || menu.title || menu.name || 'Untitled',
+    route: menu.route || menu.key,  // ✅ Add route
     icon: menu.icon || 'BoxPlotOutlined',
+    key: menu.route || menu.key || menu.title?.toLowerCase().replace(/\s+/g, '-'),  // ✅ Add key
+    children: menu.children
+      ? menu.children.map((child: any) => ({
+          title: child.label || child.title || child.name || 'Submenu',
+          route: child.route || child.key,  // ✅ Add route
+          key: child.route || child.key || child.title?.toLowerCase().replace(/\s+/g, '-'),  // ✅ Add key
+          icon: child.icon || 'BoxPlotOutlined',
+        }))
+      : null,
   }))
 )
 
-const navigate = (path: string) => {
-  if (route.path !== path) {
-    router.push(path)
-    // Close sidebar on mobile after clicking a menu
-    if (isMobile.value) sidebarOpen.value = false
+
+const navigate = async (menuPath: string) => {
+  // Prevent navigation if already on page
+  if (route.path === menuPath) return
+  
+  // Close mobile sidebar first
+  if (isMobile.value) {
+    sidebarOpen.value = false
+    await nextTick() // Wait for animation
+  }
+  
+  // Check if backend route exists in Vue Router
+  try {
+    await router.push(menuPath)
+  } catch (error) {
+    // If Vue Router can't find route, prevent full reload
+    console.warn('Route not found in Vue Router:', menuPath)
+    return false
   }
 }
 
@@ -101,20 +114,14 @@ const toggleSidebar = () => {
     collapsed.value = !collapsed.value
   }
 }
+
+const pageLoading = ref(false)
+
 </script>
 
 <template>
   <div class="flex h-screen overflow-hidden">
     <!-- FULL PAGE LOADER -->
-    <div
-      v-if="pageLoading"
-      class="fixed inset-0 z-[9998] bg-white/70 backdrop-blur-md flex items-center justify-center"
-    >
-      <a-spin size="large" />
-    </div>
-
-
-    <!-- Full-page loader overlay -->
   <div
     v-if="loggingOut"
     class="fixed inset-0 z-[9999] bg-black/30 flex items-center justify-center backdrop-blur-sm"
@@ -173,41 +180,64 @@ const toggleSidebar = () => {
         </div>
       </div>
 
-      <!-- Menu Items -->
-      <div class="flex-1 overflow-y-auto py-6 px-2">
-        <a-menu
-          theme="light"
-          mode="inline"
-          :inline-collapsed="collapsed"
-          :selected-keys="[currentRoute]"
-          class="border-none bg-transparent"
+    <div class="flex-1 overflow-y-auto py-6 px-2">
+  <a-menu
+    mode="inline"
+    :inline-collapsed="collapsed"
+    :selected-keys="[currentRoute]"
+    class="border-none bg-transparent"
+  >
+    <template v-for="menu in menus" :key="menu.key || menu.route || menu.title">
+      
+      <!-- SUBMENU (CBT Management) -->
+      <a-sub-menu 
+        v-if="menu.children && menu.children.length" 
+        :key="menu.key || menu.route || menu.title"
+      >
+        <template #title>
+          <div class="flex items-center gap-4">
+            <component
+              :is="iconComponents[menu.icon] || BoxPlotOutlined"
+              class="w-6 h-6 text-emerald-600"
+            />
+            <span v-if="!collapsed">{{ menu.title }}</span> <!-- ✅ title -->
+          </div>
+        </template>
+        <a-menu-item
+          v-for="child in menu.children"
+          :key="child.key || child.route || child.title"
+          @click="navigate(child.route || child.key || child.title)"
         >
-          <a-menu-item
-            v-for="menu in menus"
-            :key="menu.route"
-            @click="navigate(menu.route)"
-            class="mx-3 mb-2 rounded-2xl px-4 py-3 transition-all duration-300 hover:shadow-lg group border border-emerald-100/50 hover:border-emerald-200/80"
-            :class="[
-              currentRoute === menu.route 
-                ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-700 shadow-emerald-200/50 border-emerald-300 font-semibold' 
-                : 'hover:bg-emerald-50/80 hover:text-emerald-700 hover:shadow-emerald-100/50'
-            ]"
-          >
-            <a-tooltip :title="collapsed ? menu.title : ''" placement="right" :mouse-enter-delay="0.3">
-              <div class="flex items-center gap-4">
-                <component
-                  :is="iconComponents[menu.icon] || BoxPlotOutlined"
-                  class="w-7 h-7 flex-shrink-0 transition-colors duration-300"
-                  :class="currentRoute === menu.route ? 'text-emerald-600 shadow-md' : 'text-emerald-500/70 group-hover:text-emerald-600'"
-                />
-                <span v-if="!collapsed" class="text-base font-medium truncate tracking-wide">
-                  {{ menu.title }}
-                </span>
-              </div>
-            </a-tooltip>
-          </a-menu-item>
-        </a-menu>
-      </div>
+          <div class="flex items-center gap-4">
+            <component
+              :is="iconComponents[child.icon] || BoxPlotOutlined"
+              class="w-5 h-5 text-emerald-500"
+            />
+            <span>{{ child.title }}</span> <!-- ✅ title -->
+          </div>
+        </a-menu-item>
+      </a-sub-menu>
+
+      <!-- REGULAR MENU ITEM (Dashboard, Wallet, etc.) -->
+      <a-menu-item
+        v-else
+        :key="menu.key || menu.route || menu.title"
+        @click="navigate(menu.route || menu.key || menu.title)"
+      >
+        <div class="flex items-center gap-4">
+          <component
+            :is="iconComponents[menu.icon] || BoxPlotOutlined"
+            class="w-6 h-6 text-emerald-600"
+          />
+          <span v-if="!collapsed">{{ menu.title }}</span> <!-- ✅ title -->
+        </div>
+      </a-menu-item>
+
+    </template>
+  </a-menu>
+</div>
+
+
 
       <!-- Footer -->
       <div class="p-6 border-t border-emerald-100/50 mt-auto">
@@ -268,8 +298,8 @@ const toggleSidebar = () => {
       </header>
 
       <!-- Page Content -->
-      <main class="flex-1 overflow-y-auto p-6 lg:p-10 min-h-[calc(100vh-5rem)]">
-        <slot />
+      <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+          <slot />
       </main>
     </div>
   </div>

@@ -242,7 +242,7 @@ onUnmounted(() => {
                     <div class="text-3xl font-black bg-gradient-to-r from-emerald-500 via-green-500 to-blue-500 bg-clip-text text-transparent mb-8">
                       {{ s.price }}
                     </div>
-                    <NuxtLink to="/register" class="btn-primary-gradient w-full py-4 font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+                    <NuxtLink to="/register" class="btn-primary-gradient w-full py-4 px-3 font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all border rounded-full text-white duration-300">
                       Get Service Now →
                     </NuxtLink>
                   </div>
