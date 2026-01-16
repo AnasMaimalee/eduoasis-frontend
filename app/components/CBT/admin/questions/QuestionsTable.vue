@@ -223,7 +223,7 @@ const resetUpload = async () => {
     <Modal
       v-model:visible="showUploadModal"
       title="📤 Upload Questions (CSV)"
-      :width="600"
+      :width="800"
       :confirm-loading="uploading"
       ok-text="🚀 Upload"
       :ok-button-props="{
