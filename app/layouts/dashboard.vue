@@ -8,7 +8,7 @@ import {
   DashboardOutlined, WalletOutlined, BankOutlined, UserOutlined as UserIcon,
   TeamOutlined, SettingOutlined as SettingIcon, AppstoreOutlined,
   FileSearchOutlined, FileTextOutlined, IdcardOutlined, CheckCircleOutlined,BookOutlined,FormOutlined,
-  BellOutlined, BoxPlotOutlined, ClockCircleOutlined,BarChartOutlined,PlayCircleOutlined
+  BellOutlined, BoxPlotOutlined, ClockCircleOutlined,BarChartOutlined,PlayCircleOutlined,TrophyOutlined
 } from '@ant-design/icons-vue'
 
 
@@ -50,7 +50,8 @@ const iconComponents: Record<string, any> = {
   'FormOutlined' : FormOutlined,
   'ClockCircleOutlined' : ClockCircleOutlined,
   'BarChartOutlined' : BarChartOutlined,
-  'PlayCircleOutlined' : PlayCircleOutlined
+  'PlayCircleOutlined' : PlayCircleOutlined,
+  'TrophyOutlined': TrophyOutlined
 }
 
 const firstName = computed(() => auth.user?.name?.split(' ')[0] || 'Admin')
