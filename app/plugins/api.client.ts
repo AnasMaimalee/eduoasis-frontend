@@ -2,7 +2,7 @@ export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: 'https://complexity-worker-creation-several.trycloudflare.com/api',
+    baseURL: 'https://bicycle-ice-printer-collectibles.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {
