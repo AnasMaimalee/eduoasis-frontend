@@ -60,10 +60,12 @@ onMounted(fetchSettings)
 
 <template>
   <div class="p-4 sm:p-6 lg:p-8 space-y-8 w-full">
-    <!-- Header -->
+   <!-- Header -->
     <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 sm:p-8 rounded-2xl shadow-2xl text-white">
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 max-w-7xl mx-auto">
-        <div class="flex items-center gap-4 lg:gap-6">
+      <div class="flex flex-col lg:flex-row lg:items-center gap-6 max-w-7xl">
+        
+        <!-- Left Content - Title & Description -->
+        <div class="flex items-center gap-4 lg:gap-6 flex-1">
           <div class="p-3 sm:p-4 lg:p-5 bg-white/20 rounded-2xl shadow-lg backdrop-blur-sm">
             <span class="text-2xl sm:text-3xl lg:text-4xl">⚙️</span>
           </div>
@@ -72,14 +74,21 @@ onMounted(fetchSettings)
             <p class="text-lg sm:text-xl opacity-90 mt-1">Configure exam structure, timing & pricing</p>
           </div>
         </div>
-        <button 
-          @click="openModal"
-          class="bg-white text-emerald-600 hover:bg-emerald-50 font-black shadow-2xl px-8 py-4 h-auto text-lg flex items-center gap-2 rounded-xl transition-all duration-200 hover:scale-105"
-        >
-          <span>✏️ Edit Settings</span>
-        </button>
+
+        <!-- Right Button - Always End Aligned -->
+        <div class="mt-4 lg:mt-0 lg:flex-none">
+          <button 
+            @click="openModal"
+            class="bg-white ml-auto text-emerald-600 hover:bg-emerald-50 font-black shadow-2xl px-8 py-4 text-lg flex items-center gap-2 rounded-xl transition-all duration-200 hover:scale-105 whitespace-nowrap"
+          >
+            <span>✏️ Edit Settings</span>
+          </button>
+        </div>
+
       </div>
     </div>
+
+
 
     <!-- Summary Cards -->
     <CbtSettingsSummary :settings="settings" />

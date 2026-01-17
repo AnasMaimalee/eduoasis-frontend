@@ -299,11 +299,9 @@ const pageLoading = ref(false)
       </header>
 
       <!-- Page Content -->
-      <ConfigProvider :prefix-cls="'ant-'">
         <main class="flex-1 overflow-y-auto p-6 lg:p-10">
             <slot />
         </main>
-      </ConfigProvider>  
     </div>
   </div>
 </template>
