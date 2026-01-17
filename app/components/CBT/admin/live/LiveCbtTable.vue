@@ -80,12 +80,12 @@ const refreshData = () => {
       <Table.Column title="Student" width="280" fixed="left">
         <template #default="{ record }">
           <div class="flex items-center gap-3 p-2 -m-2 rounded-lg hover:bg-gray-50">
-            <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+            <div class="w-12 h-12  bg-emerald-600 rounded-full flex items-center justify-center shadow-md">
               <UserOutlined class="text-white text-xl" />
             </div>
             <div class="min-w-0 flex-1">
               <div class="font-bold text-sm text-gray-900 truncate" :title="record.user?.name">
-                {{ record.user?.name || 'Unknown Student' }}
+                {{ record.user?.name || 'Unknown User' }}
               </div>
               <div class="text-xs text-gray-500 truncate" :title="record.user?.email">
                 {{ record.user?.email || '-' }}
