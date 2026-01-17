@@ -25,7 +25,7 @@ const emit = defineEmits<{
     :data-source="exams"
     row-key="id"
     :pagination="{ pageSize: 10 }"
-    class="rounded-xl shadow-sm overflow-hidden"
+    class="rounded-xl shadow-sm overflow-hidden live-table"
   >
     <!-- Candidate -->
     <a-table-column key="candidate" title="Candidate">
@@ -117,3 +117,20 @@ const emit = defineEmits<{
     </a-table-column>
   </a-table>
 </template>
+
+<style scoped>
+.live-table :deep(.ant-table-thead > tr > th) {
+  background-color: #10b981; /* Emerald green */
+  color: #ffffff;             /* White text */
+  font-weight: 600;
+  text-align: center;
+}
+
+.live-table :deep(.ant-table-tbody tr) {
+  @apply border-b border-gray-100;
+}
+
+.live-table :deep(.ant-table-tbody tr:hover) {
+  @apply bg-emerald-50/70 shadow-sm;
+}
+</style>

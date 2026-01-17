@@ -67,7 +67,6 @@ onMounted(() => fetchLeaderboard(1))
 
 <template>
   <div class="p-4 sm:p-6 space-y-6 w-full ml-0">
-    <LeaderboardHeader :total="pagination.total" @refresh="fetchLeaderboard(pagination.current)" />
     
     <div v-if="loading" class="text-center py-12">
       <LeaderboardLoading />

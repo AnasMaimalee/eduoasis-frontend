@@ -53,13 +53,6 @@ onMounted(() => {
 <template>
   <div class="w-full border border-emerald-200 rounded-2xl shadow-xl overflow-hidden bg-white">
     
-    <!-- Header -->
-    <div class="bg-emerald-600 px-4 py-4 sm:px-8 sm:py-6 border-b border-emerald-700">
-      <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-3">
-        🏆 TOP RANKINGS
-      </h2>
-    </div>
-
     <!-- MOBILE: Cards -->
     <div v-if="isMobile" class="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
       <div 
