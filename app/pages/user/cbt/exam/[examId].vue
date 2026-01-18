@@ -20,6 +20,7 @@ const examId = route.params.examId as string
 /* ---------------- STATE ---------------- */
 const exam = ref<{ questions: any[] }>({ questions: [] })
 const activeSubject = ref('') // ✅ NEVER null
+const submitting = ref(false) // loader state
 
 /* ---------------- SUBJECTS ---------------- */
 const subjects = computed<string[]>(() => {
@@ -49,45 +50,44 @@ async function fetchExam() {
 
 /* ---------------- SUBMIT ---------------- */
 async function submitExam() {
+  submitting.value = true
   try {
-    const answers = exam.value.questions.map(q => ({
-      question_id: q.question_id,
-      selected_option: q.selected_option,
-    }))
-
     await $api(`/cbt/user/exam/${examId}/submit`, {
       method: 'POST',
-      body: { answers },
     })
 
     message.success('Exam submitted successfully')
     router.push(`/user/cbt/result/${examId}`)
-  } catch (err) {
-    console.error(err)
+  } catch (e) {
     message.error('Failed to submit exam')
+    console.error(e)
+  } finally {
+    submitting.value = false
   }
 }
 
-
 onMounted(fetchExam)
 </script>
+
 <template>
   <div class="p-4">
-   <ExamHeader
-        v-if="subjects.length && activeSubject"
-        :subjects="subjects"
-        :exam-id="examId"
-        v-model:activeSubject="activeSubject"
-        @time-up="submitExam"
-        />
+    <!-- EXAM HEADER -->
+    <ExamHeader
+      v-if="subjects.length && activeSubject"
+      :subjects="subjects"
+      :exam-id="examId"
+      v-model:activeSubject="activeSubject"
+      @time-up="submitExam"
+    />
 
-
+    <!-- QUESTIONS -->
     <div v-if="currentQuestions.length">
       <QuestionCard
-        v-for="q in currentQuestions"
+        v-for="(q, index) in currentQuestions"
         :key="q.question_id"
         :question="q"
         :exam-id="examId"
+        :number="index + 1"
       />
     </div>
 
@@ -95,8 +95,15 @@ onMounted(fetchExam)
       No questions for this subject.
     </div>
 
+    <!-- SUBMIT BUTTON -->
     <div class="text-center mt-8">
-      <a-button type="primary" @click="submitExam">
+      <a-button
+        type="primary"
+        class="!bg-emerald-500 !border-emerald-500"
+        :loading="submitting"
+        :disabled="submitting"
+        @click="submitExam"
+      >
         Submit Exam
       </a-button>
     </div>

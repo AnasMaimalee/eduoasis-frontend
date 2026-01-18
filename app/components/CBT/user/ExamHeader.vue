@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Tabs, Button } from 'ant-design-vue'
 
-/* ---------------- PROPS & EMITS ---------------- */
 const props = defineProps<{
   examId: string
   subjects: string[]
@@ -16,52 +15,37 @@ const emit = defineEmits<{
 
 const { $api } = useNuxtApp()
 
-/* ---------------- TIMER STATE ---------------- */
-const remaining = ref<number>(0)
+/* ---------------- STATE ---------------- */
+const remainingSeconds = ref(0)
 const locked = ref(false)
+const localSubject = ref(props.activeSubject)
 let interval: any = null
 
-/* ---------------- SUBJECT STATE ---------------- */
-const localSubject = ref(props.activeSubject)
+/* ---------------- SUBJECT SYNC ---------------- */
+watch(() => props.activeSubject, v => (localSubject.value = v))
+watch(localSubject, v => emit('update:activeSubject', v))
 
-/* keep parent + local in sync */
-watch(
-  () => props.activeSubject,
-  v => (localSubject.value = v)
-)
-
-watch(localSubject, v => {
-  emit('update:activeSubject', v)
+/* ---------------- TIME FORMAT ---------------- */
+const formattedTime = computed(() => {
+  const m = Math.floor(remainingSeconds.value / 60)
+  const s = remainingSeconds.value % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 })
-
-/* ---------------- FORMAT TIME ---------------- */
-const formatTime = (seconds: number) => {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
 
 /* ---------------- FETCH META ---------------- */
 onMounted(async () => {
   try {
     const res = await $api(`/cbt/user/exam/${props.examId}/meta`)
-
-    remaining.value = Number(res.time_remaining)
-
-    if (isNaN(remaining.value)) {
-      console.error('Invalid time_remaining', res)
-      remaining.value = 0
-      return
-    }
+    remainingSeconds.value = Number(res.time_remaining) || 0
 
     interval = setInterval(() => {
-      remaining.value--
-
-      if (remaining.value <= 0) {
-        remaining.value = 0
+      if (remainingSeconds.value <= 0) {
+        remainingSeconds.value = 0
         locked.value = true
         clearInterval(interval)
         emit('time-up')
+      } else {
+        remainingSeconds.value--
       }
     }, 1000)
   } catch (e) {
@@ -69,39 +53,43 @@ onMounted(async () => {
   }
 })
 
-onUnmounted(() => {
-  if (interval) clearInterval(interval)
-})
+onUnmounted(() => interval && clearInterval(interval))
 
-/* ---------------- TABS DATA ---------------- */
+/* ---------------- TABS ---------------- */
 const tabSubjects = computed(() =>
-  props.subjects.map(s => ({
-    id: s,
-    name: s,
-  }))
+  props.subjects.map(s => ({ id: s, name: s }))
 )
 </script>
 
 <template>
-  <div class="sticky top-0 bg-white z-50 shadow-md p-4 mb-4 rounded-lg">
-    <!-- TOP BAR -->
-    <div class="flex justify-between items-center mb-4">
-      <div class="text-xl font-bold text-green-600">
-        ⏱ Time Left: {{ formatTime(remaining) }}
+  <div class="sticky top-0 z-50 mb-4 rounded-xl bg-emerald-500 shadow-md">
+
+    <!-- HEADER -->
+    <div class="flex justify-between items-center px-4 py-3 text-white">
+      <div class="text-sm sm:text-lg font-bold">
+        ⏱ Time Left: {{ formattedTime }}
       </div>
 
-      <Button danger :disabled="locked" @click="$emit('time-up')">
+      <Button
+        danger
+        size="small"
+        :disabled="locked"
+        @click="$emit('time-up')"
+      >
         Submit Exam
       </Button>
     </div>
 
     <!-- SUBJECT TABS -->
-    <Tabs v-model:activeKey="localSubject">
-      <Tabs.TabPane
-        v-for="s in tabSubjects"
-        :key="s.id"
-        :tab="s.name"
-      />
-    </Tabs>
+    <div class="bg-white rounded-b-xl px-2 pt-2">
+      <Tabs v-model:activeKey="localSubject">
+        <Tabs.TabPane
+          v-for="s in tabSubjects"
+          :key="s.id"
+          :tab="s.name"
+        />
+      </Tabs>
+    </div>
+
   </div>
 </template>
