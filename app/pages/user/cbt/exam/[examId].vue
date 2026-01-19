@@ -2,8 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
-import ExamHeader from '~/components/CBT/user/ExamHeader.vue'
-import QuestionCard from '~/components/CBT/user/QuestionCard.vue'
+import ExamHeader from '~/components/CBT/user/exam/ExamHeader.vue'
+import QuestionCard from '~/components/CBT/user/exam/QuestionCard.vue'
 
 definePageMeta({
   layout: 'dashboard',
@@ -71,7 +71,7 @@ async function confirmSubmit() {
     })
 
     message.success('Exam submitted successfully')
-    router.push(`/user/cbt/result/${examId}`)
+    router.push(`/user/cbt/results/${examId}`)
   } catch (e) {
     message.error('Failed to submit exam')
     console.error(e)

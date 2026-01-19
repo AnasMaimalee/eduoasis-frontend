@@ -2,7 +2,7 @@ export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: 'https://funny-continental-centres-connections.trycloudflare.com/api',
+    baseURL: 'https://zum-wear-fantasy-families.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {

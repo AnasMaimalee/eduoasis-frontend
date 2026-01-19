@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import SubjectSelector from '@/components/CBT/user/SubjectSelector.vue'
+import SubjectSelector from '~/components/CBT/user/exam/SubjectSelector.vue'
 import { message } from 'ant-design-vue'
 definePageMeta({
     layout: 'dashboard',
