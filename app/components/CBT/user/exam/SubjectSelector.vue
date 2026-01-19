@@ -72,6 +72,10 @@ const startExam = async () => {
   }
 }
 
+const progressPercent = computed(() => {
+  return (progressCount.value / 4) * 100
+})
+
 /* ---------------- LIFECYCLE ---------------- */
 onMounted(loadSubjects)
 onMounted(getExamFee)
@@ -124,12 +128,18 @@ onMounted(getExamFee)
 
         <!-- PROGRESS -->
         <div class="flex justify-center">
-          <div class="relative w-28 h-28">
+          <div
+            class="relative w-28 h-28 rounded-full flex items-center justify-center"
+            :style="{
+              background: `conic-gradient(
+                #10b981 ${progressPercent}%,
+                #d1fae5 ${progressPercent}% 100%
+              )`
+            }"
+          >
+            <!-- inner circle -->
             <div
-              class="absolute inset-0 rounded-full border-4 border-emerald-200"
-            ></div>
-            <div
-              class="absolute inset-2 bg-white rounded-full flex flex-col items-center justify-center shadow"
+              class="w-20 h-20 bg-white rounded-full flex flex-col items-center justify-center shadow"
             >
               <div class="text-3xl font-bold text-emerald-600">
                 {{ progressCount }}
@@ -138,6 +148,7 @@ onMounted(getExamFee)
             </div>
           </div>
         </div>
+
 
         <!-- START BUTTON -->
         <Button
