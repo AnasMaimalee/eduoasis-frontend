@@ -23,7 +23,16 @@ const subjectOptions = computed(() =>
       !selectedSubjects.value.includes(subject.id),
   }))
 )
-
+const examFee = ref('')
+const getExamFee = async () => {
+  try {
+    const res =  await $api('/cbt/user/exam-fee')
+    examFee.value = res.exam_fee
+    console.log(examFee, "Exam Feee")
+  } catch {
+    message.error('Failed to Load Subjects')
+  }
+}
 /* ---------------- METHODS ---------------- */
 const loadSubjects = async () => {
   loadingSubjects.value = true
@@ -65,6 +74,7 @@ const startExam = async () => {
 
 /* ---------------- LIFECYCLE ---------------- */
 onMounted(loadSubjects)
+onMounted(getExamFee)
 </script>
 
 <template>
@@ -139,7 +149,7 @@ onMounted(loadSubjects)
           @click="startExam"
           class="h-16 text-xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl"
         >
-          {{ loadingExamStart ? 'Starting...' : 'Pay ₦1,000 & Start Exam' }}
+          {{ loadingExamStart ? 'Starting...' : `Pay ₦${examFee} & Start Exam` }}
         </Button>
       </div>
     </div>
