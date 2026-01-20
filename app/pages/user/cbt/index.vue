@@ -32,7 +32,9 @@ onMounted(checkOngoingExam)
 
 <template>
   <div>
-    <div v-if="loading" class="text-center p-10">Loading...</div>
+    <div v-if="loading" class="text-center p-10">
+      <a-spin class="large"></a-spin>
+    </div>
 
     <SubjectSelector
       v-else

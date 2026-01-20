@@ -8,60 +8,61 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
     'nuxt-icon',
-    'pinia-plugin-persistedstate/nuxt'
+    'pinia-plugin-persistedstate/nuxt',
   ],
+
+  // ✅ SINGLE Tailwind config (VERY IMPORTANT)
   tailwindcss: {
-    configPath: 'tailwind.config.ts', // optional if using custom config
-    viewer: false // disable viewer popup
+    cssPath: '~/assets/css/main.css',
+    configPath: 'tailwind.config.ts',
+    viewer: false,
   },
+
+  css: ['~/assets/css/main.css'],
+
   vite: {
-  server: {
-    host: true,
-    strictPort: true,
+    server: {
+      host: true,
+      strictPort: true,
+      allowedHosts: true,
 
-    // ✅ allow ngrok domain
-    allowedHosts: true,
+      fs: {
+        strict: false,
+      },
 
-    // ✅ disable filesystem restriction (required for Nuxt dev)
-    fs: {
-      strict: false
+      cors: true,
+
+      // ✅ CRITICAL FIX
+      hmr: {
+        protocol: 'wss',
+        clientPort: 443,
+        overlay: false, // ⬅️ THIS PREVENTS STUCK CSS
+      },
     },
-
-    // ✅ disable origin check (THIS IS THE MISSING PART)
-    cors: true,
-
-    // ✅ HMR fix for ngrok
-    hmr: {
-      protocol: 'wss',
-      clientPort: 443
-    }
-  }
-},
+  },
 
   nitro: {
-    host: '0.0.0.0',  // ✅ ALL interfaces
-    port: 3000
-  }, 
+    host: '0.0.0.0',
+    port: 3000,
+  },
 
   pinia: {
     autoImports: ['defineStore', 'acceptHMRUpdate', 'storeToRefs'],
   },
 
-  // ✅ SINGLE runtimeConfig BLOCK
- runtimeConfig: {
-  public: {
-     apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
-     appName: 'JAMB Portal',
-     appDescription: 'Print JAMB Original Results, Admission Letters & Check Status',
+  runtimeConfig: {
+    public: {
+      apiBase:
+        process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
+      appName: 'JAMB Portal',
+      appDescription:
+        'Print JAMB Original Results, Admission Letters & Check Status',
+    },
   },
-},
-
 
   imports: {
     dirs: ['./stores'],
   },
-
-  css: ['~/assets/css/main.css'],
 
   app: {
     head: {
@@ -69,18 +70,16 @@ export default defineNuxtConfig({
       meta: [
         {
           name: 'description',
-          content: 'Official platform to print JAMB original results, admission letters, check admission status.',
+          content:
+            'Official platform to print JAMB original results, admission letters, check admission status.',
         },
         { name: 'theme-color', content: '#1e3a8a' },
       ],
     },
   },
+
   generate: {
-    fallback: true  // Creates 404.html automatically
-  },
-  tailwindcss: {
-    cssPath: '~/assets/css/main.css',
-    configPath: 'tailwind.config.ts',
+    fallback: true,
   },
 
   compatibilityDate: '2024-12-01',

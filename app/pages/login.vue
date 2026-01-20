@@ -97,7 +97,7 @@ const handleLogin = async () => {
     class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4"
   >
     <a-card
-      title="Login to JAMB Portal"
+      title="Login to EduOasis Portal"
       class="w-full max-w-md shadow-xl rounded-xl"
     >
       <!-- 🚨 LOCK WARNING -->

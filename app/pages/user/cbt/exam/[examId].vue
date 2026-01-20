@@ -106,7 +106,7 @@ onMounted(fetchExam)
     </div>
 
     <div v-else class="text-center text-gray-500 mt-8">
-      No questions for this subject.
+      <a-spin class="large"></a-spin>
     </div>
 
     <!-- SUBMIT BUTTON -->

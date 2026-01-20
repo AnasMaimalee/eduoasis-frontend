@@ -42,7 +42,7 @@ const saveAnswer = async (selectedKey: string) => {
 </script>
 
 <template>
-  <div class="bg-white rounded-xl shadow p-4 sm:p-6 mb-6">
+  <div class="bg-white rounded-xl shadow p-4 sm:p-6 mb-6 border border-emerald-400">
     <!-- QUESTION HEADER -->
     <div class="flex items-start gap-2 mb-4">
       <span class="text-sm font-bold text-emerald-600">

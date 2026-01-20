@@ -16,10 +16,10 @@ const emit = defineEmits<{
 const { $api } = useNuxtApp()
 
 /* ---------------- STATE ---------------- */
-const remainingSeconds = ref(0)
+const remainingSeconds = ref<number>(0)
 const locked = ref(false)
 const localSubject = ref(props.activeSubject)
-let interval: any = null
+let interval: ReturnType<typeof setInterval> | null = null
 
 /* ---------------- SUBJECT SYNC ---------------- */
 watch(() => props.activeSubject, v => (localSubject.value = v))
@@ -36,16 +36,28 @@ const formattedTime = computed(() => {
 onMounted(async () => {
   try {
     const res = await $api(`/cbt/user/exam/${props.examId}/meta`)
-    remainingSeconds.value = Number(res.time_remaining) || 0
+
+    // ✅ normalize ONCE
+    remainingSeconds.value = Math.max(
+      0,
+      Math.floor(Number(res.time_remaining))
+    )
+
+    if (remainingSeconds.value === 0) {
+      locked.value = true
+      emit('time-up')
+      return
+    }
 
     interval = setInterval(() => {
-      if (remainingSeconds.value <= 0) {
-        remainingSeconds.value = 0
-        locked.value = true
-        clearInterval(interval)
-        emit('time-up')
-      } else {
+      if (remainingSeconds.value > 0) {
         remainingSeconds.value--
+      }
+
+      if (remainingSeconds.value === 0) {
+        locked.value = true
+        clearInterval(interval!)
+        emit('time-up')
       }
     }, 1000)
   } catch (e) {
@@ -53,13 +65,16 @@ onMounted(async () => {
   }
 })
 
-onUnmounted(() => interval && clearInterval(interval))
+onUnmounted(() => {
+  if (interval) clearInterval(interval)
+})
 
 /* ---------------- TABS ---------------- */
 const tabSubjects = computed(() =>
   props.subjects.map(s => ({ id: s, name: s }))
 )
 </script>
+
 
 <template>
   <div class="sticky top-0 z-50 mb-4 rounded-xl bg-emerald-500 shadow-md">

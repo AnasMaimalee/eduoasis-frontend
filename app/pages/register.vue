@@ -113,7 +113,7 @@ async function register() {
     "
   >
     <a-card
-      title="Register for JAMB Portal"
+      title="Register for EduOasis Portal"
       style="width: 100%; max-width: 480px"
     >
       <!-- ✅ FIXED: Added :model="form" and proper name props -->

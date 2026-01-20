@@ -142,6 +142,55 @@ onUnmounted(() => {
   if (slideInterval) clearInterval(slideInterval)
   if (reviewInterval) clearInterval(reviewInterval)
 })
+
+//form feedback submission 
+
+import { ref } from 'vue'
+import { message as antMessage } from 'ant-design-vue'
+
+
+/* ---------------- FORM STATE ---------------- */
+const form = ref({
+  full_name: '',
+  email: '',
+  message: ''
+})
+
+const loadingFeedback = ref(false)
+
+/* ---------------- SUBMIT HANDLER ---------------- */
+const submitFeedback = async () => {
+  if (!form.value.full_name || !form.value.email || !form.value.message) {
+    antMessage.warning('Please fill all fields')
+    return
+  }
+
+  loadingFeedback.value = true
+
+  try {
+    await $api('/feedback', {
+      method: 'POST',
+      body: {
+        full_name: form.value.full_name,
+        email: form.value.email,
+        message: form.value.message
+      }
+    })
+
+    antMessage.success('Message sent successfully')
+
+    // reset form
+    form.value = {
+      full_name: '',
+      email: '',
+      message: ''
+    }
+  } catch (error) {
+    antMessage.error('Failed to send message. Try again.')
+  } finally {
+    loadingFeedback.value = false
+  }
+}
 </script>
 
 <template>
@@ -339,36 +388,55 @@ onUnmounted(() => {
             </h2>
             <p class="text-lg text-gray-600">Have questions? Get instant help</p>
           </div>
-          <form @submit.prevent class="space-y-4">
+          <form @submit.prevent="submitFeedback" class="space-y-4">
             <div>
-              <input 
-                type="text" 
-                placeholder="Full Name" 
-                class="w-full px-4 py-3 text-base border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
+              <input
+                v-model="form.full_name"
+                type="text"
+                placeholder="Full Name"
+                class="w-full px-4 py-3 text-base border border-gray-200 rounded-xl
+                      focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
+                      transition-all duration-300"
               />
             </div>
+
             <div>
-              <input 
-                type="email" 
-                placeholder="your@email.com" 
-                class="w-full px-4 py-3 text-base border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
+              <input
+                v-model="form.email"
+                type="email"
+                placeholder="your@email.com"
+                class="w-full px-4 py-3 text-base border border-gray-200 rounded-xl
+                      focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
+                      transition-all duration-300"
               />
             </div>
+
             <div>
-              <textarea 
+              <textarea
+                v-model="form.message"
                 rows="4"
-                placeholder="Your message..." 
-                class="w-full px-4 py-3 text-base border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300 resize-vertical"
+                placeholder="Your message..."
+                class="w-full px-4 py-3 text-base border border-gray-200 rounded-xl
+                      focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
+                      transition-all duration-300 resize-vertical"
               />
             </div>
-            <button 
+
+            <button
               type="submit"
-              class="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold text-lg py-3 px-8 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
+              :loader="loadingFeedback"
+              :disabled="loadingFeedback"
+              class="w-full bg-gradient-to-r from-emerald-500 to-green-500
+                    hover:from-emerald-600 hover:to-green-600
+                    text-white font-bold text-lg py-3 px-8 rounded-xl shadow-xl
+                    hover:shadow-2xl hover:-translate-y-0.5
+                    transition-all duration-300 disabled:opacity-60"
             >
               <Icon name="heroicons:paper-airplane" class="w-5 h-5 inline mr-2" />
-              Send Message
+              {{ loadingFeedback ? 'Sending...' : 'Send Message' }}
             </button>
           </form>
+
         </div>
       </div>
     </section>
