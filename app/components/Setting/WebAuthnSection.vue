@@ -84,7 +84,7 @@ onMounted(fetchCredentials)
 </script>
 
 <template>
-  <a-card class="rounded-xl shadow-lg mt-4 max-w-2xl">
+  <a-card class="rounded-xl shadow-lg mt-4 max-w-4xl">
     <template #title>
       <div class="font-semibold text-lg">🔒 Biometric Login</div>
     </template>
