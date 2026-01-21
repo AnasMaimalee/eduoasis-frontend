@@ -172,6 +172,29 @@ watch(activeTab, async (tab) => {
   else if (tab === 'completed') await fetchCompleted()
 })
 
+const viewResult = async (record: any) => {
+  try {
+    const res = await $api(
+      `/services/jamb-admission-letter/${record.id}/download`,
+      {
+        method: 'GET',
+        responseType: 'blob', // 🔥 VERY IMPORTANT
+      }
+    )
+
+    const blob = new Blob([res], { type: res.type || 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+
+    window.open(url, '_blank')
+
+    // Optional: revoke after some time
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
+
+  } catch (err: any) {
+    message.error(err?.data?.message || 'Unable to view file')
+  }
+}
+
 onMounted(refreshAll)
 </script>
 
@@ -348,18 +371,20 @@ onMounted(refreshAll)
 
     <!-- FILE -->
     <Table.Column title="Result File" width="140" align="center">
-      <template #default="{ record }">
-        <a
-          v-if="record.result_file_url"
-          :href="record.result_file_url"
-          target="_blank"
-          class="text-emerald-700 font-medium"
-        >
-          📄 View
-        </a>
-        <span v-else class="text-gray-400">—</span>
-      </template>
-    </Table.Column>
+    <template #default="{ record }">
+      <a
+        v-if="record.result_available"
+        href="#"
+        @click.prevent="viewResult(record)"
+        class="text-emerald-700 font-medium"
+      >
+        📄 View
+      </a>
+      <span v-else class="text-gray-400">—</span>
+    </template>
+  </Table.Column>
+
+
 
     <!-- DATE -->
     <Table.Column title="Processed At" width="180">

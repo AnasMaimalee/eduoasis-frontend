@@ -52,7 +52,7 @@ const balanceAfter = computed(() => (props.walletBalance - props.amount).toFixed
       <div class="flex justify-between border-t pt-3">
         <span class="font-semibold">Balance After</span>
         <span class="font-bold" :class="Number(balanceAfter) < 0 ? 'text-red-600' : 'text-emerald-700'">
-          ₦{{ balanceAfter }}
+          ₦{{ balanceAfter.toLocaleString() }}
         </span>
       </div>
 

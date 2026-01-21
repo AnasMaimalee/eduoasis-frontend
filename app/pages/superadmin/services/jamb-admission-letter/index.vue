@@ -139,51 +139,69 @@ const handleReject = async () => {
     rejectLoading.value = false
   }
 }
+const downloadingId = ref<string | null>(null)
 
-const downloadFile = async (filePath: string, filename = 'document') => {
-  if (!filePath) {
-    message.warning('No result file available')
-    return
-  }
+const downloadFile = async (jobId: string) => {
+  if (downloadingId.value) return
+
+  downloadingId.value = jobId
+  console.log('🚀 Downloading:', jobId)
 
   try {
-    // ✅ USE $api - Laravel API Route
-    const response = await $api(`/download-storage/${filePath}`, {
-      method: 'GET',
-      responseType: 'blob', // ✅ IMPORTANT for files
-    })
+    const response = await $api.raw(
+      `/services/jamb-admission-letter/${jobId}/download`,
+      {
+        method: 'GET',
+        responseType: 'blob',
+      }
+    )
 
-    const contentType = response.headers?.['content-type'] || ''
-    const blob = new Blob([response], { type: contentType })
-    
-    // ✅ SMART FILENAME
-    let downloadFilename = `${filename}-${Date.now()}`
-    if (contentType.includes('pdf')) downloadFilename += '.pdf'
-    else if (contentType.includes('image/')) {
-      const ext = contentType.split('/')[1]?.split('+')[0] || 'png'
-      downloadFilename += `.${ext}`
-    } else {
-      const ext = filePath.split('.').pop()
-      downloadFilename += `.${ext || 'file'}`
+    // ✅ Handle authorization error from backend
+    if (response.status === 403) {
+      message.error(response._data?.message || 'You are not allowed to download this file')
+      return
     }
 
-    // ✅ DOWNLOAD
-    const url = window.URL.createObjectURL(blob)
+    // ✅ Blob
+    const blob = new Blob([response._data], {
+      type: response.headers.get('content-type') || 'application/octet-stream',
+    })
+
+    // ✅ Detect filename
+    const disposition = response.headers.get('content-disposition')
+    let filename = `jamb-admission-letter-${Date.now()}`
+
+    if (disposition && disposition.includes('filename=')) {
+      filename = disposition.split('filename=')[1].replace(/"/g, '')
+    }
+
+    // ✅ Download
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = downloadFilename
+    link.download = filename
     document.body.appendChild(link)
     link.click()
+
     document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    
-    message.success(`✅ ${downloadFilename} downloaded!`)
-    
+    URL.revokeObjectURL(url)
+
+    message.success('Download completed')
   } catch (error: any) {
-    console.error('❌ Download error:', error)
-    message.error(`❌ Download failed: ${error.message || 'Unknown error'}`)
+    console.error('Download error:', error)
+
+    // ✅ Proper error message from backend
+    const msg =
+      error?.data?.message ||
+      error?.response?._data?.message ||
+      'You are not allowed to download this file'
+
+    message.error(msg)
+  } finally {
+    downloadingId.value = null
   }
 }
+
 
 const columns = [
   { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
@@ -320,15 +338,18 @@ onMounted(fetchRequests)
 
         <!-- File Download -->
         <template #fileCell="{ record }">
-          <Button
+           <Button
             v-if="record.result_file"
             type="primary"
             size="small"
-            @click="downloadFile(record.result_file, `jamb-admission-letter-${record.registration_number || record.id}`)"
+            :loading="downloadingId === record.id"
+            @click="downloadFile(record.id)"
+            class="bg-emerald-600 hover:bg-emerald-700 border-none"
           >
-            <DownloadOutlined /> Download
+            📥 Download
           </Button>
-          <span v-else class="text-gray-400 text-sm">No file</span>
+
+          <Tag v-else color="default">Not ready</Tag>
         </template>
 
         <!-- Date -->
