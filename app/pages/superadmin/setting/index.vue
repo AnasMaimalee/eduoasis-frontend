@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
+import { CopyOutlined } from '@ant-design/icons-vue'
 
 definePageMeta({
   layout: 'dashboard',
@@ -65,7 +66,7 @@ const isSubmitDisabled = computed(() =>
   loadingState.password
 )
 
-/* -------------------- 2FA -------------------- */
+/* -------------------- 2FA FUNCTIONS -------------------- */
 const setup2FA = async (force = false) => {
   twoFaLoading.value = true
   try {
@@ -86,7 +87,7 @@ const setup2FA = async (force = false) => {
 
 const confirm2FA = async () => {
   const code = confirmCode.value.replace(/\D/g, '')
-  if (code.length !== 6) return message.error('Enter 6 digits')
+  if (code.length !== 6) return message.error('Enter exactly 6 digits')
 
   twoFaLoading.value = true
   try {
@@ -94,7 +95,7 @@ const confirm2FA = async () => {
       method: 'POST',
       body: { code }
     })
-    message.success('2FA enabled')
+    message.success('2FA enabled successfully')
     twoFaEnabled.value = true
     step.value = 'qr'
     confirmCode.value = ''
@@ -105,114 +106,117 @@ const confirm2FA = async () => {
   }
 }
 
+const formattedSecret = computed(() => {
+  if (!secret.value) return ''
+  return secret.value.match(/.{1,4}/g)?.join(' ') ?? secret.value
+})
+
 const copySecret = async () => {
   await navigator.clipboard.writeText(secret.value)
-  message.success('2FA secret copied')
+  message.success('Secret key copied!')
+}
+
+const copyRecoveryCode = async (code: string) => {
+  await navigator.clipboard.writeText(code)
+  message.success('Recovery code copied!')
+}
+
+const copyAllRecoveryCodes = async () => {
+  const all = recoveryCodes.value.join('\n')
+  await navigator.clipboard.writeText(all)
+  message.success('All recovery codes copied!')
 }
 
 onMounted(() => setup2FA())
 </script>
+
 <template>
-  <div
-    class="max-w-4xl mx-auto
-           p-3 sm:p-6
-           min-h-screen
-           space-y-4 sm:space-y-8
-           bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50"
-  >
+  <div class="max-w-4xl mx-auto p-3 sm:p-6 min-h-screen space-y-6 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50">
 
     <!-- 2FA CARD -->
-    <a-card class="rounded-xl shadow-lg">
+    <a-card class="rounded-2xl shadow-xl">
 
       <template #title>
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-emerald-100 rounded-lg">
-            🔐
-          </div>
+        <div class="flex items-start gap-3">
+          <div class="p-2 bg-emerald-100 rounded-xl text-xl">🔐</div>
           <div>
-            <p class="font-bold text-lg sm:text-xl">Two-Factor Authentication</p>
-            <p class="text-xs sm:text-sm text-gray-600">
-              Secure your account with Google Authenticator
-            </p>
+            <p class="font-black text-lg sm:text-xl">Two-Factor Authentication</p>
+            <p class="text-xs sm:text-sm text-gray-600">Protect your account with Google Authenticator</p>
           </div>
         </div>
       </template>
 
-      <!-- STEP: QR -->
-      <div v-if="step === 'qr'" class="space-y-4">
+      <!-- QR STEP -->
+      <div v-if="step === 'qr'" class="space-y-6">
 
         <!-- QR -->
         <div class="flex justify-center">
-          <div
-            class="w-56 h-56
-                   sm:w-72 sm:h-72
-                   bg-white
-                   border-2 border-dashed border-emerald-300
-                   rounded-xl
-                   flex items-center justify-center
-                   relative"
-          >
-            <div v-if="twoFaLoading" class="absolute inset-0 bg-white/80 flex items-center justify-center">
-              <div class="animate-spin h-8 w-8 border-b-2 border-emerald-500 rounded-full"></div>
+          <div class="w-56 h-56 sm:w-72 sm:h-72 bg-white border-2 border-dashed border-emerald-300 rounded-2xl flex items-center justify-center relative">
+            <div v-if="twoFaLoading" class="absolute inset-0 bg-white/80 flex items-center justify-center rounded-2xl">
+              <div class="animate-spin h-10 w-10 border-b-2 border-emerald-500 rounded-full"></div>
             </div>
-
-            <img
-              v-if="qrCode"
-              :src="qrCode"
-              class="w-full h-full object-contain"
-            />
+            <img v-if="qrCode" :src="qrCode" class="w-full h-full object-contain rounded-xl" />
           </div>
         </div>
 
-        <!-- SECRET -->
-        <div
-            v-if="secret"
-            class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 space-y-2"
-            >
-            <p class="text-xs text-indigo-700 font-medium">
-                Manual setup key
-            </p>
+        <!-- MANUAL SECRET KEY (single copy icon) -->
+        <div v-if="secret" class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 space-y-3">
+          <p class="text-xs font-semibold text-indigo-700">Manual setup key</p>
 
-            <div
-                class="bg-white border rounded-md p-3 flex items-start justify-between gap-3"
-            >
-                <p
-                class="font-mono text-xs text-gray-800 break-all leading-relaxed"
-                >
-                {{ secret }}
-                </p>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div class="bg-white border rounded-xl px-4 py-3 font-mono text-sm sm:text-base text-gray-800 break-all text-center flex-1">
+              {{ formattedSecret }}
+            </div>
 
-                <button
+            <!-- Copy icon – mobile: centered below, desktop: right side -->
+            <div class="flex justify-center sm:justify-end">
+              <a-button
+                type="text"
+                class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800"
                 @click="copySecret"
-                class="shrink-0 text-indigo-600 hover:text-indigo-800 text-xs font-medium"
-                >
-                Copy
-                </button>
-            </div>
-
-            <p class="text-[11px] text-gray-500">
-                Save this key in case you can’t scan the QR code.
-            </p>
-            </div>
-
-        <!-- RECOVERY -->
-        <div v-if="recoveryCodes.length">
-          <p class="text-sm font-semibold mb-2">Recovery Codes</p>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div
-              v-for="c in recoveryCodes"
-              :key="c"
-              class="bg-white border rounded-md p-2 text-center font-mono text-xs"
-            >
-              {{ c }}
+              >
+                <copy-outlined class="text-xl" />
+                <span class="text-sm sm:hidden">Copy key</span>
+              </a-button>
             </div>
           </div>
+
+          <p class="text-[11px] text-gray-500 text-center sm:text-left">
+            Use this key if QR scanning fails.
+          </p>
         </div>
 
-        <!-- BUTTONS -->
-        <div class="flex flex-col sm:flex-row gap-2">
+        <!-- RECOVERY CODES -->
+        <div v-if="recoveryCodes.length" class="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-semibold text-yellow-800">Recovery Codes</p>
+            <a-button type="link" size="small" @click="copyAllRecoveryCodes">
+              Copy all
+            </a-button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div
+              v-for="code in recoveryCodes"
+              :key="code"
+              class="bg-white border rounded-xl px-4 py-3 flex items-center justify-between font-mono text-sm"
+            >
+              <span class="tracking-wider">{{ code }}</span>
+              <a-button type="text" @click="copyRecoveryCode(code)">
+                <copy-outlined class="text-yellow-700 text-lg hover:text-yellow-900" />
+              </a-button>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-yellow-800 text-center">
+            ⚠️ Each code can be used once. Store securely.
+          </p>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex flex-col sm:flex-row gap-3">
           <a-button block type="primary" class="h-12" @click="setup2FA(true)">
-            Regenerate
+            Regenerate QR
           </a-button>
           <a-button block class="h-12" @click="step = 'confirm'">
             I’ve scanned it
@@ -220,9 +224,8 @@ onMounted(() => setup2FA())
         </div>
       </div>
 
-      <!-- STEP: CONFIRM -->
+      <!-- CONFIRM STEP -->
       <div v-else class="space-y-6 text-center">
-
         <p class="text-gray-700">
           Enter the 6-digit code from Google Authenticator
         </p>
@@ -230,13 +233,14 @@ onMounted(() => setup2FA())
         <a-input
           v-model:value="confirmCode"
           maxlength="6"
-          autofocus
           inputmode="numeric"
-          class="text-center text-xl font-mono tracking-widest py-3"
+          class="text-center text-xl font-mono tracking-widest py-3 border-emerald-400 focus:border-emerald-600"
         />
 
-        <div class="flex gap-2">
-          <a-button block class="h-12" @click="step = 'qr'">Back</a-button>
+        <div class="flex gap-3">
+          <a-button block class="h-12" @click="step = 'qr'">
+            Back
+          </a-button>
           <a-button
             block
             type="primary"
@@ -251,21 +255,31 @@ onMounted(() => setup2FA())
     </a-card>
 
     <!-- PASSWORD CARD -->
-    <a-card class="rounded-xl shadow-lg">
+    <a-card class="rounded-2xl shadow-xl">
       <template #title>
-        <p class="font-bold text-lg">Update Password</p>
+        <p class="font-black text-lg">🔑 Update Password</p>
       </template>
 
-      <a-form layout="vertical">
-        <a-input-password v-model:value="passwordForm.current_password" placeholder="Current password" />
-        <a-input-password v-model:value="passwordForm.new_password" placeholder="New password" />
-        <a-input-password v-model:value="passwordForm.new_password_confirmation" placeholder="Confirm password" />
+      <a-form layout="vertical" class="space-y-4">
+        <a-form-item label="Current password">
+          <a-input-password v-model:value="passwordForm.current_password" size="large" />
+        </a-form-item>
+
+        <a-form-item label="New password">
+          <a-input-password v-model:value="passwordForm.new_password" size="large" />
+        </a-form-item>
+
+        <a-form-item label="Confirm new password">
+          <a-input-password v-model:value="passwordForm.new_password_confirmation" size="large" />
+        </a-form-item>
 
         <a-button
           block
           type="primary"
-          class="h-12 mt-3"
+          size="large"
+          class="h-12"
           :disabled="isSubmitDisabled"
+          :loading="loadingState.password"
         >
           Update Password
         </a-button>
@@ -274,12 +288,14 @@ onMounted(() => setup2FA())
 
   </div>
 </template>
-:deep(.ant-card-body) {
-  padding: 12px;
-}
 
+<style scoped>
+:deep(.ant-card-body) {
+  padding: 16px;
+}
 @media (min-width: 640px) {
   :deep(.ant-card-body) {
     padding: 24px;
   }
 }
+</style>
