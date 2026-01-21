@@ -3,6 +3,7 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { CopyOutlined } from '@ant-design/icons-vue'
 import WebAuthnSection from '~/components/Setting/WebAuthnSection.vue'
+
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
@@ -45,18 +46,6 @@ const strengthScore = computed(() =>
   Object.values(passwordRules.value).filter(Boolean).length
 )
 
-const strengthLabel = computed(() => {
-  if (strengthScore.value <= 1) return 'Weak'
-  if (strengthScore.value <= 3) return 'Fair'
-  return 'Strong'
-})
-
-const strengthColor = computed(() => {
-  if (strengthScore.value <= 1) return 'bg-red-500'
-  if (strengthScore.value <= 3) return 'bg-yellow-400'
-  return 'bg-green-500'
-})
-
 const isSubmitDisabled = computed(() =>
   !passwordForm.current_password ||
   !passwordForm.new_password ||
@@ -66,7 +55,7 @@ const isSubmitDisabled = computed(() =>
   loadingState.password
 )
 
-/* -------------------- 2FA FUNCTIONS -------------------- */
+/* -------------------- 2FA FUNCTIONS (UNCHANGED) -------------------- */
 const setup2FA = async (force = false) => {
   twoFaLoading.value = true
   try {
@@ -97,7 +86,6 @@ const confirm2FA = async () => {
     })
     message.success('2FA enabled successfully')
     twoFaEnabled.value = true
-    step.value = 'qr'
     confirmCode.value = ''
   } catch (e: any) {
     message.error(e?.data?.message || 'Verification failed')
@@ -106,10 +94,32 @@ const confirm2FA = async () => {
   }
 }
 
-const formattedSecret = computed(() => {
-  if (!secret.value) return ''
-  return secret.value.match(/.{1,4}/g)?.join(' ') ?? secret.value
-})
+/* -------------------- DISABLE 2FA (NEW) -------------------- */
+const disable2FA = async () => {
+  twoFaLoading.value = true
+  try {
+    await $api('/auth/2fa/disable', { method: 'POST' })
+    message.success('2FA disabled successfully')
+
+    // reset state
+    twoFaEnabled.value = false
+    qrCode.value = ''
+    secret.value = ''
+    recoveryCodes.value = []
+    step.value = 'qr'
+
+    await setup2FA()
+  } catch (e: any) {
+    message.error(e?.data?.message || 'Failed to disable 2FA')
+  } finally {
+    twoFaLoading.value = false
+  }
+}
+
+/* -------------------- COPY HELPERS (UNCHANGED) -------------------- */
+const formattedSecret = computed(() =>
+  secret.value ? secret.value.match(/.{1,4}/g)?.join(' ') : ''
+)
 
 const copySecret = async () => {
   await navigator.clipboard.writeText(secret.value)
@@ -122,19 +132,50 @@ const copyRecoveryCode = async (code: string) => {
 }
 
 const copyAllRecoveryCodes = async () => {
-  const all = recoveryCodes.value.join('\n')
-  await navigator.clipboard.writeText(all)
+  await navigator.clipboard.writeText(recoveryCodes.value.join('\n'))
   message.success('All recovery codes copied!')
 }
 
-onMounted(() => setup2FA())
+/* -------------------- INIT -------------------- */
+onMounted(async () => {
+  const res = await $api('/auth/2fa/status')
+  twoFaEnabled.value = res.enabled
+
+  if (!twoFaEnabled.value) {
+    await setup2FA()
+  }
+})
 </script>
+
 
 <template>
   <div class="max-w-4xl p-3 sm:p-6 min-h-screen space-y-6 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50">
 
+    <!-- 2FA ENABLED STATE -->
+    <a-card
+      v-if="twoFaEnabled"
+      class="rounded-2xl shadow-xl text-center"
+    >
+      <div class="space-y-4">
+        <div class="text-4xl">✅</div>
+        <p class="font-bold text-lg">Two-Factor Authentication is Enabled</p>
+        <p class="text-gray-600 text-sm">
+          Your account is protected with Google Authenticator.
+        </p>
+
+        <a-button
+          danger
+          size="large"
+          :loading="twoFaLoading"
+          @click="disable2FA"
+        >
+          Disable 2FA
+        </a-button>
+      </div>
+    </a-card>
+
     <!-- 2FA CARD -->
-    <a-card class="rounded-2xl shadow-xl">
+    <a-card v-else class="rounded-2xl shadow-xl">
 
       <template #title>
         <div class="flex items-start gap-3">

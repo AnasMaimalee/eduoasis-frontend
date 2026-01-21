@@ -80,7 +80,11 @@ const registerDevice = async () => {
   }
 }
 
+
+
+
 onMounted(fetchCredentials)
+
 </script>
 
 <template>
