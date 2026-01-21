@@ -22,21 +22,28 @@ const loadingDevice = ref(false)
 const rulesRef = reactive({
   email: [
     { required: true, message: 'Please enter your email', trigger: 'blur' },
-    { type: 'email', message: 'Invalid email format', trigger: 'blur' },
+    {
+      validator: (_, value) => {
+        if (!value) return Promise.reject('Please enter your email')
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        return regex.test(value) ? Promise.resolve() : Promise.reject('Invalid email format')
+      },
+      trigger: 'blur',
+    },
   ],
   password: [{ required: true, message: 'Please enter your password', trigger: 'blur' }],
 })
+
 
 const { validate, validateInfos } = Form.useForm(modelRef, rulesRef)
 
 /* ---------------- REDIRECT ---------------- */
 const redirectUser = () => {
-  const role = auth.user?.role // <- notice user?.role
+  const role = auth.userRole
   if (role === 'superadmin') router.push('/dashboard/superadmin')
   else if (role === 'administrator') router.push('/dashboard/administrator')
   else router.push('/dashboard/user')
 }
-
 
 /* ---------------- LOGIN STEP 1 ---------------- */
 const handleLogin = async () => {
@@ -127,64 +134,25 @@ const confirm2FA = async () => {
   }
 }
 
-/* ---------------- LOGIN WITH DEVICE (WEBAUTHN) ---------------- */
-const loginWithDevice = async () => {
-  if (!navigator.credentials || !window.PublicKeyCredential) {
-    notification.error({ message: 'Device login not supported' })
-    return
-  }
 
-  loadingDevice.value = true
+const handleDeviceLogin = async () => {
+  auth.loadingWithDevice = true
   try {
-    const { $api } = useNuxtApp()
-    // 1️⃣ Get login options from backend
-    const options = await $api('/webauthn/login/options', { method: 'POST' })
-
-    // 2️⃣ Convert to PublicKeyCredentialRequestOptions
-    const publicKey: any = {
-      challenge: Uint8Array.from(atob(options.publicKey.challenge), c => c.charCodeAt(0)),
-      rpId: options.publicKey.rpId,
-      allowCredentials: (options.publicKey.allowCredentials || []).map((c: any) => ({
-        id: Uint8Array.from(atob(c.id), x => x.charCodeAt(0)),
-        type: c.type,
-      })),
-      userVerification: options.publicKey.userVerification,
-    }
-
-    // 3️⃣ Ask user to scan face / fingerprint
-    const credential = (await navigator.credentials.get({ publicKey })) as any
-
-    // 4️⃣ Send credential back to server
-    const res = await $api('/webauthn/login', {
-      method: 'POST',
-      body: {
-        id: credential.id,
-        rawId: Array.from(new Uint8Array(credential.rawId)),
-        response: {
-          authenticatorData: Array.from(new Uint8Array(credential.response.authenticatorData)),
-          clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-          signature: Array.from(new Uint8Array(credential.response.signature)),
-          userHandle: credential.response.userHandle
-            ? Array.from(new Uint8Array(credential.response.userHandle))
-            : null,
-        },
-        type: credential.type,
-      },
-    })
-
-    // 5️⃣ Save token in store (your auth.ts handles it)
-    auth.login({ email: res.user.email, password: '' }) // just populate user in store
-    auth.token = res.token
+    await auth.loginWithDevice()  // ✅ Now fetches options internally
     notification.success({ message: '✅ Logged in with device!' })
-
     redirectUser()
   } catch (err: any) {
-    console.error(err)
-    notification.error({ message: err.message || 'Device login failed' })
+    notification.error({
+      message: 'Device login failed',
+      description: err?.message || 'Authentication error',
+    })
   } finally {
-    loadingDevice.value = false
+    auth.loadingWithDevice = false
   }
 }
+
+
+
 </script>
 
 <template>
@@ -220,10 +188,10 @@ const loginWithDevice = async () => {
           type="dashed"
           block
           class="mt-2"
-          :loading="loadingDevice"
-          @click="loginWithDevice"
+          :loading="auth.loadingWithDevice"
+          @click="handleDeviceLogin"
         >
-          Login with Device (Face / Fingerprint)
+          🔐 Login with Device (Face / Fingerprint)
         </a-button>
       </a-form>
     </a-card>
