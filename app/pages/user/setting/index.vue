@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, computed } from 'vue'
 import { message } from 'ant-design-vue'
-
+import WebAuthnSection from '~/components/Setting/WebAuthnSection.vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
@@ -166,6 +166,7 @@ const updatePassword = async () => {
         </a-button>
       </a-form>
     </a-card>
+    <WebAuthnSection />
   </div>
 </template>
 

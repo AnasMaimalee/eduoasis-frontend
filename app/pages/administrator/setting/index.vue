@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
+import WebAuthnSection from '~/components/Setting/WebAuthnSection.vue'
 
 definePageMeta({
   layout: 'dashboard',
@@ -350,6 +351,7 @@ onMounted(fetchProfile)
         </a-form-item>
       </a-form>
     </a-modal>
+    <WebAuthnSection />
   </div>
 </template>
 

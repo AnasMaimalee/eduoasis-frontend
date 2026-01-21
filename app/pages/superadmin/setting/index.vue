@@ -2,7 +2,7 @@
 import { reactive, ref, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { CopyOutlined } from '@ant-design/icons-vue'
-
+import WebAuthnSection from '~/components/Setting/WebAuthnSection.vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
@@ -131,7 +131,7 @@ onMounted(() => setup2FA())
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto p-3 sm:p-6 min-h-screen space-y-6 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50">
+  <div class="max-w-4xl p-3 sm:p-6 min-h-screen space-y-6 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50">
 
     <!-- 2FA CARD -->
     <a-card class="rounded-2xl shadow-xl">
@@ -286,6 +286,8 @@ onMounted(() => setup2FA())
       </a-form>
     </a-card>
 
+      <!-- WebAuthn / Fingerprint Section -->
+    <WebAuthnSection />
   </div>
 </template>
 

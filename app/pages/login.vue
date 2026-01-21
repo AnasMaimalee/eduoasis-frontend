@@ -16,6 +16,7 @@ const modelRef = reactive({
 const twoFaCode = ref('')
 const show2FAModal = ref(false)
 const lockedMessage = ref<string | null>(null)
+const loadingDevice = ref(false)
 
 /* ---------------- RULES ---------------- */
 const rulesRef = reactive({
@@ -23,35 +24,23 @@ const rulesRef = reactive({
     { required: true, message: 'Please enter your email', trigger: 'blur' },
     { type: 'email', message: 'Invalid email format', trigger: 'blur' },
   ],
-  password: [
-    { required: true, message: 'Please enter your password', trigger: 'blur' },
-  ],
+  password: [{ required: true, message: 'Please enter your password', trigger: 'blur' }],
 })
 
 const { validate, validateInfos } = Form.useForm(modelRef, rulesRef)
 
-/* ---------------- FIXED REDIRECT ---------------- */
-// login.vue - ONLY CHANGE THIS FUNCTION
+/* ---------------- REDIRECT ---------------- */
 const redirectUser = () => {
-  // ✅ FIXED: Use store getter (works with your existing structure)
-  const role = auth.userRole  // Uses your existing getter!
-
-  console.log('🚀 Redirecting with role:', role)
-
-  if (role === 'superadmin') {
-    router.push('/dashboard/superadmin')
-  } else if (role === 'administrator') {
-    router.push('/dashboard/administrator')
-  } else {
-    router.push('/dashboard/user')
-  }
+  const role = auth.user?.role // <- notice user?.role
+  if (role === 'superadmin') router.push('/dashboard/superadmin')
+  else if (role === 'administrator') router.push('/dashboard/administrator')
+  else router.push('/dashboard/user')
 }
 
 
 /* ---------------- LOGIN STEP 1 ---------------- */
 const handleLogin = async () => {
   lockedMessage.value = null
-
   try {
     await validate()
     auth.loading = true
@@ -61,7 +50,6 @@ const handleLogin = async () => {
       password: modelRef.password,
     })
 
-    // ✅ LOGIN SUCCESS → REDIRECT
     notification.success({
       message: 'Login Successful',
       description: `Welcome back, ${auth.user?.name}`,
@@ -72,7 +60,7 @@ const handleLogin = async () => {
     const response = err?.response
     const status = response?.status
 
-    /* 🔐 BACKEND SAYS 2FA REQUIRED */
+    /* 🔐 2FA REQUIRED */
     if (status === 403 && response?.data?.requires_2fa) {
       show2FAModal.value = true
       notification.info({
@@ -84,7 +72,8 @@ const handleLogin = async () => {
 
     /* 🚫 RATE LIMIT */
     if (status === 429) {
-      lockedMessage.value = 'Too many failed login attempts. Please wait before trying again.'
+      lockedMessage.value =
+        'Too many failed login attempts. Please wait before trying again.'
       notification.error({
         message: 'Account Temporarily Locked',
         description: lockedMessage.value,
@@ -137,9 +126,67 @@ const confirm2FA = async () => {
     auth.loading = false
   }
 }
+
+/* ---------------- LOGIN WITH DEVICE (WEBAUTHN) ---------------- */
+const loginWithDevice = async () => {
+  if (!navigator.credentials || !window.PublicKeyCredential) {
+    notification.error({ message: 'Device login not supported' })
+    return
+  }
+
+  loadingDevice.value = true
+  try {
+    const { $api } = useNuxtApp()
+    // 1️⃣ Get login options from backend
+    const options = await $api('/webauthn/login/options', { method: 'POST' })
+
+    // 2️⃣ Convert to PublicKeyCredentialRequestOptions
+    const publicKey: any = {
+      challenge: Uint8Array.from(atob(options.publicKey.challenge), c => c.charCodeAt(0)),
+      rpId: options.publicKey.rpId,
+      allowCredentials: (options.publicKey.allowCredentials || []).map((c: any) => ({
+        id: Uint8Array.from(atob(c.id), x => x.charCodeAt(0)),
+        type: c.type,
+      })),
+      userVerification: options.publicKey.userVerification,
+    }
+
+    // 3️⃣ Ask user to scan face / fingerprint
+    const credential = (await navigator.credentials.get({ publicKey })) as any
+
+    // 4️⃣ Send credential back to server
+    const res = await $api('/webauthn/login', {
+      method: 'POST',
+      body: {
+        id: credential.id,
+        rawId: Array.from(new Uint8Array(credential.rawId)),
+        response: {
+          authenticatorData: Array.from(new Uint8Array(credential.response.authenticatorData)),
+          clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
+          signature: Array.from(new Uint8Array(credential.response.signature)),
+          userHandle: credential.response.userHandle
+            ? Array.from(new Uint8Array(credential.response.userHandle))
+            : null,
+        },
+        type: credential.type,
+      },
+    })
+
+    // 5️⃣ Save token in store (your auth.ts handles it)
+    auth.login({ email: res.user.email, password: '' }) // just populate user in store
+    auth.token = res.token
+    notification.success({ message: '✅ Logged in with device!' })
+
+    redirectUser()
+  } catch (err: any) {
+    console.error(err)
+    notification.error({ message: err.message || 'Device login failed' })
+  } finally {
+    loadingDevice.value = false
+  }
+}
 </script>
 
-<!-- Template stays exactly the same -->
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
     <a-card title="Login to EduOasis Portal" class="w-full max-w-md shadow-xl rounded-xl">
@@ -167,6 +214,16 @@ const confirm2FA = async () => {
           @click="handleLogin"
         >
           Login
+        </a-button>
+
+        <a-button
+          type="dashed"
+          block
+          class="mt-2"
+          :loading="loadingDevice"
+          @click="loginWithDevice"
+        >
+          Login with Device (Face / Fingerprint)
         </a-button>
       </a-form>
     </a-card>
