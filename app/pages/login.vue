@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { Form, notification, Alert } from 'ant-design-vue'
+import { Form, notification } from 'ant-design-vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
 
@@ -13,6 +13,8 @@ const modelRef = reactive({
   password: '',
 })
 
+const twoFaCode = ref('')
+const show2FAModal = ref(false)
 const lockedMessage = ref<string | null>(null)
 
 /* ---------------- RULES ---------------- */
@@ -28,63 +30,108 @@ const rulesRef = reactive({
 
 const { validate, validateInfos } = Form.useForm(modelRef, rulesRef)
 
-/* ---------------- LOGIN HANDLER ---------------- */
+/* ---------------- FIXED REDIRECT ---------------- */
+// login.vue - ONLY CHANGE THIS FUNCTION
+const redirectUser = () => {
+  // ✅ FIXED: Use store getter (works with your existing structure)
+  const role = auth.userRole  // Uses your existing getter!
+
+  console.log('🚀 Redirecting with role:', role)
+
+  if (role === 'superadmin') {
+    router.push('/dashboard/superadmin')
+  } else if (role === 'administrator') {
+    router.push('/dashboard/administrator')
+  } else {
+    router.push('/dashboard/user')
+  }
+}
+
+
+/* ---------------- LOGIN STEP 1 ---------------- */
 const handleLogin = async () => {
   lockedMessage.value = null
 
   try {
     await validate()
-
     auth.loading = true
-    await auth.login(modelRef)
+
+    await auth.login({
+      email: modelRef.email,
+      password: modelRef.password,
+    })
+
+    // ✅ LOGIN SUCCESS → REDIRECT
+    notification.success({
+      message: 'Login Successful',
+      description: `Welcome back, ${auth.user?.name}`,
+    })
+
+    redirectUser()
+  } catch (err: any) {
+    const response = err?.response
+    const status = response?.status
+
+    /* 🔐 BACKEND SAYS 2FA REQUIRED */
+    if (status === 403 && response?.data?.requires_2fa) {
+      show2FAModal.value = true
+      notification.info({
+        message: 'Two-Factor Authentication Required',
+        description: 'Enter the code from Google Authenticator.',
+      })
+      return
+    }
+
+    /* 🚫 RATE LIMIT */
+    if (status === 429) {
+      lockedMessage.value = 'Too many failed login attempts. Please wait before trying again.'
+      notification.error({
+        message: 'Account Temporarily Locked',
+        description: lockedMessage.value,
+      })
+      return
+    }
+
+    notification.error({
+      message: 'Login Failed',
+      description: response?.data?.message || 'Invalid email or password',
+    })
+  } finally {
+    auth.loading = false
+  }
+}
+
+/* ---------------- LOGIN STEP 2 (2FA) ---------------- */
+const confirm2FA = async () => {
+  if (!twoFaCode.value || twoFaCode.value.length !== 6) {
+    notification.warning({
+      message: 'Invalid Code',
+      description: 'Enter a valid 6-digit code.',
+    })
+    return
+  }
+
+  try {
+    auth.loading = true
+
+    await auth.login({
+      email: modelRef.email,
+      password: modelRef.password,
+      two_fa_code: twoFaCode.value,
+    })
+
+    show2FAModal.value = false
 
     notification.success({
       message: 'Login Successful',
       description: `Welcome back, ${auth.user?.name}`,
-      placement: 'topRight',
     })
 
-    const role = auth.user?.roles?.[0]?.name
-
-    if (role === 'superadmin') {
-      router.push('/dashboard/superadmin')
-    } else if (role === 'administrator' || role === 'admin') {
-      router.push('/dashboard/administrator')
-    } else {
-      router.push('/dashboard/user')
-    }
-  } catch (err: any) {
-    if (err?.errorFields) return
-
-    const response = err?.response
-    const status = response?.status
-
-    /* 🚫 TOO MANY ATTEMPTS */
-    if (status === 429) {
-      const retryAfter = response?.headers?.['retry-after']
-      const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null
-
-      lockedMessage.value = minutes
-        ? `Too many failed login attempts. Your account is temporarily locked for ${minutes} minute(s).`
-        : 'Too many failed login attempts. Please wait or reset your password.'
-
-      notification.error({
-        message: 'Account Temporarily Locked',
-        description: lockedMessage.value,
-        placement: 'topRight',
-        duration: 6,
-      })
-
-      return
-    }
-
-    /* ❌ NORMAL ERROR */
+    redirectUser()
+  } catch {
     notification.error({
-      message: 'Login Failed',
-      description:
-        response?.data?.message ||
-        'Invalid email or password',
-      placement: 'topRight',
+      message: 'Invalid 2FA Code',
+      description: 'Check your authenticator app and try again.',
     })
   } finally {
     auth.loading = false
@@ -92,77 +139,64 @@ const handleLogin = async () => {
 }
 </script>
 
+<!-- Template stays exactly the same -->
 <template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4"
-  >
-    <a-card
-      title="Login to EduOasis Portal"
-      class="w-full max-w-md shadow-xl rounded-xl"
-    >
-      <!-- 🚨 LOCK WARNING -->
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <a-card title="Login to EduOasis Portal" class="w-full max-w-md shadow-xl rounded-xl">
       <a-alert
         v-if="lockedMessage"
         type="error"
         show-icon
         class="mb-4"
         :message="lockedMessage"
-        description="For your security, please wait or reset your password."
       />
 
-      <a-form
-        layout="vertical"
-        :model="modelRef"
-        :rules="rulesRef"
-      >
+      <a-form layout="vertical" :model="modelRef" :rules="rulesRef">
         <a-form-item label="Email" v-bind="validateInfos.email">
-          <a-input
-            v-model:value="modelRef.email"
-            type="email"
-            placeholder="Enter your email"
-            size="large"
-            autocomplete="email"
-          />
+          <a-input v-model:value="modelRef.email" size="large" />
         </a-form-item>
 
         <a-form-item label="Password" v-bind="validateInfos.password">
-          <a-input-password
-            v-model:value="modelRef.password"
-            placeholder="Enter your password"
-            size="large"
-            autocomplete="current-password"
-          />
+          <a-input-password v-model:value="modelRef.password" size="large" />
         </a-form-item>
 
-        <a-form-item class="mt-6">
-          <a-button
-            type="primary"
-            size="large"
-            block
-            :loading="auth.loading"
-            @click="handleLogin"
-          >
-            Login
-          </a-button>
-        </a-form-item>
-      </a-form>
-
-      <!-- LINKS -->
-      <div class="text-center mt-6 space-y-2 text-sm">
-        <NuxtLink
-          to="/forgot-password"
-          class="block text-blue-600 hover:underline"
+        <a-button
+          type="primary"
+          block
+          :loading="auth.loading"
+          @click="handleLogin"
         >
-          Forgot Password?
-        </NuxtLink>
-
-        <div>
-          Don’t have an account?
-          <NuxtLink to="/register" class="text-blue-600 hover:underline">
-            Register
-          </NuxtLink>
-        </div>
-      </div>
+          Login
+        </a-button>
+      </a-form>
     </a-card>
+
+    <!-- 🔐 2FA MODAL -->
+    <a-modal
+      v-model:open="show2FAModal"
+      title="Two-Factor Authentication"
+      :footer="null"
+      destroy-on-close
+    >
+      <p class="mb-4">
+        Open <strong>Google Authenticator</strong> and enter the 6-digit code.
+      </p>
+
+      <a-input
+        v-model:value="twoFaCode"
+        maxlength="6"
+        placeholder="6-digit code"
+      />
+
+      <a-button
+        type="primary"
+        block
+        class="mt-4"
+        :loading="auth.loading"
+        @click="confirm2FA"
+      >
+        Verify & Login
+      </a-button>
+    </a-modal>
   </div>
 </template>

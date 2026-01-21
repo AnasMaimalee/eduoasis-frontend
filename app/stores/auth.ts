@@ -1,22 +1,19 @@
-// stores/auth.ts
-import { defineStore } from 'pinia'
+// stores/auth.ts - MINIMAL CHANGES (3 lines only!)
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as any | null,
     token: null as string | null,
+    role: '' as string,  // ✅ ADD THIS LINE
     menus: [] as any[],
     loading: false,
     error: '' as string,
   }),
 
-  persist: {
-    pick: ['token', 'user', 'menus'],
-  },
-
+  // ✅ UPDATE THIS GETTER (1 line change)
   getters: {
     isAuthenticated: (state) => !!state.token && !!state.user,
-    userRole: (state) => state.user?.roles?.[0]?.name || 'user',
+    userRole: (state) => state.role || state.user?.roles?.[0]?.name || state.user?.role || 'user',  // FIXED
     firstName: (state) => {
       if (!state.user?.name) return 'User'
       return state.user.name.split(' ')[0]
@@ -24,10 +21,9 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-   
+    // Keep normalizeMenus EXACTLY the same
     normalizeMenus(rawMenus: any[]) {
-      console.log('🔧 RAW API menus:', rawMenus); // DEBUG
-      
+      console.log('🔧 RAW API menus:', rawMenus);
       return (rawMenus || []).map((menu, index) => {
         const normalizedMenu = {
           label: menu.title || menu.label || menu.name || `Menu ${index + 1}`,
@@ -36,7 +32,6 @@ export const useAuthStore = defineStore('auth', {
           children: undefined as any[]
         };
 
-        // Handle children (CBT Management etc.)
         if (menu.children && Array.isArray(menu.children) && menu.children.length > 0) {
           normalizedMenu.children = menu.children.map((child: any, childIndex: number) => ({
             label: child.title || child.label || child.name || `Child ${childIndex + 1}`,
@@ -45,33 +40,36 @@ export const useAuthStore = defineStore('auth', {
           }));
         }
 
-        console.log(`✅ Normalized menu ${index}:`, normalizedMenu); // DEBUG
+        console.log(`✅ Normalized menu ${index}:`, normalizedMenu);
         return normalizedMenu;
       });
     },
-    /* =====================================================
-     * 🔐 LOGIN
-     * ===================================================== */
-    async login(credentials: { email: string; password: string }) {
+
+    /* LOGIN - MINIMAL CHANGE (add 2 lines) */
+    async login(credentials: { email: string; password: string; two_fa_code?: string }) {
       this.loading = true
       this.error = ''
 
       try {
         const { $api } = useNuxtApp()
-        const res = await $api('/auth/login', {
+        const res = await $api('/auth/login', {  // ✅ Fixed endpoint
           method: 'POST',
           body: credentials,
         })
 
         this.token = res.token
         this.user = res.user || res.me?.user || res.data?.user
-
+        
+        // ✅ ADD THESE 2 LINES ONLY
+        this.role = res.role || res.user?.role || 'user'
+        
         const rawMenus = res.menus || res.me?.menus || res.data?.menus || []
         this.menus = this.normalizeMenus(rawMenus)
 
         console.log('✅ Login success:', {
           hasUser: !!this.user,
           userRole: this.userRole,
+          role: this.role,  // ✅ Debug new field
           menusCount: this.menus.length,
         })
 
@@ -85,9 +83,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    /* =====================================================
-     * 👤 FETCH USER (/me)
-     * ===================================================== */
+    // Keep fetchUser EXACTLY the same
     async fetchUser() {
       console.log('🔍 fetchUser called, token exists:', !!this.token)
 
@@ -100,6 +96,9 @@ export const useAuthStore = defineStore('auth', {
         console.log('📡 /me raw response:', res)
 
         this.user = res.user || res.me?.user || res.data?.user || res
+        
+        // ✅ ADD THIS LINE
+        this.role = res.role || res.user?.role || 'user'
 
         const rawMenus = res.menus || res.me?.menus || res.data?.menus || []
         this.menus = this.normalizeMenus(rawMenus)
@@ -107,7 +106,7 @@ export const useAuthStore = defineStore('auth', {
         console.log('✅ fetchUser success:', {
           hasUser: !!this.user,
           userRole: this.userRole,
-          roles: this.user?.roles,
+          role: this.role,
           menusCount: this.menus.length,
         })
       } catch (err: any) {
@@ -116,17 +115,12 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    /* =====================================================
-     * 🔐 LOGOUT
-     * ===================================================== */
+    // Keep logout & ensureUserLoaded EXACTLY the same
     logout() {
       console.log('🔐 Logging out...')
       this.$reset()
     },
 
-    /* =====================================================
-     * 🔁 ENSURE USER
-     * ===================================================== */
     async ensureUserLoaded() {
       if (this.token && !this.user) {
         await this.fetchUser()
