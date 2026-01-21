@@ -28,6 +28,7 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    
     // ---------------- Helper methods ----------------
     base64urlToUint8Array(base64url: string) {
       const padding = '='.repeat((4 - (base64url.length % 4)) % 4)
@@ -216,5 +217,10 @@ export const useAuthStore = defineStore('auth', {
       }
       return this.isAuthenticated
     },
+  },
+  persist: {
+    key: 'auth', // localStorage key
+    paths: ['user', 'token', 'role', 'menus'],
+    storage: process.client ? localStorage : undefined, // only use localStorage on client
   },
 })
