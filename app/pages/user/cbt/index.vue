@@ -5,7 +5,8 @@ import { message } from 'ant-design-vue'
 definePageMeta({
     layout: 'dashboard',
     middleware: 'auth',
-    roles: ['user']
+    roles: ['user'],
+    title: 'CBT Subject Selection '
 })
 const { $api } = useNuxtApp()
 const router = useRouter()

@@ -2,12 +2,13 @@
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['user']
+  roles: ['user'],
+  title: 'Services'
 })
 
-import { ref, onMounted, reactive, nextTick } from 'vue'
-import { Table, Button, message, Typography, Input, Card, Modal, InputNumber, Tag } from 'ant-design-vue'
-import { ReloadOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { ref, onMounted, reactive } from 'vue'
+import { Table, Button, message, Typography, Input, Card, Tag } from 'ant-design-vue'
+import { ReloadOutlined } from '@ant-design/icons-vue'
 
 const { $api } = useNuxtApp()
 
@@ -15,17 +16,14 @@ const allServices = ref<any[]>([])
 const services = ref<any[]>([])         
 const loading = ref(false)
 const searchText = ref('')
-const updateModalVisible = ref(false)
-const currentService = ref<any>(null)
 
 const columns = [
-  { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
-  { title: 'Service Name', dataIndex: 'name', key: 'name', slots: { customRender: 'name' }, width: 400 },
-  { title: 'Description', key: 'description', width: 150, align: 'right', slots: { customRender: 'description' } },
-  { title: 'Price', key: 'price', width: 150, align: 'right', slots: { customRender: 'price' } },
-  { title: 'Status', key: 'status', width: 150, align: 'center', slots: { customRender: 'status' } },
+  { title: '#', key: 'index', width: 20, slots: { customRender: 'indexCell' } },
+  { title: 'Service Name', dataIndex: 'name', width:50, key: 'name', slots: { customRender: 'name' } },
+  { title: 'Description', key: 'description', width: 50, slots: { customRender: 'description' } },
+  { title: 'Price', key: 'price', width: 50, slots: { customRender: 'price' } },
+  { title: 'Status', key: 'status', width: 40, slots: { customRender: 'status' } },
 ]
-
 
 const formData = reactive({
   customer_price: null as number | null,
@@ -93,17 +91,18 @@ onMounted(fetchServices)
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-4 sm:p-6 space-y-4 text-[10px] sm:text-xs md:text-sm lg:text-base">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-      <div>
-        <Typography.Title level="3" class="!m-0">Services Management</Typography.Title>
-        <Typography.Text type="secondary">{{ pagination.total }} total services</Typography.Text>
-      </div>
-     
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+      <Typography.Title level="3" class="!m-0 text-[12px] sm:text-sm md:text-base lg:text-lg">
+        Services Management
+      </Typography.Title>
+      <Typography.Text type="secondary" class="text-[10px] sm:text-xs md:text-sm">
+        {{ pagination.total }} total services
+      </Typography.Text>
     </div>
 
-    <!-- ✅ TABLE WITH BUILT-IN SEARCH + REFRESH -->
+    <!-- TABLE CARD -->
     <Card>
       <Table
         :columns="columns"
@@ -116,117 +115,108 @@ onMounted(fetchServices)
         size="middle"
         class="service-table"
       >
-        <!-- ✅ TABLE TITLE WITH SEARCH + REFRESH -->
+        <!-- Table Title -->
         <template #title>
-          <div class="flex flex-wrap items-center gap-3 p-4 pb-2">
+          <div class="flex flex-wrap items-center gap-2 p-2 sm:p-4">
             <Input 
               v-model:value="searchText"
               size="large"
-              placeholder="Search services by name/description... (Enter to search)"
-              class="flex-1 min-w-[250px] max-w-[400px]"
+              placeholder="Search services by name/description..."
+              class="flex-1 min-w-[180px] max-w-[400px] text-[10px] sm:text-xs"
               @input="handleSearchChange"
               @pressEnter="triggerSearch"
               @blur="triggerSearch"
             />
-            <Button size="large" @click="fetchServices" :loading="loading">
+            <Button size="large" @click="fetchServices" :loading="loading" class="text-[10px] sm:text-xs">
               <ReloadOutlined /> Refresh
             </Button>
           </div>
         </template>
 
         <template #emptyText>
-          <div class="text-center py-8">
-            <div class="text-lg font-semibold text-gray-600 mb-1">No services found</div>
-            <div v-if="searchText" class="text-sm text-gray-500 mb-4">
+          <div class="text-center py-4 sm:py-8">
+            <div class="text-[12px] sm:text-sm font-semibold text-gray-600 mb-1">No services found</div>
+            <div v-if="searchText" class="text-[10px] sm:text-xs text-gray-500 mb-4">
               No services match "<strong>{{ searchText }}</strong>"
             </div>
-            <div v-else class="text-sm text-gray-500 mb-4">
+            <div v-else class="text-[10px] sm:text-xs text-gray-500 mb-4">
               Services will appear here when added to the system
             </div>
-            <Button type="primary" @click="fetchServices">
+            <Button type="primary" @click="fetchServices" class="text-[10px] sm:text-xs">
               <ReloadOutlined /> Load Services
             </Button>
           </div>
         </template>
 
         <template #indexCell="{ index }">
-          <div class="font-semibold text-emerald-600">
+          <div class="font-semibold text-emerald-600 text-[10px] sm:text-xs">
             {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
           </div>
         </template>
 
         <template #name="{ record }">
           <div>
-            <div class="font-semibold text-gray-900 text-sm">{{ record.name }}</div>
-            <div class="text-xs text-gray-500 truncate max-w-[350px]" :title="record.description">
+            <div class="font-semibold text-gray-900 truncate text-[10px] sm:text-sm md:text-base">{{ record.name }}</div>
+            <div class="text-gray-500 truncate max-w-[350px] text-[8px] sm:text-xs md:text-sm" :title="record.description">
               {{ record.description }}
             </div>
           </div>
         </template>
+
         <template #description="{ record }">
           <div>
-            <div class="text-xl truncate max-w-[350px]" :title="record.description">
+            <div class="truncate max-w-[350px] text-[10px] sm:text-sm md:text-base" :title="record.description">
               {{ record.description }}
             </div>
           </div>
         </template>
-        
 
         <template #price="{ record }">
-          <div class="text-right">
-            <div class="text-xl font-black text-emerald-600 mb-1">
-              ₦{{ Number(record.price || 0).toLocaleString() }}
-            </div>
-            
+          <div class="text-right text-[10px] sm:text-sm md:text-base">
+            ₦{{ Number(record.price || 0).toLocaleString() }}
           </div>
         </template>
+
         <template #status="{ record }">
-
-         <div class="text-center">
-        <Tag
-        :color="record.active ? 'green' : 'green'"
-        size="small"
-        class="font-semibold uppercase"
-        >
-        {{ record.active ? 'Active' : 'Active' }}
-        </Tag>
-
-    </div>
+          <div class="text-center text-[10px] sm:text-xs md:text-sm">
+            <Tag
+              :color="record.active ? 'green' : 'green'"
+              size="small"
+              class="font-semibold uppercase text-[8px] sm:text-xs"
+            >
+              {{ record.active ? 'Active' : 'Active' }}
+            </Tag>
+          </div>
         </template>
 
       </Table>
     </Card>
-
-
   </div>
 </template>
 
 <style scoped>
-/* ✅ PLAIN HEADER - NO SHADOW, NO GRADIENT */
+/* Responsive Table Styling */
 .service-table :deep(.ant-table) {
   @apply border border-emerald-200/30 rounded-xl overflow-hidden;
 }
 
 .service-table :deep(.ant-table-thead th) {
-  @apply !bg-emerald-500 !text-white !font-bold !py-4 !px-6 text-sm uppercase tracking-wide border-none;
-}
-
-.service-table :deep(.ant-table-thead) {
-  @apply border-b-0;
+  @apply !bg-emerald-500 !text-white !font-bold !py-3 !px-4 text-[10px] sm:text-xs md:text-sm;
 }
 
 .service-table :deep(.ant-table-tbody td) {
-  @apply !py-4 !px-6 border-b border-gray-100/50;
+  @apply !py-2 !px-3 border-b border-gray-100/50 text-[10px] sm:text-xs md:text-sm;
 }
 
 .service-table :deep(.ant-table-tbody tr:hover > td) {
-  @apply bg-emerald-50/70;
+  @apply bg-emerald-50/50;
 }
 
 .service-table :deep(.ant-table-tbody tr:last-child td) {
   @apply border-b-0;
 }
 
+/* Modals */
 .half-screen-modal :deep(.ant-modal) {
   max-width: 50vw !important;
   width: 50vw !important;

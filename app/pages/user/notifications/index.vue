@@ -7,6 +7,8 @@ import NotificationSkeleton from '~/components/notifications/NotificationSkeleto
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
+  roles: ['user'],
+  title: 'Notifications'
 })
 
 const { $api } = useNuxtApp()

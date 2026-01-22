@@ -7,7 +7,8 @@ import dayjs from 'dayjs'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['user']
+  roles: ['user'],
+  title : 'JAMB Olevel Status'
 })
 
 const { $api } = useNuxtApp()

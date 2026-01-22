@@ -7,7 +7,8 @@ import ServiceConfirmModal from '@/components/user/ServiceConfirmModal.vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['user']
+  roles: ['user'],
+  title: 'JAMB Admission Status'
 })
 
 const { $api } = useNuxtApp()

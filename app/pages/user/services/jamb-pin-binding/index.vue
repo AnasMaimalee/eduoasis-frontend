@@ -8,7 +8,8 @@ import dayjs from 'dayjs'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['user']
+  roles: ['user'],
+  title: 'JAMB PIN Binding'
 })
 
 const { $api } = useNuxtApp()

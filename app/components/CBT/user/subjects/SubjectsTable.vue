@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { Table, Input, Button, Card, message } from 'ant-design-vue'
+import { Table, Input, Button, message } from 'ant-design-vue'
+import { ReloadOutlined } from '@ant-design/icons-vue'
 import StatusTag from './StatusTag.vue'
+
 const { $api } = useNuxtApp()
 
 const subjects = ref<any[]>([])
 const loading = ref(false)
 const searchText = ref('')
-const modalVisible = ref(false)
-const selectedSubject = ref<any | null>(null)
 
 const fetchSubjects = async () => {
   loading.value = true
@@ -25,74 +25,108 @@ const fetchSubjects = async () => {
 const filteredSubjects = computed(() => {
   if (!searchText.value.trim()) return subjects.value
   const q = searchText.value.toLowerCase()
-  return subjects.value.filter(s => 
-    s.name?.toLowerCase().includes(q) || 
+  return subjects.value.filter(s =>
+    s.name?.toLowerCase().includes(q) ||
     s.slug?.toLowerCase().includes(q)
   )
 })
 
+// ✅ PERFECT NUMBERING
+const getIndex = (index: number) => index + 1
+
 onMounted(fetchSubjects)
-
-const openModal = (subject: any | null = null) => {
-  selectedSubject.value = subject
-  modalVisible.value = true
-}
-
-// ✅ PERFECT NUMBERING FUNCTION
-const getIndex = (index: number) => {
-  return Math.floor(index) + 1
-}
 </script>
 
 <template>
-  <Card>
-    <div class="flex justify-between mb-4">
-      <Input v-model:value="searchText" placeholder="Search subjects..." class="!w-64" />
+  <div class="">
+
+    <!-- HEADER ACTIONS -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <Input
+        v-model:value="searchText"
+        placeholder="Search subjects..."
+        allow-clear
+        class="w-full sm:w-64"
+      />
+
+      <Button
+        type="primary"
+        ghost
+        size="middle"
+        :loading="loading"
+        @click="fetchSubjects"
+        class="flex items-center mb-2 gap-1"
+      >
+        <ReloadOutlined />
+        Refresh
+      </Button>
     </div>
 
-    <Table 
-      :data-source="filteredSubjects" 
-      row-key="id" 
+    <!-- TABLE -->
+    <Table
+      :data-source="filteredSubjects"
+      row-key="id"
       :loading="loading"
-      :scroll="{ x: 800 }"
-      class="custom-table"
+      :scroll="{ x: 600 }"
+      class="modern-table"
+      bordered
+      size="middle"
+      :pagination="{ pageSize: 20, showQuickJumper: true }"
     >
-      <!-- ✅ FIXED NUMBERING - 100% WORKS -->
+      <!-- INDEX -->
       <Table.Column title="#" width="60" align="center">
         <template #default="{ index }">
-          <span class="font-semibold text-gray-700">{{ getIndex(index) }}</span>
+          <span class="font-semibold text-gray-700">
+            {{ getIndex(index) }}
+          </span>
         </template>
       </Table.Column>
-      
-      <Table.Column title="Name" dataIndex="name" width="200" />
-      <Table.Column title="Slug" dataIndex="slug" width="200" />
-      
-      <Table.Column title="Status" dataIndex="status" width="120">
+
+      <!-- NAME -->
+      <Table.Column title="Name" dataIndex="name" />
+
+      <!-- SLUG -->
+      <Table.Column title="Slug" dataIndex="slug" />
+
+      <!-- STATUS -->
+      <Table.Column title="Status" width="120" align="center">
         <template #default="{ record }">
           <StatusTag :status="record.status" />
         </template>
       </Table.Column>
     </Table>
-  </Card>
+
+  </div>
 </template>
 
-
-
 <style scoped>
-/* ✅ GREEN EMERALD HEADER */
-.custom-table :deep(.ant-table-thead th) {
-  @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
+/* ✅ MODERN CLEAN TABLE */
+.modern-table :deep(.ant-table) {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
 }
 
-.custom-table :deep(.ant-table-tbody td) {
+.modern-table :deep(.ant-table-thead th) {
+  @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm uppercase tracking-wide;
+  border-bottom: none;
+}
+
+.modern-table :deep(.ant-table-tbody td) {
   @apply !py-3 !px-4;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.custom-table :deep(.ant-table-row:hover > td) {
+.modern-table :deep(.ant-table-tbody tr:hover > td) {
   @apply bg-emerald-50;
 }
 
-.font-mono {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+/* MOBILE TEXT REDUCTION */
+@media (max-width: 640px) {
+  .modern-table :deep(.ant-table-container) {
+    margin-left: -4px;
+    margin-right: -4px;
+  }
 }
+
 </style>

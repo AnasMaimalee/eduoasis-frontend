@@ -9,6 +9,7 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['user'],
+  title: 'CBT Exam'
 })
 
 const { $api } = useNuxtApp()
