@@ -76,29 +76,45 @@ async function register() {
   error.value = ''
 
   try {
-    // Trim values to avoid spaces
+    // ✅ Trim and prepare payload
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
-      state: form.state,
+      state: form.state.trim(),
       password: form.password,
       password_confirmation: form.password_confirmation,
     }
 
-    const { data } = await api('/auth/register', {
+    // ✅ Use runtime config API base
+    const config = useRuntimeConfig()
+    const apiBase = config.public.apiBase
+
+    // ✅ Call API with proper endpoint
+    const { data } = await $fetch(`${apiBase}/auth/register`, {
       method: 'POST',
       body: payload,
     })
 
-    message.success('Registration successful 🎉 Please login')
+    // ✅ Success message
+    message.success(data?.message || 'Registration successful 🎉 Please login')
+
+    // ✅ Redirect to login page
     navigateTo('/login')
   } catch (err: any) {
-    message.error(err?.data?.message || 'Registration failed')
+    // ✅ Handle validation & network errors
+    if (err?.data?.errors) {
+      // Laravel validation errors
+      const messages = Object.values(err.data.errors).flat()
+      message.error(messages.join(', '))
+    } else {
+      message.error(err?.data?.message || 'Registration failed')
+    }
   } finally {
     loading.value = false
   }
 }
+
 </script>
 
 <template>
