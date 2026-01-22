@@ -8,7 +8,8 @@ definePageMeta({
   layout: 'default',
 })
 
-const api = usePublicApi()
+const { $api } = useNuxtApp()
+
 
 /* -------------------- FORM MODEL -------------------- */
 const form = reactive({
@@ -21,7 +22,7 @@ async function submit() {
   loading.value = true
 
   try {
-    await api('/forgot-password', {
+    await $api('/forgot-password', {
       method: 'POST',
       body: { email: form.email },
     })

@@ -7,7 +7,7 @@ definePageMeta({
   layout: 'default',
 })
 
-    const { $api } = useNuxtApp()
+const { $api } = useNuxtApp()
 
 
 /* -------------------- FORM STATE -------------------- */

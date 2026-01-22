@@ -142,15 +142,17 @@ export const useAuthStore = defineStore('auth', {
           throw new Error('Failed to get WebAuthn options from server')
         }
 
-        const publicKey: PublicKeyCredentialRequestOptions = {
-          challenge: this.base64urlToUint8Array(options.publicKey.challenge),
-          rpId: options.publicKey.rpId,
-          userVerification: options.publicKey.userVerification,
-          allowCredentials: (options.publicKey.allowCredentials || []).map((cred: any) => ({
-            id: this.base64urlToUint8Array(cred.id),
-            type: cred.type,
-          })),
-        }
+      const publicKey: PublicKeyCredentialRequestOptions = {
+        challenge: this.base64urlToUint8Array(options.publicKey.challenge),
+        rpId: window.location.hostname, // ✅ This will be 'localhost' on localhost, and your domain in prod
+        userVerification: options.publicKey.userVerification,
+        allowCredentials: (options.publicKey.allowCredentials || []).map((cred: any) => ({
+          id: this.base64urlToUint8Array(cred.id),
+          type: cred.type,
+        })),
+      }
+
+
 
         const credential = await navigator.credentials.get({ publicKey }) as PublicKeyCredential
         if (!credential) throw new Error('Authentication cancelled')
