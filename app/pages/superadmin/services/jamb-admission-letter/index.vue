@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { useFileDownloader } from '@/composables/useFileDownloader'
+const { downloadingId, downloadFile } = useFileDownloader()
+
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['superadmin'],
+  title: 'JAMB Admission Letter'
 })
 
 import { ref, onMounted, computed } from 'vue'
@@ -139,69 +143,6 @@ const handleReject = async () => {
     rejectLoading.value = false
   }
 }
-const downloadingId = ref<string | null>(null)
-
-const downloadFile = async (jobId: string) => {
-  if (downloadingId.value) return
-
-  downloadingId.value = jobId
-  console.log('🚀 Downloading:', jobId)
-
-  try {
-    const response = await $api.raw(
-      `/services/jamb-admission-letter/${jobId}/download`,
-      {
-        method: 'GET',
-        responseType: 'blob',
-      }
-    )
-
-    // ✅ Handle authorization error from backend
-    if (response.status === 403) {
-      message.error(response._data?.message || 'You are not allowed to download this file')
-      return
-    }
-
-    // ✅ Blob
-    const blob = new Blob([response._data], {
-      type: response.headers.get('content-type') || 'application/octet-stream',
-    })
-
-    // ✅ Detect filename
-    const disposition = response.headers.get('content-disposition')
-    let filename = `jamb-admission-letter-${Date.now()}`
-
-    if (disposition && disposition.includes('filename=')) {
-      filename = disposition.split('filename=')[1].replace(/"/g, '')
-    }
-
-    // ✅ Download
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    message.success('Download completed')
-  } catch (error: any) {
-    console.error('Download error:', error)
-
-    // ✅ Proper error message from backend
-    const msg =
-      error?.data?.message ||
-      error?.response?._data?.message ||
-      'You are not allowed to download this file'
-
-    message.error(msg)
-  } finally {
-    downloadingId.value = null
-  }
-}
-
 
 const columns = [
   { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
@@ -222,16 +163,24 @@ onMounted(fetchRequests)
 <template>
   <div class="p-6 space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
+   <div class="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center">
       <div>
-        <Typography.Title level="2" class="!m-0">
+        <Typography.Title
+          level="2"
+          class="!m-0 text-lg sm:text-2xl"
+        >
           JAMB Admission Letter Requests
         </Typography.Title>
-        <Typography.Text type="secondary">
+
+        <Typography.Text
+          type="secondary"
+          class="text-xs sm:text-sm"
+        >
           {{ filteredRequests.length }} total requests
         </Typography.Text>
       </div>
     </div>
+
 
     <!-- Table with Compact Search + Refresh -->
     <Card>
@@ -243,7 +192,7 @@ onMounted(fetchRequests)
             placeholder="Search requests..."
             size="middle"
             class="!w-64"
-          />
+          /> <br>
           <Button
             type="primary"
             :loading="loading"
@@ -254,15 +203,17 @@ onMounted(fetchRequests)
         </div>
       </div>
 
-      <Table
-        :columns="columns"
-        :data-source="filteredRequests"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        :scroll="{ x: 1600 }"
-        class="jamb-table"
-      >
+      <div class="overflow-x-auto">
+        <Table
+          :columns="columns"
+          :data-source="filteredRequests"
+          :loading="loading"
+          :pagination="pagination"
+          row-key="id"
+          :scroll="{ x: 1600 }"
+          class="jamb-table min-w-[1200px]"
+        >
+
         <!-- ✅ GREEN NUMBERING -->
         <template #indexCell="{ index }">
           <div class="font-semibold text-emerald-600">
@@ -339,15 +290,20 @@ onMounted(fetchRequests)
         <!-- File Download -->
         <template #fileCell="{ record }">
            <Button
-            v-if="record.result_file"
-            type="primary"
-            size="small"
-            :loading="downloadingId === record.id"
-            @click="downloadFile(record.id)"
-            class="bg-emerald-600 hover:bg-emerald-700 border-none"
-          >
-            📥 Download
-          </Button>
+              v-if="record.result_file"
+              type="primary"
+              size="small"
+              :loading="downloadingId === record.id"
+              @click="downloadFile({ 
+                id: record.id,
+                url: `/services/jamb-admission-letter/${record.id}/download`,
+                defaultFilename: 'jamb-admission-letter',
+                successMessage: 'Admission letter downloaded',
+              })"
+            >
+              📥 Download
+            </Button>
+
 
           <Tag v-else color="default">Not ready</Tag>
         </template>
@@ -395,6 +351,7 @@ onMounted(fetchRequests)
           </div>
         </template>
       </Table>
+      </div>
     </Card>
 
     <!-- Approve Modal -->

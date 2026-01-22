@@ -2,7 +2,8 @@
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: 'JAMB Services'
 })
 
 import { ref, onMounted, reactive, nextTick } from 'vue'
@@ -19,11 +20,11 @@ const updateModalVisible = ref(false)
 const currentService = ref<any>(null)
 
 const columns = [
-  { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
-  { title: 'Service Name', dataIndex: 'name', key: 'name', slots: { customRender: 'name' }, width: 400 },
-  { title: 'Customer Price', key: 'customerPrice', width: 180, align: 'right', slots: { customRender: 'customerPrice' } },
-  { title: 'Admin Payout', key: 'adminPayout', width: 150, align: 'right', slots: { customRender: 'adminPayout' } },
-  { title: 'Platform Profit', key: 'platformProfit', width: 150, align: 'right', slots: { customRender: 'platformProfit' } },
+  { title: '#', key: 'index', width: 50, slots: { customRender: 'indexCell' } },
+  { title: 'Service Name', dataIndex: 'name', key: 'name', slots: { customRender: 'name' }, width: 300 },
+  { title: 'Customer Price', key: 'customerPrice', slots: { customRender: 'customerPrice' } },
+  { title: 'Admin Payout', key: 'adminPayout', slots: { customRender: 'adminPayout' } },
+  { title: 'Platform Profit', key: 'platformProfit', slots: { customRender: 'platformProfit' } },
   { title: '', key: 'actions', width: 80, slots: { customRender: 'actions' }, fixed: 'right' }
 ]
 
@@ -150,8 +151,7 @@ onMounted(fetchServices)
         @change="handleTableChange"
         row-key="id"
         :scroll="{ x: 1200 }"
-        size="middle"
-        class="service-table"
+        class="status-table"
       >
         <!-- ✅ TABLE TITLE WITH SEARCH + REFRESH -->
         <template #title>
@@ -204,7 +204,7 @@ onMounted(fetchServices)
 
         <!-- ✅ ALL MONEY GREEN -->
         <template #customerPrice="{ record }">
-          <div class="text-right">
+          <div class="">
             <div class="text-xl font-black text-emerald-600 mb-1">
               ₦{{ Number(record.customer_price || record.price || 0).toLocaleString() }}
             </div>
@@ -215,7 +215,7 @@ onMounted(fetchServices)
         </template>
 
         <template #adminPayout="{ record }">
-          <div class="text-right">
+          <div class="">
             <div class="text-xl font-black text-emerald-600 mb-1">
               ₦{{ Number(record.admin_payout || 0).toLocaleString() }}
             </div>
@@ -226,7 +226,7 @@ onMounted(fetchServices)
         </template>
 
         <template #platformProfit="{ record }">
-          <div class="text-right">
+          <div class="">
             <div class="text-xl font-black text-emerald-600 mb-1">
               ₦{{ Number(record.platform_profit || 0).toLocaleString() }}
             </div>
@@ -324,25 +324,34 @@ onMounted(fetchServices)
 
 <style scoped>
 /* ✅ PLAIN HEADER - NO SHADOW, NO GRADIENT */
-.service-table :deep(.ant-table-thead th) {
+/* ✅ GREEN EMERALD HEADER */
+.status-table :deep(.ant-table-thead th) {
   @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
-  box-shadow: none !important;
-  border: none;
 }
 
-.service-table :deep(.ant-table-thead) {
-  box-shadow: none !important;
+.status-table :deep(.ant-table-tbody td) {
+  @apply !py-3 !px-4;
 }
 
-.service-table :deep(.ant-table-tbody td) {
-  @apply !py-3 !px-4 border-b border-gray-50;
-}
-
-.service-table :deep(.ant-table-row:hover > td) {
-  @apply bg-emerald-50/50;
+.status-table :deep(.ant-table-row:hover > td) {
+  @apply bg-emerald-50;
 }
 
 .font-mono {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
+/* ✅ Rounded table header corners */
+.status-table :deep(.ant-table-thead > tr > th:first-child) {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.status-table :deep(.ant-table-thead > tr > th:last-child) {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+.status-table :deep(.ant-table-thead > tr > th) {
+  border-right: none !important;
+}
+
 </style>

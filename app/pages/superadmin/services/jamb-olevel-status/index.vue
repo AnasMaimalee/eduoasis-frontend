@@ -3,7 +3,12 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['superadmin'],
+  title: 'JAMB Uplaod Status'
 })
+
+
+import { useFileDownloader } from '@/composables/useFileDownloader'
+const { downloadingId, downloadFile } = useFileDownloader()
 
 import { ref, onMounted, computed } from 'vue'
 import {
@@ -136,51 +141,6 @@ const handleReject = async () => {
     message.error(err.data?.message || 'Rejection failed')
   } finally {
     rejectLoading.value = false
-  }
-}
-
-const downloadFile = async (filePath: string, filename = 'document') => {
-  if (!filePath) {
-    message.warning('No result file available')
-    return
-  }
-
-  try {
-    // ✅ USE $api - Laravel API Route
-    const response = await $api(`/download-storage/${filePath}`, {
-      method: 'GET',
-      responseType: 'blob', // ✅ IMPORTANT for files
-    })
-
-    const contentType = response.headers?.['content-type'] || ''
-    const blob = new Blob([response], { type: contentType })
-    
-    // ✅ SMART FILENAME
-    let downloadFilename = `${filename}-${Date.now()}`
-    if (contentType.includes('pdf')) downloadFilename += '.pdf'
-    else if (contentType.includes('image/')) {
-      const ext = contentType.split('/')[1]?.split('+')[0] || 'png'
-      downloadFilename += `.${ext}`
-    } else {
-      const ext = filePath.split('.').pop()
-      downloadFilename += `.${ext || 'file'}`
-    }
-
-    // ✅ DOWNLOAD
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = downloadFilename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    
-    message.success(`✅ ${downloadFilename} downloaded!`)
-    
-  } catch (error: any) {
-    console.error('❌ Download error:', error)
-    message.error(`❌ Download failed: ${error.message || 'Unknown error'}`)
   }
 }
 
@@ -320,13 +280,19 @@ onMounted(fetchRequests)
         <!-- File Download -->
         <template #fileCell="{ record }">
           <Button
-            v-if="record.result_file"
-            type="primary"
-            size="small"
-            @click="downloadFile(record.result_file, `jamb-upload-${record.registration_number || record.id}`)"
-          >
-            <DownloadOutlined /> Download
-          </Button>
+              v-if="record.result_file"
+              type="primary"
+              size="small"
+              :loading="downloadingId === record.id"
+              @click="downloadFile({ 
+                id: record.id,
+                url: `/services/jamb-upload-status/${record.id}/download`,
+                defaultFilename: 'jamb-uplaod-status',
+                successMessage: 'Admission Uplaod Status downloaded',
+              })"
+            >
+              📥 Download
+            </Button>
           <span v-else class="text-gray-400 text-sm">No file</span>
         </template>
 

@@ -2,7 +2,7 @@ export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: 'https://sent-aids-massive-century.trycloudflare.com/api',
+    baseURL: 'https://transcription-returned-uses-teaches.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {
