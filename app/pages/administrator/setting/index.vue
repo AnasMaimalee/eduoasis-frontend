@@ -3,10 +3,20 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import WebAuthnSection from '~/components/Setting/WebAuthnSection.vue'
 
+import { useBanks } from '~/composables/useBanks'
+
+const { banks, fetchBanks, getBankCode } = useBanks()
+
+onMounted(() => {
+  fetchProfile()
+  fetchBanks()
+})
+
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['administrator']
+  roles: ['administrator'],
+  title: 'Setting'
 })
 
 const { $api } = useNuxtApp()
@@ -43,40 +53,14 @@ const passwordForm = reactive({
 })
 
 /* -------------------- BANK LIST -------------------- */
-const bankOptions = [
-  { name: "Access Bank", code: "044" },
-  { name: "Afriland Bank", code: "302" },
-  { name: "ALAT Digital Bank (Wema)", code: "035" },
-  { name: "Ecobank Nigeria", code: "050" },
-  { name: "Fidelity Bank", code: "070" },
-  { name: "First Bank of Nigeria", code: "011" },
-  { name: "First City Monument Bank (FCMB)", code: "214" },
-  { name: "FCMB Digital Account", code: "214" },
-  { name: "GTBank", code: "058" },
-  { name: "Heritage Bank", code: "030" },
-  { name: "Jaiz Bank", code: "206" },
-  { name: "Keystone Bank", code: "082" },
-  { name: "Paragon Bank", code: "268" },
-  { name: "Petra Microfinance Bank", code: "838" },
-  { name: "Polaris Bank", code: "076" },
-  { name: "Premium Trust Bank", code: "8033" },
-  { name: "Providus Bank", code: "101" },
-  { name: "Stanbic IBTC Bank", code: "221" },
-  { name: "Standard Chartered Bank", code: "068" },
-  { name: "Sterling Bank", code: "232" },
-  { name: "Suntrust Bank", code: "100" },
-  { name: "Taiwo Bank", code: "1004" },
-  { name: "Union Bank", code: "032" },
-  { name: "United Bank for Africa (UBA)", code: "033" },
-  { name: "Unity Bank", code: "215" },
-  { name: "Wema Bank", code: "035" },
-  { name: "Zenith Bank", code: "057" },
-  { name: "Titan Trust Bank", code: "100031" },
-  { name: "Gboko Power Microfinance Bank", code: "8012" },
-]
+
 
 /* -------------------- COMPUTED -------------------- */
 const hasBank = computed(() => !!profile.bank_account)
+
+const onBankChange = (name: string) => {
+  bankForm.bank_code = getBankCode(name)
+}
 
 /* -------------------- FETCH PROFILE FROM API ONLY -------------------- */
 const fetchProfile = async () => {
@@ -104,12 +88,8 @@ const fetchProfile = async () => {
 }
 
 /* -------------------- BANK CHANGE -------------------- */
-const onBankChange = (name: string) => {
-  const bank = bankOptions.find(b => b.name === name)
-  if (bank) bankForm.bank_code = bank.code
-}
 
-/* -------------------- FIXED: PROPER PUT/POST LOGIC -------------------- */
+
 const submitBank = async () => {
   if (!bankForm.bank_name || !bankForm.account_name || !bankForm.account_number || !bankForm.bank_code) {
     message.error('Please fill all fields')
@@ -118,14 +98,13 @@ const submitBank = async () => {
 
   loading.bank = true
   try {
-    // ✅ FIXED: Proper PUT for update, POST for create
-    const method = profile.bank_account ? 'PUT' : 'POST'
-    
-    const res = await $api('/admin/payout/bank', {
-      method,
+    // Always POST, backend decides create or update
+    const res = await $api('/administrator/payout/bank', {
+      method: 'POST',
       body: bankForm
     })
 
+    // Update frontend state
     profile.bank_account = res.data
     bankModalOpen.value = false
     message.success('Bank details saved successfully')
@@ -135,6 +114,7 @@ const submitBank = async () => {
     loading.bank = false
   }
 }
+
 
 /* -------------------- UPDATE PASSWORD -------------------- */
 const updatePassword = async () => {
@@ -312,20 +292,19 @@ onMounted(fetchProfile)
           <a-select
             v-model:value="bankForm.bank_name"
             show-search
-            :filter-option="true"
-            size="middle"
+            :loading="loading"
             placeholder="Select bank"
             @change="onBankChange"
-            class="!w-full"
           >
             <a-select-option
-              v-for="bank in bankOptions"
+              v-for="bank in banks"
               :key="bank.code"
               :value="bank.name"
             >
               {{ bank.name }}
             </a-select-option>
           </a-select>
+
         </a-form-item>
         <a-form-item label="Account Name *" class="!mb-1 !pt-0">
           <a-input 

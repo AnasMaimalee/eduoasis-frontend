@@ -6,8 +6,13 @@ import { UploadOutlined } from '@ant-design/icons-vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['administrator']
+  roles: ['administrator'],
+  title: 'JAMB Admission Result Notifcation'
 })
+
+
+import { useFileViewer } from '@/composables/useFileViewer'
+const { viewFile } = useFileViewer()
 
 const { $api } = useNuxtApp()
 
@@ -178,37 +183,46 @@ onMounted(refreshAll)
 
 <template>
   <div class="p-6 lg:p-8 space-y-8 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen">
-    
-  <div class="flex items-center justify-between flex-wrap gap-4">
-  <div>
-    <Typography.Title
-      level="3"
-      class="!m-0 mb-2 flex items-center gap-3 text-emerald-800 font-black"
+ <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-1 sm:p-0">
+  <!-- TITLE -->
+  <div class="w-full sm:w-auto">
+    <div
+      class="!m-0 text-sm sm:text-base md:text-lg flex items-center gap-1.5 sm:gap-2
+             text-emerald-800 font-semibold"
     >
-      🧾 JAMB Admission Result Notification Processing
+      🧾 JAMB Admission Result Notification
       <span
-        class="text-sm bg-white/80 px-3 py-1 rounded-full text-emerald-700 font-semibold"
+        class="text-[9px] sm:text-xs bg-emerald-100/90 px-1.5 sm:px-2 py-px sm:py-0.5 
+               rounded-full text-emerald-700 font-medium shadow-sm"
       >
-        {{ pendingJobs.length + myJobs.length + completedJobs.length }} total jobs
+        {{ pendingJobs.length + myJobs.length + completedJobs.length }}
       </span>
-    </Typography.Title>
+    </div>
 
-    <Typography.Text type="secondary">
-      Pending → Take → Complete → Track your work
-    </Typography.Text>
+    <div
+      class="text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-0 block sm:inline text-gray-500"
+    >
+      Pending → Take → Complete → Track
+    </div>
   </div>
 
-  <!-- 🔄 REFRESH BUTTON -->
+  <!-- REFRESH -->
   <Button
     type="primary"
     ghost
+    size="small"
     :loading="loading.refresh"
     @click="refreshAll"
-    class="border-emerald-500 text-emerald-700"
+    class="!text-xs sm:!text-sm border-emerald-500 text-emerald-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg"
   >
     🔄 Refresh
   </Button>
 </div>
+
+
+
+
+
 
 
     <!-- MAIN CONTENT -->
@@ -336,14 +350,17 @@ onMounted(refreshAll)
             <Table.Column title="Result File" width="140" align="center">
               <template #default="{ record }">
                 <a
-                  v-if="record.result_file_url"
-                  :href="record.result_file_url"
-                  target="_blank"
-                  class="text-emerald-700 font-medium"
+                  href="#"
+                  @click.prevent="
+                    viewFile(
+                      record.id,
+                      `/services/jamb-admission-result-notification/${record.id}/download`
+                    )
+                  "
                 >
-                  📄 View
+                  <span v-if="viewingId === record.id">⏳ Opening…</span>
+                  <span v-else>📄 View</span>
                 </a>
-                <span v-else class="text-gray-400">—</span>
               </template>
             </Table.Column>
 

@@ -6,8 +6,13 @@ import { UploadOutlined } from '@ant-design/icons-vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['administrator']
+  roles: ['administrator'],
+  title: 'JAMB Check Admission'
 })
+
+
+import { useFileViewer } from '@/composables/useFileViewer'
+const { viewFile } = useFileViewer()
 
 const { $api } = useNuxtApp()
 
@@ -178,48 +183,41 @@ onMounted(refreshAll)
 
 <template>
   <div class="p-6 lg:p-8 space-y-8 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen">
-    
- <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-4 sm:p-6">
-  <!-- Title Section - Responsive Typography -->
-  <div class="w-full lg:w-auto flex flex-col gap-2">
-    <Typography.Title
-      level="3"
-      class="!m-0 mb-1 flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3 
-             text-emerald-800 font-black text-lg xs:text-xl sm:text-2xl lg:text-3xl xl:text-4xl leading-tight"
+   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-1 sm:p-0">
+  <!-- TITLE -->
+  <div class="w-full sm:w-auto">
+    <div
+      class="!m-0 text-sm sm:text-base md:text-lg flex items-center gap-1.5 sm:gap-2
+             text-emerald-800 font-semibold"
     >
-      <span>🧾 JAMB Admission Status Processing</span>
+      🧾 JAMB Admission Status
       <span
-        class="text-xs xs:text-sm bg-white/80 px-2 py-1 rounded-full text-emerald-700 font-semibold 
-               whitespace-nowrap shadow-sm border border-emerald-200"
+        class="text-[9px] sm:text-xs bg-emerald-100/90 px-1.5 sm:px-2 py-px sm:py-0.5 
+               rounded-full text-emerald-700 font-medium shadow-sm"
       >
-        {{ pendingJobs.length + myJobs.length + completedJobs.length }} total jobs
+        {{ pendingJobs.length + myJobs.length + completedJobs.length }}
       </span>
-    </Typography.Title>
+    </div>
 
-    <Typography.Text 
-      type="secondary" 
-      class="text-xs xs:text-sm sm:text-base text-left lg:text-center leading-relaxed"
+    <div
+      class="text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-0 block sm:inline text-gray-500"
     >
-      Pending → Take → Complete → Track your work
-    </Typography.Text>
+      Pending → Take → Complete → Track
+    </div>
   </div>
 
-  <!-- Refresh Button - Always prominent -->
+  <!-- REFRESH -->
   <Button
     type="primary"
     ghost
+    size="small"
     :loading="loading.refresh"
     @click="refreshAll"
-    class="border-emerald-500 text-emerald-700 hover:border-emerald-600 hover:text-emerald-600 
-           px-4 py-2 sm:px-6 sm:py-2.5 text-sm sm:text-base font-semibold shadow-md 
-           flex-shrink-0 whitespace-nowrap min-w-[120px]"
+    class="!text-xs sm:!text-sm border-emerald-500 text-emerald-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg"
   >
-    <span class="inline-block mr-1 animate-spin" v-if="loading.refresh">🔄</span>
-    <span v-else>🔄</span>
-    Refresh
+    🔄 Refresh
   </Button>
 </div>
-
 
 
     <!-- MAIN CONTENT -->
@@ -346,15 +344,18 @@ onMounted(refreshAll)
             <!-- FILE -->
             <Table.Column title="Result File" width="140" align="center">
             <template #default="{ record }">
-                <a
-                v-if="record.result_file_url"
-                :href="record.result_file_url"
-                target="_blank"
-                class="text-emerald-700 font-medium"
-                >
-                📄 View
-                </a>
-                <span v-else class="text-gray-400">—</span>
+               <a
+                href="#"
+                @click.prevent="
+                  viewFile(
+                    record.id,
+                    `/services/jamb-admission-status/${record.id}/download`
+                  )
+                "
+              >
+                <span v-if="viewingId === record.id">⏳ Opening…</span>
+                <span v-else>📄 View</span>
+              </a>
             </template>
             </Table.Column>
 
