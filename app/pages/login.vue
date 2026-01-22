@@ -144,7 +144,9 @@ const confirm2FA = async () => {
 
 
 
-
+const isLoginDisabled = computed(() => {
+  return !modelRef.email.trim() || !modelRef.password.trim() || auth.loading
+})
 /* ---------------- DEVICE LOGIN ---------------- */
 const handleDeviceLogin = async () => {
   auth.loadingWithDevice = true
@@ -187,6 +189,7 @@ const handleDeviceLogin = async () => {
           type="primary"
           block
           :loading="auth.loading"
+          :disabled="isLoginDisabled"
           @click="handleLogin"
         >
           Login
