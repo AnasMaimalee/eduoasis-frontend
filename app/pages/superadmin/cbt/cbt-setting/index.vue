@@ -42,21 +42,25 @@ const fetchSettings = async () => {
 }
 
 // Update settings on backend
-const updateSettings = async (payload: Settings) => {
-  loading.value = true
+const updateSettings = async () => {
   try {
-    const res = await $api('/cbt/superadmin/settings', {
+    await $api('/cbt/superadmin/settings', {
       method: 'PUT',
-      body: payload
+      body: {
+        subjects_count: Number(form.subjects_count),
+        questions_per_subject: Number(form.questions_per_subject),
+        duration_minutes: Number(form.duration_minutes),
+        exam_fee: Number(form.exam_fee),
+      }
     })
-    settings.value = res.data
-    closeModal()
-  } catch (error) {
-    console.error('Failed to update CBT settings', error)
-  } finally {
-    loading.value = false
+
+    message.success('Settings updated successfully')
+  } catch (err: any) {
+    console.error(err)
+    message.error(err.data?.message || 'Failed to update CBT settings')
   }
 }
+
 
 // Fetch on page load
 onMounted(fetchSettings)
