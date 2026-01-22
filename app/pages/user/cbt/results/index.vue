@@ -50,5 +50,7 @@ onMounted(fetchResults)
       :data="filteredResults"
       :loading="loading"
     />
+
+    
   </div>
 </template>

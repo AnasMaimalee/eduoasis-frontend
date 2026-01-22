@@ -260,47 +260,66 @@ const pageLoading = ref(false)
     <!-- Main Content -->
     <div class="flex-1 flex flex-col min-h-screen overflow-hidden lg:ml-0" :class="isMobile ? 'ml-0' : ''">
       <!-- Header -->
-      <header class="h-20 lg:h-24 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-lg border-b border-emerald-100/50 flex items-center justify-between px-6 lg:px-8">
-        <div class="flex items-center gap-6">
+      <header class="h-20 lg:h-24 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-lg border-b border-emerald-100/50 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-4 sm:gap-6">
+          <!-- Mobile Sidebar Toggle -->
           <button
             v-if="isMobile"
             @click="toggleSidebar"
             class="p-2 rounded-lg hover:bg-emerald-100/50 dark:hover:bg-emerald-900/50 transition-all"
           >
-            <LeftOutlined class="w-6 h-6 text-emerald-600" />
+            <LeftOutlined class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
           </button>
-          <h1 class="text-2xl lg:text-3xl font-black bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 bg-clip-text text-transparent drop-shadow-lg">
+
+          <!-- Page Title -->
+          <h1
+            class="font-black bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 bg-clip-text text-transparent drop-shadow-lg truncate"
+            :class="{
+              'text-lg sm:text-xl lg:text-3xl': true
+            }"
+          >
             {{ currentPageTitle }}
           </h1>
         </div>
 
         <!-- User Dropdown -->
         <a-dropdown placement="bottomRight">
-          <div class="flex items-center gap-4 cursor-pointer px-4 py-2 rounded-2xl hover:bg-emerald-50/80 dark:hover:bg-emerald-900/50 transition-all duration-300 shadow-sm border border-emerald-200/50 hover:border-emerald-300/70">
-            <a-avatar size="large" :style="{ background: 'linear-gradient(135deg, #10b981, #34d399)' }">
+          <div
+            class="flex items-center gap-2 sm:gap-4 cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded-xl hover:bg-emerald-50/80 dark:hover:bg-emerald-900/50 transition-all duration-300 shadow-sm border border-emerald-200/50 hover:border-emerald-300/70"
+          >
+            <a-avatar
+              size="small sm:large"
+              :style="{ background: 'linear-gradient(135deg, #10b981, #34d399)' }"
+            >
               {{ firstName.charAt(0).toUpperCase() }}
             </a-avatar>
-            <div class="hidden lg:block min-w-0">
-              <p class="text-sm text-emerald-600 font-medium">{{ auth.userRole }}</p>
+            <div class="hidden sm:block min-w-0">
+              <p class="text-xs sm:text-sm text-emerald-600 font-medium truncate">{{ auth.userRole }}</p>
             </div>
+            <LogoutOutlined
+              class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 sm:ml-2"
+            />
           </div>
+
           <template #overlay>
-            <a-menu class="min-w-[200px] shadow-2xl border border-emerald-100/50 rounded-2xl overflow-hidden">
-              <a-menu-item key="profile" class="px-6 py-4 hover:bg-emerald-50/50 border-b border-emerald-100/30">
-                <UserOutlined class="mr-3 text-emerald-600" /> Profile
+            <a-menu class="min-w-[180px] sm:min-w-[200px] shadow-2xl border border-emerald-100/50 rounded-2xl overflow-hidden">
+              <a-menu-item key="profile" class="px-4 sm:px-6 py-3 sm:py-4 hover:bg-emerald-50/50 border-b border-emerald-100/30">
+                <UserOutlined class="mr-2 sm:mr-3 text-emerald-600" /> Profile
               </a-menu-item>
-              <a-menu-item key="settings" class="px-6 py-4 hover:bg-emerald-50/50">
-                <SettingOutlined class="mr-3 text-emerald-600" /> Settings
+              <a-menu-item key="settings" class="px-4 sm:px-6 py-3 sm:py-4 hover:bg-emerald-50/50">
+                <SettingOutlined class="mr-2 sm:mr-3 text-emerald-600" /> Settings
               </a-menu-item>
               <a-menu-divider class="my-0 bg-emerald-100/50" />
-              <a-menu-item key="logout" danger class="px-6 py-4" @click="logout">
-                <LogoutOutlined class="mr-3" /> Logout
+              <a-menu-item key="logout" danger class="px-4 sm:px-6 py-3 sm:py-4" @click="logout">
+                <LogoutOutlined class="mr-2 sm:mr-3" /> Logout
               </a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>
       </header>
 
+      
+    
       <!-- Page Content -->
         <main class="flex-1 overflow-y-auto p-6 lg:p-10">
             <slot />

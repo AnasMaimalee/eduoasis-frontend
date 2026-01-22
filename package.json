@@ -28,6 +28,7 @@
     "@typescript-eslint/parser": "^8.52.0",
     "eslint": "^9.39.2",
     "eslint-plugin-vue": "^10.6.2",
+    "vite-tsconfig-paths": "^6.0.4",
     "vue-eslint-parser": "^10.2.0"
   }
 }

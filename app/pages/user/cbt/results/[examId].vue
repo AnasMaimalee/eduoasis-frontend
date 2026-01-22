@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 
+import ResultTabs from '~/components/CBT/user/result/ResultTabs.vue'
+
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
@@ -23,13 +25,30 @@ onMounted(async () => {
     const res = await $api(`/cbt/user/results/${examId}`)
     result.value = res.data
   } catch (e) {
-    message.error('Failed to load exam result')
     console.error(e)
+    message.error('Failed to load exam result')
   } finally {
     loading.value = false
   }
 })
 
+const loadingSummary = ref(false)
+const resultSummary = ref<any>(null)
+const fetchResultSummary = async () => {
+  loadingSummary.value = true
+  try {
+    const res = await $api(`cbt/user/results/${examId}/show-result`)
+    resultSummary.value = res
+    console.log("Result Summary", res)
+  } catch (e) {
+    console.error(e)
+    message.error('Failed to load result summary')
+  } finally {
+    loadingSummary.value = false
+  }
+}
+
+onMounted(fetchResultSummary)
 /* ---------------- DOWNLOAD PDF ---------------- */
 const downloadPDF = async () => {
   downloadLoading.value = true
@@ -41,28 +60,34 @@ const downloadPDF = async () => {
     const url = window.URL.createObjectURL(new Blob([res]))
     const link = document.createElement('a')
     link.href = url
-    link.download = `Exam-${examId}.pdf`
+    link.download = `Exam-Result-${examId}.pdf`
     document.body.appendChild(link)
     link.click()
+
+    window.URL.revokeObjectURL(url)
     document.body.removeChild(link)
+
+    message.success('PDF downloaded successfully')
   } catch (e) {
-    message.error('Failed to download PDF')
     console.error(e)
+    message.error('Failed to download PDF')
   } finally {
     downloadLoading.value = false
   }
 }
 </script>
 
+
 <template>
-  <div class="max-w-5xl mx-auto px-3 sm:px-6 py-6">
+  <div class="max-w-6xl mx-auto px-4 py-8">
 
     <!-- LOADING -->
-    <div v-if="loading" class="text-center text-gray-500 text-sm">
-      Loading result...
+    <div v-if="loading" :loader="loading" class="text-center py-12">
+      <p class="text-gray-500">Loading exam result...</p>
     </div>
 
     <!-- RESULT -->
+     <!-- RESULT -->
     <div v-else-if="result">
 
       <!-- HEADER -->
@@ -133,25 +158,26 @@ const downloadPDF = async () => {
         </table>
       </div>
 
+      <!-- SUBJECT TABS -->
+      <ResultTabs :subjects="resultSummary.subjects" class="mt-5"/>
+
       <!-- DOWNLOAD -->
-      <div class="mt-6 text-center">
+      <div class="text-center mt-10">
         <button
-          class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg text-sm flex items-center justify-center gap-2 mx-auto disabled:opacity-60"
+          class="bg-emerald-600 text-white px-8 py-3 rounded-lg font-semibold"
           :disabled="downloadLoading"
-          :loader="downloadLoading"
           @click="downloadPDF"
         >
-          <span>
-            {{ downloadLoading ? 'Downloading...' : 'Download PDF' }}
-          </span>
+          {{ downloadLoading ? 'Downloading...' : 'Download PDF' }}
         </button>
       </div>
 
     </div>
 
-    <!-- NO RESULT -->
-    <div v-else class="text-center text-red-500">
-      Result not available.
+    <!-- EMPTY -->
+    <div v-else class="text-center text-red-500 py-20">
+      Result not available
     </div>
   </div>
 </template>
+
