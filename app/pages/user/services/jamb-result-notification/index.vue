@@ -56,41 +56,68 @@ const filteredRequests = computed(() => {
 
 const downloadingId = ref<string | null>(null)
 
-const downloadFile = async (filePath: string, id: string) => {
-  if (!filePath || downloadingId.value) return
+const downloadFile = async (jobId: string) => {
+  if (downloadingId.value) return
 
-  downloadingId.value = id
+  downloadingId.value = jobId
+  console.log('🚀 Downloading:', jobId)
 
   try {
-    const response = await $api(`/download-storage/${filePath}`, {
-      method: 'GET',
-      responseType: 'blob'
+    const response = await $api.raw(
+      `/services/jamb-admission-result-notification/${jobId}/download`,
+      {
+        method: 'GET',
+        responseType: 'blob',
+      }
+    )
+
+    // ✅ Handle authorization error from backend
+    if (response.status === 403) {
+      message.error(response._data?.message || 'You are not allowed to download this file')
+      return
+    }
+
+    // ✅ Blob
+    const blob = new Blob([response._data], {
+      type: response.headers.get('content-type') || 'application/octet-stream',
     })
 
-    const contentType = response.headers?.['content-type'] || ''
-    const blob = new Blob([response], { type: contentType })
+    // ✅ Detect filename
+    const disposition = response.headers.get('content-disposition')
+    let filename = `jamb-admission-result-notification-${Date.now()}`
 
-    let filename = `jamb-result-${Date.now()}`
-    if (contentType.includes('pdf')) filename += '.pdf'
-    else if (contentType.includes('image/')) filename += '.png'
-    else filename += `.${filePath.split('.').pop()}`
+    if (disposition && disposition.includes('filename=')) {
+      filename = disposition.split('filename=')[1].replace(/"/g, '')
+    }
 
+    // ✅ Download
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
     link.download = filename
     document.body.appendChild(link)
     link.click()
+
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
 
     message.success('Download completed')
-  } catch (e) {
-    message.error('Download failed')
+  } catch (error: any) {
+    console.error('Download error:', error)
+
+    // ✅ Proper error message from backend
+    const msg =
+      error?.data?.message ||
+      error?.response?._data?.message ||
+      'You are not allowed to download this file'
+
+    message.error(msg)
   } finally {
     downloadingId.value = null
   }
 }
+
+
 
 /* ===================== FETCH ===================== */
 const fetchRequests = async () => {
@@ -309,17 +336,18 @@ onMounted(fetchRequests)
           </Tag>
         </template>
         
-        <template v-else-if="column.dataIndex === 'result'">
+         <template v-else-if="column.dataIndex === 'result'">
           <Button
             v-if="record.result_file"
             type="primary"
             size="small"
             :loading="downloadingId === record.id"
-            @click="downloadFile(record.result_file, record.id)"
+            @click="downloadFile(record.id)"
             class="bg-emerald-600 hover:bg-emerald-700 border-none"
           >
-           📥 Download
+            📥 Download
           </Button>
+
           <Tag v-else color="default">Not ready</Tag>
         </template>
         
