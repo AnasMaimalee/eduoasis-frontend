@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { Table, Input, Button, message } from 'ant-design-vue'
+import { Table, Input, Button, message, Tag } from 'ant-design-vue'
 import { ReloadOutlined } from '@ant-design/icons-vue'
 import StatusTag from './StatusTag.vue'
 
@@ -31,6 +31,9 @@ const filteredSubjects = computed(() => {
   )
 })
 
+// ✅ TOTAL COUNT (SMART)
+const totalCount = computed(() => filteredSubjects.value.length)
+
 // ✅ PERFECT NUMBERING
 const getIndex = (index: number) => index + 1
 
@@ -38,10 +41,12 @@ onMounted(fetchSubjects)
 </script>
 
 <template>
-  <div class="">
+  <div>
 
-    <!-- HEADER ACTIONS -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+
+      <!-- SEARCH -->
       <Input
         v-model:value="searchText"
         placeholder="Search subjects..."
@@ -49,17 +54,26 @@ onMounted(fetchSubjects)
         class="w-full sm:w-64"
       />
 
-      <Button
-        type="primary"
-        ghost
-        size="middle"
-        :loading="loading"
-        @click="fetchSubjects"
-        class="flex items-center mb-2 gap-1"
-      >
-        <ReloadOutlined />
-        Refresh
-      </Button>
+      <!-- ACTIONS -->
+      <div class="flex items-center gap-2">
+        <!-- TOTAL COUNT -->
+        <Tag color="green" class="!text-xs sm:!text-sm">
+          Total: {{ totalCount }}
+        </Tag>
+
+        <!-- REFRESH -->
+        <Button
+          type="primary"
+          ghost
+          size="middle"
+          :loading="loading"
+          @click="fetchSubjects"
+          class="flex items-center gap-1"
+        >
+          <ReloadOutlined />
+          Refresh
+        </Button>
+      </div>
     </div>
 
     <!-- TABLE -->
@@ -121,12 +135,11 @@ onMounted(fetchSubjects)
   @apply bg-emerald-50;
 }
 
-/* MOBILE TEXT REDUCTION */
+/* MOBILE EDGE FIX */
 @media (max-width: 640px) {
   .modern-table :deep(.ant-table-container) {
     margin-left: -4px;
     margin-right: -4px;
   }
 }
-
 </style>
