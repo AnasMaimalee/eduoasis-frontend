@@ -7,7 +7,8 @@ definePageMeta({
   layout: 'default',
 })
 
-const api = usePublicApi()
+    const { $api } = useNuxtApp()
+
 
 /* -------------------- FORM STATE -------------------- */
 const form = reactive({
@@ -91,7 +92,7 @@ async function register() {
     const apiBase = config.public.apiBase
 
     // ✅ Call API with proper endpoint
-    const { data } = await $fetch(`${apiBase}/auth/register`, {
+    const { data } = await $api(`/auth/register`, {
       method: 'POST',
       body: payload,
     })
