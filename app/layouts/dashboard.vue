@@ -185,61 +185,64 @@ const pageLoading = ref(false)
       </div>
 
     <div class="flex-1 overflow-y-auto py-6 px-2">
-  <a-menu
-    mode="inline"
-    :inline-collapsed="collapsed"
-    :selected-keys="[currentRoute]"
-    class="border-none bg-transparent"
-  >
-    <template v-for="menu in menus" :key="menu.key || menu.route || menu.title">
-      
-      <!-- SUBMENU (CBT Management) -->
-      <a-sub-menu 
-        v-if="menu.children && menu.children.length" 
-        :key="menu.key || menu.route || menu.title"
-      >
-        <template #title>
+    <a-menu
+      mode="inline"
+      :inline-collapsed="collapsed"
+      :selected-keys="[currentRoute]"
+      class="border-none bg-transparent"
+    >
+      <template v-for="menu in menus" :key="menu.key || menu.route || menu.title">
+        
+       <!-- SUBMENU (Parent with children) -->
+        <a-sub-menu 
+          v-if="menu.children && menu.children.length" 
+          :key="menu.key || menu.route || menu.title"
+        >
+          <template #title>
+            <div class="flex items-center gap-4">
+              <component
+                :is="iconComponents[menu.icon] || BoxPlotOutlined"
+                class="w-6 h-6 text-emerald-600"
+              />
+              <!-- REMOVE v-if -->
+              <span>{{ menu.title }}</span>
+            </div>
+          </template>
+          <a-menu-item
+            v-for="child in menu.children"
+            :key="child.key || child.route || child.title"
+            @click="navigate(child.route || child.key || child.title)"
+          >
+            <div class="flex items-center gap-4">
+              <component
+                :is="iconComponents[child.icon] || BoxPlotOutlined"
+                class="w-5 h-5 text-emerald-500"
+              />
+              <span>{{ child.title }}</span>
+            </div>
+          </a-menu-item>
+        </a-sub-menu>
+
+        <!-- REGULAR MENU ITEM -->
+        <a-menu-item
+          v-else
+          :key="menu.key || menu.route || menu.title"
+          @click="navigate(menu.route || menu.key || menu.title)"
+        >
           <div class="flex items-center gap-4">
             <component
               :is="iconComponents[menu.icon] || BoxPlotOutlined"
               class="w-6 h-6 text-emerald-600"
             />
-            <span v-if="!collapsed">{{ menu.title }}</span> <!-- ✅ title -->
-          </div>
-        </template>
-        <a-menu-item
-          v-for="child in menu.children"
-          :key="child.key || child.route || child.title"
-          @click="navigate(child.route || child.key || child.title)"
-        >
-          <div class="flex items-center gap-4">
-            <component
-              :is="iconComponents[child.icon] || BoxPlotOutlined"
-              class="w-5 h-5 text-emerald-500"
-            />
-            <span>{{ child.title }}</span> <!-- ✅ title -->
+            <!-- REMOVE v-if -->
+            <span>{{ menu.title }}</span>
           </div>
         </a-menu-item>
-      </a-sub-menu>
 
-      <!-- REGULAR MENU ITEM (Dashboard, Wallet, etc.) -->
-      <a-menu-item
-        v-else
-        :key="menu.key || menu.route || menu.title"
-        @click="navigate(menu.route || menu.key || menu.title)"
-      >
-        <div class="flex items-center gap-4">
-          <component
-            :is="iconComponents[menu.icon] || BoxPlotOutlined"
-            class="w-6 h-6 text-emerald-600"
-          />
-          <span v-if="!collapsed">{{ menu.title }}</span> <!-- ✅ title -->
-        </div>
-      </a-menu-item>
 
-    </template>
-  </a-menu>
-</div>
+      </template>
+    </a-menu>
+  </div>
 
 
 
@@ -366,4 +369,24 @@ const pageLoading = ref(false)
 .dark :deep(.ant-menu-item-selected) {
   background: linear-gradient(135deg, rgba(52, 211, 153, 0.3), rgba(16, 185, 129, 0.25)) !important;
 }
+/* Sidebar collapsed adjustments */
+:deep(.ant-menu-inline-collapsed .ant-menu-item),
+:deep(.ant-menu-inline-collapsed .ant-menu-submenu-title) {
+  background: transparent !important;       /* Remove white/dark bg */
+  color: #86efac !important;               /* emerald-300 text */
+}
+
+/* Hover effect for collapsed items */
+:deep(.ant-menu-inline-collapsed .ant-menu-item:hover),
+:deep(.ant-menu-inline-collapsed .ant-menu-submenu-title:hover) {
+  background: rgba(16, 185, 129, 0.1) !important; /* soft green overlay */
+}
+
+/* Selected effect for collapsed items */
+:deep(.ant-menu-inline-collapsed .ant-menu-item-selected),
+:deep(.ant-menu-inline-collapsed .ant-menu-submenu-selected) {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important; /* emerald-500 for selected text */
+}
+
 </style>
