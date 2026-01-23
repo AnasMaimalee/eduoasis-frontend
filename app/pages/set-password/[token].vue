@@ -93,13 +93,17 @@ async function resetPassword() {
       class="shadow-xl"
       style="width: 100%; max-width: 420px"
     >
-      <a-form layout="vertical" @finish="resetPassword">
+      <a-form
+        layout="vertical"
+        :model="form"
+        @finish="resetPassword"
+        >
         <a-form-item label="Email">
           <a-input v-model:value="form.email" disabled />
         </a-form-item>
 
         <a-form-item label="New Password">
-          <a-input-password v-model:value="form.password" />
+          <a-input-password v-model:value="form.password" name="password" />
 
           <!-- Strength bar -->
           <div class="mt-2">
@@ -128,7 +132,7 @@ async function resetPassword() {
         </a-form-item>
 
         <a-form-item label="Confirm Password">
-          <a-input-password v-model:value="form.password_confirmation" />
+          <a-input-password v-model:value="form.password_confirmation" name="password_confirmation" />
         </a-form-item>
 
         <a-alert
