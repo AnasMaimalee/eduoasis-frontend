@@ -93,10 +93,10 @@ async function resetPassword() {
       class="shadow-xl"
       style="width: 100%; max-width: 420px"
     >
-      <a-form
+     <a-form
         layout="vertical"
         :model="form"
-        @finish="resetPassword"
+        @submit.prevent="resetPassword"
         >
         <a-form-item label="Email">
           <a-input v-model:value="form.email" disabled />
@@ -144,14 +144,14 @@ async function resetPassword() {
         />
 
         <a-button
-          type="primary"
-          html-type="submit"
-          block
-          size="large"
-          :loading="loading"
-          :disabled="isSubmitDisabled"
+            type="primary"
+            html-type="submit"
+            block
+            size="large"
+            :loading="loading"
+            :disabled="isSubmitDisabled"
         >
-          Set Password
+          🔐 Set Password
         </a-button>
       </a-form>
 
