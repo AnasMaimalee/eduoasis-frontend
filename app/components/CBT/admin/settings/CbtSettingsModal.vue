@@ -28,26 +28,27 @@ const model = ref<Settings>({
   exam_fee: 0
 })
 
-// ✅ Watch backend data and populate dynamically
+// Watch modal open and initialize model
 watch(
   () => props.open,
   async (open) => {
     if (open && props.initialSettings) {
-      model.value = { ...props.initialSettings } // always use backend values
+      model.value = { ...props.initialSettings }
       await nextTick()
       form.value?.resetFields()
     }
   }
 )
 
-// ✅ Computed total questions
+// Computed total questions
 const totalQuestions = computed(() =>
   model.value.subjects_count * model.value.questions_per_subject
 )
 
-// ✅ Money formatter
+// Format money
 const formatMoney = (v: number) => Number(v || 0).toLocaleString()
 
+// Emit updated settings
 const handleOk = () => emit('update', { ...model.value })
 const handleCancel = () => emit('cancel')
 </script>

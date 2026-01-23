@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import CbtSettingsSummary from '~/components/CBT/admin/settings/CbtSettingsSummary.vue'
 import CbtSettingsModal from '~/components/CBT/admin/settings/CbtSettingsModal.vue'
-
+import { message } from 'ant-design-vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
@@ -19,13 +19,14 @@ const showModal = ref(false)
 const openModal = () => (showModal.value = true)
 const closeModal = () => (showModal.value = false)
 
-// CBT Settings (nullable until fetched)
+// CBT Settings
 type Settings = {
   subjects_count: number
   questions_per_subject: number
   duration_minutes: number
   exam_fee: number
 }
+
 const settings = ref<Settings | null>(null)
 
 // Fetch settings from backend
@@ -36,33 +37,35 @@ const fetchSettings = async () => {
     settings.value = res.data
   } catch (error) {
     console.error('Failed to fetch CBT settings', error)
+    message.error('Failed to load CBT settings')
   } finally {
     loading.value = false
   }
 }
 
-// Update settings on backend
-const updateSettings = async () => {
+// Update settings from modal
+const updateSettings = async (updated: Settings) => {
+  loading.value = true
   try {
     await $api('/cbt/superadmin/settings', {
       method: 'PUT',
-      body: {
-        subjects_count: Number(form.subjects_count),
-        questions_per_subject: Number(form.questions_per_subject),
-        duration_minutes: Number(form.duration_minutes),
-        exam_fee: Number(form.exam_fee),
-      }
+      body: updated
     })
 
+    closeModal()          // ✅ close modal
+    await fetchSettings() // ✅ REFRESH DATA
     message.success('Settings updated successfully')
+
   } catch (err: any) {
     console.error(err)
     message.error(err.data?.message || 'Failed to update CBT settings')
+  } finally {
+    loading.value = false
   }
 }
 
 
-// Fetch on page load
+// Fetch on mount
 onMounted(fetchSettings)
 </script>
 
@@ -70,36 +73,44 @@ onMounted(fetchSettings)
   <div class="p-4 sm:p-6 lg:p-8 space-y-8 w-full">
 
     <!-- Header -->
-    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 sm:p-8 rounded-2xl shadow-2xl text-white">
-      <div class="flex flex-col lg:flex-row lg:items-center gap-6 max-w-7xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
-        <!-- Left Content -->
-        <div class="flex items-center gap-4 lg:gap-6 flex-1">
-          <div class="p-3 sm:p-4 lg:p-5 bg-white/20 rounded-2xl shadow-lg backdrop-blur-sm">
-            <span class="text-2xl sm:text-3xl lg:text-4xl">⚙️</span>
+        <!-- Title -->
+        <div class="flex items-center gap-4">
+          <div class="p-3 rounded-xl bg-emerald-100 text-emerald-600">
+            ⚙️
           </div>
           <div>
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black leading-tight">CBT Settings</h1>
-            <p class="text-lg sm:text-xl opacity-90 mt-1">Configure exam structure, timing & pricing</p>
+            <h1 class="text-2xl font-bold text-gray-800">
+              CBT Settings
+            </h1>
+            <p class="text-sm text-gray-500">
+              Control exam structure, timing & pricing
+            </p>
           </div>
         </div>
 
-        <!-- Right Button -->
-        <div class="mt-4 lg:mt-0 lg:flex-none">
-          <button 
-            @click="openModal"
-            class="bg-white ml-auto text-emerald-600 hover:bg-emerald-50 font-black shadow-2xl px-8 py-4 text-lg flex items-center gap-2 rounded-xl transition-all duration-200 hover:scale-105 whitespace-nowrap"
-            :disabled="!settings"
-          >
-            <span>✏️ Edit Settings</span>
-          </button>
-        </div>
+        <!-- Action -->
+        <button
+          @click="openModal"
+          :disabled="!settings"
+          class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-white font-semibold shadow hover:bg-emerald-700 transition disabled:opacity-50"
+        >
+          ✏️ Edit Settings
+        </button>
 
       </div>
     </div>
 
-    <!-- Summary Cards -->
-    <CbtSettingsSummary v-if="settings" :settings="settings" />
+
+    <!-- Summary -->
+   <CbtSettingsSummary
+      v-if="settings"
+      :key="JSON.stringify(settings)"
+      :settings="settings"
+    />
+
 
     <!-- Loading Overlay -->
     <div v-if="loading" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
@@ -109,7 +120,7 @@ onMounted(fetchSettings)
       </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Modal -->
     <CbtSettingsModal
       v-if="settings"
       :open="showModal"
