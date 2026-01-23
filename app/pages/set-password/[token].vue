@@ -55,7 +55,7 @@ async function resetPassword() {
   error.value = ''
 
   try {
-    await $api('/auth/reset-password', {
+    await $api('/reset-password', {
       method: 'POST',
       body: form,
     })
