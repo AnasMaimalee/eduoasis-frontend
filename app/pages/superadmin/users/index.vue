@@ -2,7 +2,8 @@
 definePageMeta({ 
   layout: 'dashboard', 
   middleware: 'auth', 
-  roles: ['superadmin'] 
+  roles: ['superadmin'] ,
+  title: 'Users'
 })
 
 import { ref, onMounted } from 'vue'

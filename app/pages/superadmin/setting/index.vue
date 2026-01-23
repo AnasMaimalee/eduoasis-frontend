@@ -7,7 +7,8 @@ import WebAuthnSection from '~/components/Setting/WebAuthnSection.vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: 'Setting'
 })
 
 const { $api } = useNuxtApp()

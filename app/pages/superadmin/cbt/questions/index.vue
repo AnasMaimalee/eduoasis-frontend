@@ -15,7 +15,8 @@ import QuestionsTable from '@/components/CBT/admin/questions/QuestionsTable.vue'
 definePageMeta({
     layout: 'dashboard',
     middleware: 'auth',
-    roles: ['superadmin']
+    roles: ['superadmin'],
+    title: 'CBT Exam Questions'
 })
 
 </script>

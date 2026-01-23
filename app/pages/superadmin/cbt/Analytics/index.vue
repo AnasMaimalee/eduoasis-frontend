@@ -7,7 +7,8 @@ import LiveCbtTable from '@/components/CBT/admin/live/LiveCbtTable.vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: 'CBT Exam Live Sessions'
 })
 
 const { $api } = useNuxtApp()

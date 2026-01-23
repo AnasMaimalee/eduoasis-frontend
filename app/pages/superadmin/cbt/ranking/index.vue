@@ -5,7 +5,8 @@ import { Select, Table, Card, Spin, message } from 'ant-design-vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: 'CBT Exam Ranking'
 })
 
 const { $api } = useNuxtApp()

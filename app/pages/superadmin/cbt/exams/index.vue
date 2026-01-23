@@ -13,7 +13,8 @@ import ExamRankings from '@/components/CBT/admin/exam/ExamRankings.vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: 'CBT Exams'
 })
 
 const { $api } = useNuxtApp()

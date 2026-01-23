@@ -9,7 +9,8 @@ import { ArrowLeftOutlined, CreditCardOutlined, HistoryOutlined } from '@ant-des
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: 'User Info Page'
 })
 
 const router = useRouter()

@@ -3,6 +3,7 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['superadmin'],
+  title: 'Wallet'
 })
 
 import { ref, onMounted, computed, watch } from 'vue'

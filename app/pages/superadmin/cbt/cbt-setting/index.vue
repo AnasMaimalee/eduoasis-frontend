@@ -6,7 +6,8 @@ import { message } from 'ant-design-vue'
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: "CBT Setting"
 })
 
 const { $api } = useNuxtApp()

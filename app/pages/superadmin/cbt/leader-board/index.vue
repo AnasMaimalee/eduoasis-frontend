@@ -8,7 +8,8 @@ import LeaderboardLoading from '@/components/CBT/admin/leaderboard/LeaderboardLo
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: 'CBT Exam Leader Board'
 })
 
 const leaderboard = ref<any[]>([])

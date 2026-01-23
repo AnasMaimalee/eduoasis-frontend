@@ -2,7 +2,8 @@
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['superadmin']
+  roles: ['superadmin'],
+  title: 'Administrator Payouts'
 })
 
 import { ref, onMounted, watch } from 'vue'

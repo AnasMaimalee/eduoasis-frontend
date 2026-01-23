@@ -4,6 +4,7 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['superadmin'],
+  title: 'CBT Subjects'
 })
 </script>
 
