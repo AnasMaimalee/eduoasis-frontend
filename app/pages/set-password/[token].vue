@@ -14,7 +14,7 @@ const emailFromQuery = (route.query.email as string) || ''
 
 const form = reactive({
   email: emailFromQuery,
-  token, // now the real token
+  token, // actual token from query
   password: '',
   password_confirmation: '',
 })
@@ -22,7 +22,7 @@ const form = reactive({
 const loading = ref(false)
 const error = ref('')
 
-/* ---------------- PASSWORD STRENGTH ---------------- */
+/* ---------------- PASSWORD RULES ---------------- */
 const passwordRules = computed(() => {
   const p = form.password
   return {
@@ -84,7 +84,8 @@ async function resetPassword() {
         </a-form-item>
 
         <a-form-item label="New Password">
-          <a-input-password v-model:value="form.password" />
+          <a-input-password v-model:value="form.password" name="password" />
+
           <!-- Strength bar -->
           <div class="mt-2">
             <div class="h-2 bg-gray-200 rounded overflow-hidden">
@@ -100,11 +101,30 @@ async function resetPassword() {
                 :style="{ width: `${(strengthScore / 5) * 100}%` }"
               ></div>
             </div>
+
+            <!-- Password Rules -->
+            <ul class="mt-2 text-xs space-y-1">
+              <li :class="passwordRules.length ? 'text-green-600' : 'text-gray-500'">
+                • Min 8 characters
+              </li>
+              <li :class="passwordRules.upper ? 'text-green-600' : 'text-gray-500'">
+                • Uppercase letter
+              </li>
+              <li :class="passwordRules.lower ? 'text-green-600' : 'text-gray-500'">
+                • Lowercase letter
+              </li>
+              <li :class="passwordRules.number ? 'text-green-600' : 'text-gray-500'">
+                • Number
+              </li>
+              <li :class="passwordRules.special ? 'text-green-600' : 'text-gray-500'">
+                • Special character
+              </li>
+            </ul>
           </div>
         </a-form-item>
 
         <a-form-item label="Confirm Password">
-          <a-input-password v-model:value="form.password_confirmation" />
+          <a-input-password v-model:value="form.password_confirmation" name="password_confirmation" />
         </a-form-item>
 
         <a-alert
