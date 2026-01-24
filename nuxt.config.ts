@@ -32,15 +32,18 @@ export default defineNuxtConfig({
 
       cors: true,
 
-      // ✅ CRITICAL FIX
       hmr: {
-        protocol: 'wss',
-        clientPort: 443,
-        overlay: false, // ⬅️ THIS PREVENTS STUCK CSS
+        protocol: 'ws',   // ✅ CHANGE THIS
+        overlay: false,
       },
     },
   },
 
+
+  devServer: {
+    https: false
+  },
+ 
   nitro: {
     host: '0.0.0.0',
     port: 3000,
