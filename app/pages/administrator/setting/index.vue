@@ -157,7 +157,7 @@ onMounted(fetchProfile)
 
 <template>
   <!-- SAME BEAUTIFUL TEMPLATE - NO HARDCODING -->
-  <div class="max-w-2xl space-y-6 p-6 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen">
+  <div class="max-w-2xl space-y-2 p-1 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen">
     
     <!-- PROFILE - LOADS FROM API -->
     <a-card :loading="loading.profile" class="border-emerald-200 shadow-xl">
@@ -277,16 +277,18 @@ onMounted(fetchProfile)
     </a-card>
 
     <!-- BANK MODAL - SAME COMPACT VERSION -->
-    <a-modal
+   <a-modal
       v-model:open="bankModalOpen"
       title="Bank Account Details"
       :confirm-loading="loading.bank"
       width="420"
       ok-text="Save Bank Account"
       @ok="submitBank"
+      :getContainer="false"
       ok-button-props="{ class: 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600' }"
       class="!max-w-sm"
     >
+
       <a-form layout="vertical" class="!space-y-3">
         <a-form-item label="Bank Name *" class="!mb-1 !pt-0">
           <a-select
@@ -335,6 +337,9 @@ onMounted(fetchProfile)
 </template>
 
 <style scoped>
+  html, body {
+  -webkit-overflow-scrolling: touch;
+}
 :deep(.ant-form-item-label > label) {
   @apply font-semibold text-gray-800;
 }
