@@ -3,18 +3,18 @@ definePageMeta({
   layout: 'dashboard', 
   middleware: 'auth', 
   roles: ['superadmin'],
-  title: 'Adminstrators'
+  title: 'Administrators'
 })
 
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   Table, Card, Button, Input, Select, Modal, InputNumber, message, 
-  Tag, Typography, Dropdown, Space
+  Tag, Dropdown
 } from 'ant-design-vue'
 import { 
   EyeOutlined, WalletOutlined, CreditCardOutlined, DeleteOutlined,
-  ReloadOutlined, PlusOutlined, UserAddOutlined, SearchOutlined
+  ReloadOutlined, UserAddOutlined
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
@@ -199,53 +199,50 @@ onMounted(() => fetchUsers())
 </script>
 
 <template>
-  <div class="p-6 space-y-6 bg-emerald-50">
+  <div class="p-2 space-y-2 bg-emerald-50">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-      <Typography.Title level="3" class="!m-0">Administrator Management</Typography.Title>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div class="text-2xl font-bold text-emerald-700">Administrator Management</div>
       <Button type="primary" size="middle" @click="openCreateModal">
         <UserAddOutlined /> Store Administrator
       </Button>
     </div>
 
-    <!-- ✅ TABLE WITH BUILT-IN SEARCH + REFRESH -->
-    <Card>
-      <Table
-        :columns="[
-          { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
-          { title: 'Name', dataIndex: 'name', key: 'name', width: 140, ellipsis: true },
-          { title: 'Email', dataIndex: 'email', key: 'email', width: 180, ellipsis: true },
-          { title: 'Role', dataIndex: 'role', key: 'role', width: 100, slots: { customRender: 'roleCell' } },
-          { title: 'Balance', key: 'balance', width: 110, align: 'right', slots: { customRender: 'balanceCell' } },
-          { title: 'Phone', dataIndex: 'phone', key: 'phone', width: 120 },
-          { title: 'State', dataIndex: 'state', key: 'state', width: 100 },
-          { title: 'Created', dataIndex: 'created_at', key: 'created_at', width: 120, slots: { customRender: 'createdCell' } },
-          { title: 'Action', key: 'actions', width: 80, slots: { customRender: 'actionsCell' }, fixed: 'right' }
-        ]"
-        :data-source="users"
-        :loading="loading"
-        :pagination="pagination"
-        @change="handleTableChange"
-        row-key="id"
-        :scroll="{ x: 1200 }"
-        size="middle"
-        class="admin-table"
-      >
-        <!-- ✅ TABLE TITLE WITH SEARCH + FILTER + REFRESH -->
+    <!-- Table -->
+    <Card class="overflow-x-auto -mx-2 px-2 rounded-t-lg">
+      <div class="min-w-[900px]">
+        <Table
+          class="admin-table w-full"
+          :columns="[
+            { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
+            { title: 'Name', dataIndex: 'name', key: 'name', width: 140, ellipsis: true },
+            { title: 'Email', dataIndex: 'email', key: 'email', width: 180, ellipsis: true },
+            { title: 'Role', dataIndex: 'role', key: 'role', width: 100, slots: { customRender: 'roleCell' } },
+            { title: 'Balance', key: 'balance', width: 110, align: 'right', slots: { customRender: 'balanceCell' } },
+            { title: 'Phone', dataIndex: 'phone', key: 'phone', width: 120 },
+            { title: 'State', dataIndex: 'state', key: 'state', width: 100 },
+            { title: 'Created', dataIndex: 'created_at', key: 'created_at', width: 120, slots: { customRender: 'createdCell' } },
+            { title: 'Action', key: 'actions', width: 80, slots: { customRender: 'actionsCell' }, fixed: 'right' }
+          ]"
+          :data-source="users"
+          :loading="loading"
+          :pagination="pagination"
+          @change="handleTableChange"
+          row-key="id"
+          :scroll="{ x: 'max-content' }"
+          size="middle"
+        >
+     
         <template #title>
           <div class="flex flex-wrap items-center gap-3 p-4 pb-2">
-            <!-- ✅ SEARCH - FIXED -->
             <Input 
               v-model:value="searchText"
               size="small"
               placeholder="Search name/email..."
-              
               class="flex-1 min-w-[200px] max-w-[300px]"
               @pressEnter="fetchUsers"
               @blur="fetchUsers"
             />
-            
-            <!-- ✅ ROLE FILTER -->
             <Select
               v-model:value="roleFilter"
               size="small"
@@ -258,8 +255,6 @@ onMounted(() => fetchUsers())
               <Select.Option value="admin">Admin</Select.Option>
               <Select.Option value="superadmin">Super Admin</Select.Option>
             </Select>
-            
-            <!-- ✅ REFRESH BUTTON INSIDE TABLE -->
             <Button size="small" @click="fetchUsers" :loading="loading">
               <ReloadOutlined /> Refresh
             </Button>
@@ -323,10 +318,10 @@ onMounted(() => fetchUsers())
           </Dropdown>
         </template>
       </Table>
+     </div>
     </Card>
 
-   <!-- ADD THESE COMPLETE MODALS at the bottom (before </div>) -->
-
+   
 <!-- ✅ CREATE MODAL -->
 <Modal v-model:visible="createModalVisible" title="Create New Administrator" :width="500" :footer="null">
   <div class="space-y-4 p-4">
@@ -447,4 +442,27 @@ onMounted(() => fetchUsers())
 .font-mono {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
+
+/* Horizontal scroll on mobile/tablet with rounded top */
+@media (max-width: 1024px) {
+  .admin-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    border-top-left-radius: 0.5rem;  /* rounded top-left */
+    border-top-right-radius: 0.5rem; /* rounded top-right */
+  }
+
+  .ant-table-fixed-right {
+    right: 0 !important; /* ensure action column sticks correctly */
+  }
+
+  /* Optional: clip table body to rounded top */
+  .admin-table :deep(.ant-table-container) {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    overflow: hidden;
+  }
+}
+
 </style>
