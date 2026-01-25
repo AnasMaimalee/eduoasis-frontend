@@ -10,141 +10,131 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import {
-  Table, Card, Button, Input, Select, Typography, Dropdown, message, Tag, Modal, Form
+  Table, Card, Button, Input, Select, Dropdown, message, Tag, Modal, Form
 } from 'ant-design-vue'
-import { 
-  EyeOutlined, EyeInvisibleOutlined, FilterOutlined, FilePdfOutlined, ReloadOutlined,
+import {
+  EyeOutlined, EyeInvisibleOutlined, FilterOutlined, ReloadOutlined,
   WalletOutlined, CheckCircleOutlined, PlusCircleOutlined
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
 const { $api } = useNuxtApp()
 
+/* ---------------- STATE ---------------- */
 const fundModalVisible = ref(false)
 const loading = ref(false)
-
-// Wallet state
 const walletLoading = ref(false)
 const hideBalance = ref(true)
+
 const walletBalance = ref(0)
 const currency = ref('NGN')
+const fundingAmount = ref<number | null>(null)
 
-// Fund modal
-const fundingAmount = ref(0)
-
-// Pagination & Transactions
 const transactions = ref<any[]>([])
+const searchText = ref('')
+const monthFilter = ref<number | null>(null)
+const yearFilter = ref<string | null>(null)
+let searchTimeout: any = null
+
+/* ---------------- PAGINATION ---------------- */
 const pagination = ref({
   current: 1,
   pageSize: 20,
   total: 0,
-  pageSizeOptions: ['10', '20', '50', '100'],
   showSizeChanger: true,
-  showQuickJumper: true,
-  showTotal: (total: number, range: number[]) => `${range[0]}-${range[1]} of ${total.toLocaleString()} transactions`
+  pageSizeOptions: ['10', '20', '50', '100'],
+  showTotal: (total: number, range: number[]) =>
+    `${range[0]}–${range[1]} of ${total.toLocaleString()}`
 })
 
-// Filters
-const searchText = ref('')
-const monthFilter = ref<number | null>(null)
-const yearFilter = ref<string | null>(null)
-const searchTimeout = ref<NodeJS.Timeout | null>(null)
-
-// Computed
+/* ---------------- COMPUTED ---------------- */
 const balanceText = computed(() =>
   hideBalance.value ? '••••••' : `₦${walletBalance.value.toLocaleString()}`
 )
 
-const formatNaira = (amount: number) => {
-  return new Intl.NumberFormat('en-NG', {
+const formatNaira = (amount: number) =>
+  new Intl.NumberFormat('en-NG', {
     style: 'currency',
     currency: 'NGN',
     minimumFractionDigits: 0
   }).format(amount)
-}
 
-const getRowClassName = (record: any) => {
-  if (!record || !record.type) return ''
-  return record.type === 'credit' ? 'credit-row' : 'debit-row'
-}
-
-// Fund Wallet
-const fundWallet = async () => {
-  try {
-    const amount = Number(fundingAmount.value)
-    if (isNaN(amount) || amount < 1000) {
-      message.error('Minimum funding amount is ₦1,000')
-      return
-    }
-
-    loading.value = true
-    const res = await $api('/wallet/initialize', {
-      method: 'POST',
-      body: { amount },
-    })
-
-    const authUrl = res?.data?.authorization_url
-    if (!authUrl) throw new Error('Authorization URL not returned')
-
-    window.open(authUrl, '_blank')
-    message.success('Redirecting to Paystack...')
-    
-    fundModalVisible.value = false
-    fundingAmount.value = 0
-  } catch (error: any) {
-    message.error(error.data?.message || 'Unable to initialize payment')
-  } finally {
-    loading.value = false
-  }
-}
-
-// Fetch Wallet
+/* ---------------- WALLET ---------------- */
 const fetchWallet = async () => {
+  walletLoading.value = true
   try {
-    walletLoading.value = true
     const res = await $api('/wallet/me')
-    walletBalance.value = Number(res.current_balance || res.balance || 0)
-    currency.value = res.currency || 'NGN'
-  } catch (err) {
-    console.error('Wallet error:', err)
+    walletBalance.value = Number(res?.current_balance ?? res?.balance ?? 0)
+    currency.value = res?.currency || 'NGN'
+  } catch (e) {
+    console.error(e)
   } finally {
     walletLoading.value = false
   }
 }
 
-// Fetch Transactions
-const fetchTransactions = async (forceRefresh = false) => {
+/* ---------------- TRANSACTIONS ---------------- */
+const fetchTransactions = async () => {
   loading.value = true
-  if (searchTimeout.value) clearTimeout(searchTimeout.value)
-
   try {
     const params: any = {
       page: pagination.value.current,
-      per_page: pagination.value.pageSize,
+      per_page: pagination.value.pageSize
     }
-    
-    if (searchText.value.trim()) params.search = searchText.value.trim()
+
+    if (searchText.value) params.search = searchText.value
     if (monthFilter.value) params.month = monthFilter.value
     if (yearFilter.value) params.year = yearFilter.value
 
     const res = await $api('/wallet/transactions', { params })
-    transactions.value = res.transactions?.data || res.data?.data || res.data || []
 
-    const meta = res.transactions || res.data || res || {}
+    const list = res?.transactions?.data || res?.data?.data || []
+    const meta = res?.transactions || res?.data || {}
+
+    transactions.value = list
     pagination.value.total = Number(meta.total || 0)
     pagination.value.current = Number(meta.current_page || 1)
-    pagination.value.pageSize = Number(meta.per_page || meta.page_size || 20)
-    
-  } catch (error) {
-    console.error('Transactions error:', error)
+    pagination.value.pageSize = Number(meta.per_page || 20)
+  } catch (e) {
+    console.error(e)
     transactions.value = []
-    pagination.value.total = 0
   } finally {
     loading.value = false
   }
 }
 
-// Filters & Actions
+/* ---------------- FUND WALLET ---------------- */
+const fundWallet = async () => {
+  const amount = Number(fundingAmount.value)
+  if (!amount || amount < 1000) {
+    message.error('Minimum funding amount is ₦1,000')
+    return
+  }
+
+  loading.value = true
+  try {
+    const res = await $api('/wallet/initialize', {
+      method: 'POST',
+      body: { amount }
+    })
+
+    const url = res?.data?.authorization_url
+    if (!url) throw new Error('Payment link not returned')
+
+    window.open(url, '_blank')
+    fundModalVisible.value = false
+    fundingAmount.value = null
+  } catch (e: any) {
+    message.error(e?.data?.message || 'Unable to initialize payment')
+  } finally {
+    loading.value = false
+  }
+}
+
+/* ---------------- HELPERS ---------------- */
+const getRowClassName = (record: any) =>
+  record?.type === 'credit' ? 'credit-row' : 'debit-row'
+
 const resetFilters = () => {
   searchText.value = ''
   monthFilter.value = null
@@ -153,265 +143,185 @@ const resetFilters = () => {
   fetchTransactions()
 }
 
-const exportingPdf = ref(false)
-const exportPdf = async () => {
-  exportingPdf.value = true
-  try {
-    const blob = await $api('/wallet/history/pdf', { responseType: 'blob' })
-    const url = window.URL.createObjectURL(blob)
-    window.open(url, '_blank')
-  } catch {
-    message.error('Failed to export PDF')
-  } finally {
-    exportingPdf.value = false
-  }
-}
-
-const refreshAll = async () => {
-  await Promise.all([fetchWallet(), fetchTransactions(true)])
-  message.success('Refreshed successfully')
-}
-
-const handleTableChange = (paginationConfig: any) => {
-  pagination.value.current = paginationConfig.current || 1
-  pagination.value.pageSize = paginationConfig.pageSize || 20
+const handleTableChange = (p: any) => {
+  pagination.value.current = p.current
+  pagination.value.pageSize = p.pageSize
   fetchTransactions()
 }
 
-const debouncedSearch = () => {
-  if (searchTimeout.value) clearTimeout(searchTimeout.value)
-  searchTimeout.value = setTimeout(() => {
+/* ---------------- WATCHERS ---------------- */
+watch(searchText, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
     pagination.value.current = 1
     fetchTransactions()
   }, 500)
-}
+})
 
-watch(searchText, debouncedSearch)
 watch([monthFilter, yearFilter], () => {
   pagination.value.current = 1
   fetchTransactions()
 })
 
+/* ---------------- INIT ---------------- */
 onMounted(async () => {
   await Promise.all([fetchWallet(), fetchTransactions()])
 })
 </script>
 
 <template>
-  <div class="p-2 sm:p-4 lg:p-6 space-y-4 lg:space-y-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 min-h-screen">
-    
-    <!-- Wallet Header -->
+  <div class="p-2 sm:p-4 lg:p-6 space-y-4 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 min-h-screen">
+
+    <!-- ================= WALLET HEADER ================= -->
     <Card class="!shadow-none !border border-emerald-200/30">
-      <div class="p-3 sm:p-4 lg:p-6 bg-emerald-600 rounded-2xl">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-white">
-          
-          <div class="flex-1 space-y-1 sm:space-y-2">
-            <div class="inline-flex items-center gap-2 px-2 py-1 bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm">
-              <WalletOutlined class="text-base sm:text-xl" />
+      <div class="p-4 bg-emerald-600 rounded-2xl text-white">
+        <div class="flex flex-col sm:flex-row justify-between gap-4">
+          <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-xl text-sm">
+              <WalletOutlined />
               Wallet Balance
             </div>
-            <div class="text-lg sm:text-2xl lg:text-3xl font-black drop-shadow-lg">
-              {{ balanceText }}
-            </div>
-            <div class="flex flex-wrap items-center gap-1 text-xs sm:text-sm font-semibold opacity-90">
-              <span class="px-1.5 py-0.5 bg-white/15 backdrop-blur-sm rounded-md">{{ currency }}</span>
-              <span class="flex items-center gap-1 text-xs sm:text-sm">
-                <CheckCircleOutlined class="text-xs sm:text-sm" />
-                Available to spend
-              </span>
+            <div class="text-3xl font-black">{{ balanceText }}</div>
+            <div class="flex items-center gap-2 text-sm font-semibold opacity-90">
+              <span class="px-2 py-0.5 bg-white/20 rounded-md">{{ currency }}</span>
+              <span class="flex items-center gap-1"><CheckCircleOutlined /> Available</span>
             </div>
           </div>
-
-          <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-            <Button 
-              type="primary" 
+          <div class="flex gap-2 flex-col sm:flex-row">
+            <Button
+              type="primary"
+              class="bg-white text-emerald-600 font-bold rounded-xl"
               @click="fundModalVisible = true"
-              class="h-10 sm:h-12 px-3 sm:px-5 font-bold text-sm sm:text-base shadow flex items-center gap-2 bg-white hover:bg-white/90 border-white/50 text-emerald-600 rounded-xl w-full sm:w-auto"
             >
               <PlusCircleOutlined /> Fund Wallet
             </Button>
-
-            <Button 
-              type="text" 
+            <Button
+              type="text"
+              class="text-white font-semibold"
               @click="hideBalance = !hideBalance"
-              class="px-2 sm:px-4 py-1 font-semibold text-xs sm:text-sm !border-none bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl w-full sm:w-auto flex items-center justify-center"
             >
-              <component :is="hideBalance ? EyeOutlined : EyeInvisibleOutlined" class="mr-1" />
+              <component :is="hideBalance ? EyeOutlined : EyeInvisibleOutlined" />
               {{ hideBalance ? 'Show' : 'Hide' }}
             </Button>
           </div>
-
         </div>
       </div>
     </Card>
 
-    <!-- Fund Modal -->
+    <!-- ================= FUND MODAL ================= -->
     <Modal
       v-model:open="fundModalVisible"
-      width="300"
-      :footer="null"
-      :closable="false"
+      width="320"
       centered
       destroy-on-close
-      class="micro-modal"
-      :bodyStyle="{ padding: '12px' }"
-      :maskStyle="{ backdropFilter: 'blur(8px)' }"
+      :footer="null"
     >
-      <div class="text-center text-sm font-bold text-emerald-700 mb-2">💰 Fund Wallet</div>
-      
+      <div class="text-center font-bold text-emerald-600 mb-3">💰 Fund Wallet</div>
       <Form layout="vertical">
-        <Form.Item label="Amount (₦)" class="!mb-2">
-          <Input v-model:value.number="fundingAmount" type="number" placeholder="1000" size="middle" class="!h-10 sm:!h-12" />
+        <Form.Item label="Amount (₦)">
+          <Input v-model:value.number="fundingAmount" type="number" placeholder="1000" />
         </Form.Item>
-
-        <div class="text-right text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded mb-2">
+        <div class="text-right text-sm font-bold text-emerald-700 mb-3">
           {{ formatNaira(Number(fundingAmount || 0)) }}
         </div>
-
         <div class="flex gap-2">
-          <Button block size="middle" @click="fundModalVisible = false" class="h-10 rounded-lg">Cancel</Button>
-          <Button type="primary" block size="middle" :loading="loading" @click="fundWallet" class="h-10 rounded-lg bg-emerald-600 hover:bg-emerald-700">
-            Fund ₦{{ fundingAmount | 0 }}
-          </Button>
+          <Button block @click="fundModalVisible = false">Cancel</Button>
+          <Button type="primary" block :loading="loading" @click="fundWallet">Fund Wallet</Button>
         </div>
       </Form>
     </Modal>
 
-    <!-- Transactions Section -->
-    <Card class="!shadow-xl border border-emerald-200/30 backdrop-blur-sm rounded-2xl">
-      <div class="p-3 sm:p-4 lg:p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-          <div>
-            <div class="text-base sm:text-lg lg:text-xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Transaction History
-            </div>
-            <div class="text-xs sm:text-sm opacity-80 mt-1">
-              {{ pagination.total.toLocaleString() }} transactions • Page {{ pagination.current }} of {{ Math.ceil(pagination.total / pagination.pageSize) }}
-            </div>
-          </div>
+    <!-- ================= TRANSACTIONS ================= -->
+    <Card class="!shadow-xl border border-emerald-200/30 rounded-2xl">
+      <div class="p-4 space-y-4">
+        <div>
+          <h2 class="text-xl font-black text-emerald-700">Transaction History</h2>
+          <p class="text-sm opacity-70">{{ pagination.total.toLocaleString() }} transactions</p>
         </div>
 
-        <!-- Filters -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 mb-4 p-3 bg-emerald-50/50 backdrop-blur-sm rounded-xl border border-emerald-200/30">
-          <Input.Search
-            v-model:value="searchText"
-            placeholder="🔍 Search transactions..."
-            size="middle"
-            class="!h-10 sm:!h-12 rounded-lg shadow-sm border-emerald-300 w-full"
-            @search="fetchTransactions"
-            enter-button="Search"
-          />
-          <div class="flex gap-2 lg:col-span-2 w-full flex-wrap">
-            <Dropdown trigger="click">
-              <Button size="middle" class="!h-10 sm:!h-12 px-2 sm:px-4 rounded-lg shadow-sm flex items-center gap-1 border-emerald-300 w-full sm:w-auto">
-                <FilterOutlined /> Filters
-              </Button>
-              <template #overlay>
-                <div class="p-3 w-64 sm:w-72 space-y-2 bg-white shadow-2xl rounded-xl border border-gray-200">
-                  <Select v-model:value="monthFilter" placeholder="All Months" allow-clear size="middle" class="w-full">
-                    <Select.Option v-for="m in 12" :key="m" :value="m">{{ dayjs().month(m-1).format('MMMM') }}</Select.Option>
-                  </Select>
-                  <Select v-model:value="yearFilter" placeholder="All Years" allow-clear size="middle" class="w-full">
-                    <Select.Option v-for="y in 6" :key="2025 - y" :value="String(2025 - y)">{{ 2025 - y }}</Select.Option>
-                  </Select>
-                  <div class="flex gap-2 pt-2 flex-wrap">
-                    <Button block @click="resetFilters" size="middle">Reset</Button>
-                    <Button type="primary" block @click="fetchTransactions" size="middle">Apply</Button>
-                  </div>
+        <!-- ================= FILTERS ================= -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 p-3 bg-emerald-50 rounded-xl">
+          <Input.Search v-model:value="searchText" placeholder="Search transactions" enter-button />
+          <Dropdown trigger="click">
+            <Button class="flex items-center gap-2"><FilterOutlined /> Filters</Button>
+            <template #overlay>
+              <div class="p-4 space-y-3 bg-white rounded-xl shadow-xl w-64">
+                <Select v-model:value="monthFilter" allow-clear placeholder="Month">
+                  <Select.Option v-for="m in 12" :key="m" :value="m">{{ dayjs().month(m - 1).format('MMMM') }}</Select.Option>
+                </Select>
+                <Select v-model:value="yearFilter" allow-clear placeholder="Year">
+                  <Select.Option v-for="y in 6" :key="2025 - y" :value="String(2025 - y)">{{ 2025 - y }}</Select.Option>
+                </Select>
+                <div class="flex gap-2">
+                  <Button block @click="resetFilters">Reset</Button>
+                  <Button type="primary" block @click="fetchTransactions">Apply</Button>
                 </div>
-              </template>
-            </Dropdown>
-
-            <Button type="primary" :loading="exportingPdf" ghost size="middle" @click="exportPdf" class="!h-10 sm:!h-12 px-2 sm:px-4 rounded-lg shadow-sm border-emerald-300 w-full sm:w-auto">
-              <FilePdfOutlined /> PDF
-            </Button>
-
-            <Button type="primary" @click="refreshAll" :loading="loading || walletLoading" class="px-2 sm:px-4 h-10 sm:h-12 font-semibold shadow-lg flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl w-full sm:w-auto">
-              <ReloadOutlined /> Refresh
-            </Button>
-          </div>
+              </div>
+            </template>
+          </Dropdown>
+          <Button type="primary" ghost @click="fetchTransactions"><ReloadOutlined /> Refresh</Button>
         </div>
 
-        <!-- Table -->
-        <div class="w-full overflow-x-auto rounded-xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
-          <div class="min-w-[800px]">
-            <Table
-              :columns="[
-                { title: 'Type', dataIndex: 'type', key: 'type', width: 80, slots: { customRender: 'typeCell' }, fixed: 'left' },
-                { title: 'Description', dataIndex: 'description', key: 'description', width: 150, slots: { customRender: 'descriptionCell' } },
-                { title: 'Balance Before', key: 'balanceBefore', width: 120, align: 'right', slots: { customRender: 'balanceBeforeCell' } },
-                { title: 'Amount', key: 'amount', width: 120, align: 'right', slots: { customRender: 'amountCell' } },
-                { title: 'Balance After', key: 'balanceAfter', width: 120, align: 'right', slots: { customRender: 'balanceAfterCell' } },
-                { title: 'Date', dataIndex: 'created_at', key: 'created_at', width: 120, slots: { customRender: 'dateCell' } }
-              ]"
-              :data-source="transactions"
-              :loading="loading"
-              row-key="id"
-              :scroll="{ x: 900 }"
-              :pagination="pagination"
-              @change="handleTableChange"
-              :row-class-name="getRowClassName"
-              class="mobile-table w-full"
-            >
-              <template #typeCell="{ record }">
-                <Tag :color="record?.type === 'credit' ? 'success' : 'error'" class="!text-xs sm:!text-sm !px-2 !py-1 rounded-full font-bold">
-                  {{ record?.type?.toUpperCase() || '-' }}
-                </Tag>
+        <!-- ================= TABLE ================= -->
+        <div class="overflow-x-auto">
+          <Table
+            class="mobile-table"
+            :data-source="transactions"
+            :loading="loading"
+            row-key="id"
+            :pagination="pagination"
+            @change="handleTableChange"
+            :row-class-name="getRowClassName"
+          >
+            <Table.Column title="Type" width="100">
+              <template #default="{ record }">
+                <Tag :color="record.type === 'credit' ? 'success' : 'error'">{{ record.type.toUpperCase() }}</Tag>
               </template>
+            </Table.Column>
 
-              <template #descriptionCell="{ record }">
-                <div class="text-xs sm:text-sm font-medium line-clamp-2">{{ record.description || '-' }}</div>
+            <Table.Column title="Description" dataIndex="description" />
+
+            <Table.Column title="Balance Before" align="right">
+              <template #default="{ record }">{{ formatNaira(Number(record.balance_before || 0)) }}</template>
+            </Table.Column>
+
+            <Table.Column title="Amount" align="right">
+              <template #default="{ record }">
+                <span :class="record.type === 'credit' ? 'text-emerald-600' : 'text-red-600'">
+                  {{ record.type === 'credit' ? '+' : '-' }}{{ formatNaira(Number(record.amount || 0)) }}
+                </span>
               </template>
+            </Table.Column>
 
-              <template #amountCell="{ record }">
-                <div :class="[
-                  'font-mono text-xs sm:text-sm font-black inline-block px-1 py-0.5 rounded shadow-sm whitespace-nowrap',
-                  record?.type === 'credit' ? 'text-emerald-600 bg-emerald-100/50' : 'text-red-600 bg-red-100/50'
-                ]">
-                  {{ record?.type === 'credit' ? '+' : '-' }}{{ formatNaira(Number(record.amount || 0)) }}
-                </div>
-              </template>
+            <Table.Column title="Balance After" align="right">
+              <template #default="{ record }">{{ formatNaira(Number(record.balance_after || 0)) }}</template>
+            </Table.Column>
 
-              <template #balanceBeforeCell="{ record }">
-                <div class="font-mono text-xs sm:text-sm font-semibold text-gray-700 bg-gray-100/50 px-1 py-0.5 rounded whitespace-nowrap">
-                  {{ formatNaira(Number(record.balance_before || 0)) }}
-                </div>
-              </template>
-
-              <template #balanceAfterCell="{ record }">
-                <div class="font-mono text-xs sm:text-sm font-semibold text-emerald-600 bg-emerald-50/50 px-1 py-0.5 rounded whitespace-nowrap">
-                  {{ formatNaira(Number(record.balance_after || 0)) }}
-                </div>
-              </template>
-
-              <template #dateCell="{ record }">
-                <div class="text-[10px] sm:text-xs text-gray-700 whitespace-nowrap">
-                  {{ dayjs(record.created_at).format('DD MMM • hh:mm A') }}
-                </div>
-              </template>
-            </Table>
-
-          </div>
+            <Table.Column title="Date" width="140">
+              <template #default="{ record }">{{ dayjs(record.created_at).format('DD MMM • hh:mm A') }}</template>
+            </Table.Column>
+          </Table>
         </div>
-
       </div>
     </Card>
   </div>
 </template>
 
 <style scoped>
-.mobile-table :deep(.ant-table-thead) {
-  @apply !bg-gradient-to-r !from-emerald-500 !to-teal-600 !border-none rounded-t-xl;
-}
+/* Credit and debit row backgrounds */
 .mobile-table :deep(.ant-table-tbody .credit-row) {
-  background-color: rgb(236 253 245 / 0.9) !important;
+  background-color: rgba(236, 253, 245, 0.8) !important; /* light green */
 }
 .mobile-table :deep(.ant-table-tbody .debit-row) {
-  background-color: rgb(254 242 242 / 0.9) !important;
+  background-color: rgba(254, 242, 242, 0.8) !important; /* light red */
 }
+
+/* Monospaced fonts for balances and amounts */
 .font-mono {
   font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
+
+/* Truncate text for long descriptions */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

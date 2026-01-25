@@ -415,16 +415,17 @@ onUnmounted(() => {
     </Modal>
   </div>
    <!-- Confirmation Modal -->
-    <ServiceConfirmModal
-      :visible="showConfirmModal"
-      :service-name="serviceName"
-      :amount="serviceAmount"
-      :wallet-balance="walletBalance"
-      :loading="submittingRequest"
-      :preparing="preparingConfirmation"
-      @confirm="submitRequest"
-      @cancel="showConfirmModal = false"
-    />
+  <ServiceConfirmModal
+    :visible="showConfirmModal"
+    :service-name="serviceName"
+    :amount="serviceAmount"
+    :wallet-balance="walletBalance"
+    :loading="submittingRequest"
+    :preparing="preparingConfirmation"
+    @confirm="submitRequest"
+    @cancel="showConfirmModal = false"
+    @refreshWallet="prepareConfirmation"
+  />
 
 </template>
 
