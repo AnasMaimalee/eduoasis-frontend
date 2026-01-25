@@ -3,9 +3,8 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['superadmin'],
-  title: 'JAMB Uplaod Status'
+  title: 'JAMB Upload Status'
 })
-
 
 import { useFileDownloader } from '@/composables/useFileDownloader'
 const { downloadingId, downloadFile } = useFileDownloader()
@@ -16,7 +15,6 @@ import {
   Button,
   Tag,
   message,
-  Typography,
   Card,
   Modal,
   Input,
@@ -25,16 +23,14 @@ import {
   CheckOutlined,
   CloseOutlined,
   ReloadOutlined,
-  SearchOutlined,
 } from '@ant-design/icons-vue'
 
 const { $api } = useNuxtApp()
-const config = useRuntimeConfig()
 
 /* ================= STATE ================= */
 const requests = ref<any[]>([])
 const loading = ref(false)
-const searchText = ref('')  // ✅ COMPACT SEARCH
+const searchText = ref('')
 
 /* Approve modal */
 const approveModalVisible = ref(false)
@@ -52,23 +48,18 @@ const pagination = ref({
   current: 1,
   pageSize: 1000,
   total: 0,
-  showSizeChanger: true,
-  showQuickJumper: true,
-  showTotal: (total: number, range: number[]) =>
-    `${range[0]}-${range[1]} of ${total} requests`,
 })
 
-/* ================= CLIENT-SIDE FILTERED DATA ✅ */
+/* ================= FILTER ================= */
 const filteredRequests = computed(() => {
   if (!searchText.value.trim()) return requests.value
-  
-  const query = searchText.value.toLowerCase()
-  return requests.value.filter(request => 
-    request.user?.name?.toLowerCase().includes(query) ||
-    request.email?.toLowerCase().includes(query) ||
-    request.service?.name?.toLowerCase().includes(query) ||
-    request.registration_number?.toLowerCase().includes(query) ||
-    request.status?.toLowerCase().includes(query)
+  const q = searchText.value.toLowerCase()
+  return requests.value.filter(r =>
+    r.user?.name?.toLowerCase().includes(q) ||
+    r.email?.toLowerCase().includes(q) ||
+    r.service?.name?.toLowerCase().includes(q) ||
+    r.registration_number?.toLowerCase().includes(q) ||
+    r.status?.toLowerCase().includes(q)
   )
 })
 
@@ -78,41 +69,33 @@ const fetchRequests = async () => {
   try {
     const res = await $api('/services/jamb-upload-status/all')
     requests.value = Array.isArray(res) ? res : res.data || []
-    pagination.value.total = filteredRequests.value.length
-  } catch (err) {
+  } catch {
     message.error('Failed to load requests')
   } finally {
     loading.value = false
   }
 }
 
-/* ================= APPROVE MODAL ================= */
+/* ================= ACTIONS ================= */
 const openApproveModal = (id: string) => {
   currentApproveId.value = id
   approveModalVisible.value = true
 }
 
 const handleApprove = async () => {
-  if (!currentApproveId.value) return
-
   approveLoading.value = true
-
   try {
-    await $api(`/services/jamb-upload-status/${currentApproveId.value}/approve`, { 
-      method: 'POST' 
+    await $api(`/services/jamb-upload-status/${currentApproveId.value}/approve`, {
+      method: 'POST',
     })
-    message.success('Request approved successfully')
+    message.success('Request approved')
     approveModalVisible.value = false
-    currentApproveId.value = null
     fetchRequests()
-  } catch (err: any) {
-    message.error(err.data?.message || 'Approval failed')
   } finally {
     approveLoading.value = false
   }
 }
 
-/* ================= REJECT MODAL ================= */
 const openRejectModal = (id: string) => {
   currentRejectId.value = id
   rejectReason.value = ''
@@ -120,25 +103,16 @@ const openRejectModal = (id: string) => {
 }
 
 const handleReject = async () => {
-  if (!rejectReason.value.trim()) {
-    message.error('Rejection reason is required')
-    return
-  }
-
+  if (!rejectReason.value.trim()) return message.error('Reason required')
   rejectLoading.value = true
-
   try {
     await $api(`/services/jamb-upload-status/${currentRejectId.value}/reject`, {
       method: 'POST',
       body: { reason: rejectReason.value },
     })
-    message.success('Request rejected successfully')
+    message.success('Request rejected')
     rejectModalVisible.value = false
-    currentRejectId.value = null
-    rejectReason.value = ''
     fetchRequests()
-  } catch (err: any) {
-    message.error(err.data?.message || 'Rejection failed')
   } finally {
     rejectLoading.value = false
   }
@@ -158,70 +132,47 @@ const columns = [
 ]
 
 onMounted(fetchRequests)
-let refreshInterval: ReturnType<typeof setInterval> | null = null
-
-onMounted(() => {
-  fetchRequests()
-
-  // ✅ Auto refresh every 30 seconds
-  refreshInterval = setInterval(() => {
-    fetchRequests()
-  }, 30_000)
-})
-
-onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-    refreshInterval = null
-  }
-})
 </script>
 
 <template>
-  <div class="p-6 space-y-6 bg-emerald-50">
+  <div class="p-4 md:p-6 space-y-4 bg-emerald-50">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-      <div>
-        <Typography.Title level="2" class="!m-0">
-          JAMB Olevel Upload Status Requests
-        </Typography.Title>
-        <Typography.Text type="secondary">
-          {{ filteredRequests.length }} total requests
-        </Typography.Text>
-      </div>
+    <div>
+      <h2 class="text-lg md:text-2xl font-semibold">
+        JAMB Olevel Upload Status Requests
+      </h2>
+      <p class="text-xs md:text-sm text-gray-500">
+        {{ filteredRequests.length }} total requests
+      </p>
     </div>
 
-    <!-- Table with Compact Search + Refresh -->
-    <Card>
-      <div class="flex justify-between items-center mb-4 p-4 pt-0">
-        <!-- ✅ COMPACT SEARCH + REFRESH -->
-        <div class="flex items-center gap-2">
-          <Input
-            v-model:value="searchText"
-            placeholder="Search requests..."
-            size="middle"
-            class="!w-64"
-          />
-          <Button
-            type="primary"
-            :loading="loading"
-            @click="fetchRequests"
-          >
-            <ReloadOutlined /> Refresh
-          </Button>
-        </div>
+    <Card class="rounded-t-2xl overflow-hidden">
+      <!-- Search -->
+      <div class="flex gap-2 mb-3 px-2">
+        <Input
+          v-model:value="searchText"
+          placeholder="Search..."
+          size="small"
+          class="max-w-xs"
+        />
+        <Button size="small" type="primary" @click="fetchRequests">
+          <ReloadOutlined />
+        </Button>
       </div>
 
+      <!-- TABLE -->
       <Table
+        size="small"
         :columns="columns"
         :data-source="filteredRequests"
         :loading="loading"
         :pagination="pagination"
         row-key="id"
-        :scroll="{ x: 1600 }"
-        class="upload-table"
+        :scroll="{ x: 1600, y: 500 }"
+        class="upload-table text-xs md:text-sm"
       >
-        <!-- ✅ GREEN NUMBERING -->
+        
+ <!-- ✅ GREEN NUMBERING -->
         <template #indexCell="{ index }">
           <div class="font-semibold text-emerald-600">
             {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
@@ -396,6 +347,28 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* TABLE HEADER */
+.upload-table :deep(.ant-table-thead th) {
+  @apply !bg-emerald-500 !text-white text-xs md:text-sm;
+}
+
+/* TABLE BODY */
+.upload-table :deep(.ant-table-tbody td) {
+  @apply !py-2 !px-2 md:!py-3 md:!px-4 text-xs md:text-sm;
+}
+
+/* BUTTONS + TAGS MOBILE */
+@media (max-width: 640px) {
+  .ant-btn,
+  .ant-tag {
+    font-size: 11px !important;
+    padding: 0 6px !important;
+  }
+}
+</style>
+
+
+<style scoped>
 .upload-table :deep(.ant-table-thead th) {
   @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
 }
@@ -412,3 +385,4 @@ onUnmounted(() => {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 </style>
+
