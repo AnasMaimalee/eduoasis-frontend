@@ -6,14 +6,14 @@ definePageMeta({
   title: 'JAMB Services'
 })
 
-import { ref, onMounted, reactive, nextTick } from 'vue'
-import { Table, Button, message, Typography, Input, Card, Modal, InputNumber, Tag } from 'ant-design-vue'
-import { ReloadOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { ref, onMounted, reactive } from 'vue'
+import { Table, Button, message, Input, Card, Modal, InputNumber, Tag } from 'ant-design-vue'
+import { ReloadOutlined, EditOutlined } from '@ant-design/icons-vue'
 
 const { $api } = useNuxtApp()
 
-const allServices = ref<any[]>([])      
-const services = ref<any[]>([])         
+const allServices = ref<any[]>([])
+const services = ref<any[]>([])
 const loading = ref(false)
 const searchText = ref('')
 const updateModalVisible = ref(false)
@@ -21,11 +21,11 @@ const currentService = ref<any>(null)
 
 const columns = [
   { title: '#', key: 'index', width: 50, slots: { customRender: 'indexCell' } },
-  { title: 'Service Name', dataIndex: 'name', key: 'name', slots: { customRender: 'name' }, width: 300 },
-  { title: 'Customer Price', key: 'customerPrice', slots: { customRender: 'customerPrice' } },
-  { title: 'Admin Payout', key: 'adminPayout', slots: { customRender: 'adminPayout' } },
-  { title: 'Platform Profit', key: 'platformProfit', slots: { customRender: 'platformProfit' } },
-  { title: '', key: 'actions', width: 80, slots: { customRender: 'actions' }, fixed: 'right' }
+  { title: 'Service', dataIndex: 'name', key: 'name', width: 280, slots: { customRender: 'name' } },
+  { title: 'Customer', key: 'customerPrice', width: 150, slots: { customRender: 'customerPrice' } },
+  { title: 'Admin', key: 'adminPayout', width: 150, slots: { customRender: 'adminPayout' } },
+  { title: 'Profit', key: 'platformProfit', width: 150, slots: { customRender: 'platformProfit' } },
+  { title: '', key: 'actions', width: 70, slots: { customRender: 'actions' } }
 ]
 
 const formData = reactive({
@@ -35,12 +35,9 @@ const formData = reactive({
 
 const pagination = ref({
   current: 1,
-  pageSize: 50,
+  pageSize: 20,
   total: 0,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showSizeChanger: true,
-  showQuickJumper: true,
-  showTotal: (total: number, range: number[]) => `${range[0]}-${range[1]} of ${total} services`
+  showSizeChanger: true
 })
 
 const fetchServices = async () => {
@@ -49,10 +46,8 @@ const fetchServices = async () => {
     const res = await $api('/superadmin/services')
     allServices.value = res.data || []
     applyFilters()
-  } catch (err: any) {
-    message.error(err.data?.message || 'Failed to fetch services')
-    allServices.value = []
-    services.value = []
+  } catch {
+    message.error('Failed to fetch services')
   } finally {
     loading.value = false
   }
@@ -60,33 +55,23 @@ const fetchServices = async () => {
 
 const applyFilters = () => {
   let filtered = [...allServices.value]
-  
+
   if (searchText.value.trim()) {
-    const query = searchText.value.toLowerCase().trim()
-    filtered = filtered.filter(service =>
-      service.name.toLowerCase().includes(query) ||
-      service.description.toLowerCase().includes(query)
+    const q = searchText.value.toLowerCase()
+    filtered = filtered.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.description?.toLowerCase().includes(q)
     )
   }
-  
+
   pagination.value.total = filtered.length
   const start = (pagination.value.current - 1) * pagination.value.pageSize
-  const end = start + pagination.value.pageSize
-  services.value = filtered.slice(start, end)
+  services.value = filtered.slice(start, start + pagination.value.pageSize)
 }
 
-const handleSearchChange = (e: any) => {
-  searchText.value = e.target.value
-}
-
-const triggerSearch = () => {
-  pagination.value.current = 1
-  applyFilters()
-}
-
-const handleTableChange = (paginationConfig: any) => {
-  pagination.value.current = paginationConfig.current
-  pagination.value.pageSize = paginationConfig.pageSize
+const handleTableChange = (p: any) => {
+  pagination.value.current = p.current
+  pagination.value.pageSize = p.pageSize
   applyFilters()
 }
 
@@ -99,259 +84,186 @@ const openUpdateModal = (service: any) => {
 
 const handleUpdate = async () => {
   if (formData.customer_price === null && formData.admin_payout === null) {
-    message.error('Please enter at least one price')
+    message.error('Enter at least one value')
     return
   }
 
-  try {
-    const payload: any = {}
-    if (formData.customer_price !== null) payload.customer_price = formData.customer_price
-    if (formData.admin_payout !== null) payload.admin_payout = formData.admin_payout
+  const payload: any = {}
+  if (formData.customer_price !== null) payload.customer_price = formData.customer_price
+  if (formData.admin_payout !== null) payload.admin_payout = formData.admin_payout
 
+  try {
     await $api(`/services/${currentService.value.id}/update-prices`, {
       method: 'PUT',
       body: payload
     })
-    
-    message.success('✅ Service updated successfully!')
+    message.success('Updated successfully')
     updateModalVisible.value = false
     fetchServices()
-  } catch (err: any) {
-    message.error(err.data?.message || 'Update failed')
+  } catch {
+    message.error('Update failed')
   }
-}
-
-const resetForm = () => {
-  formData.customer_price = null
-  formData.admin_payout = null
-  currentService.value = null
 }
 
 onMounted(fetchServices)
 </script>
 
 <template>
-  <div class="p-6 space-y-6 bg-emerald-50">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
+  <div class="p-4 md:p-6 space-y-4 bg-emerald-50 min-h-screen">
+
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
       <div>
-        <Typography.Title level="3" class="!m-0">Services Management</Typography.Title>
-        <Typography.Text type="secondary">{{ pagination.total }} total services</Typography.Text>
+        <div class="text-lg md:text-xl font-bold">Services</div>
+        <div class="text-xs text-gray-500">{{ pagination.total }} total services</div>
       </div>
-     
+
+      <div class="flex gap-2">
+        <Input
+          v-model:value="searchText"
+          placeholder="Search services..."
+          size="small"
+          class="w-48"
+          @input="applyFilters"
+        />
+        <Button size="small" @click="fetchServices" :loading="loading">
+          <ReloadOutlined />
+        </Button>
+      </div>
     </div>
 
-    <!-- ✅ TABLE WITH BUILT-IN SEARCH + REFRESH -->
-    <Card>
-      <Table
-        :columns="columns"
-        :data-source="services"
-        :loading="loading"
-        :pagination="pagination"
-        @change="handleTableChange"
-        row-key="id"
-        :scroll="{ x: 1200 }"
-        class="status-table"
-      >
-        <!-- ✅ TABLE TITLE WITH SEARCH + REFRESH -->
-        <template #title>
-          <div class="flex flex-wrap items-center gap-3 p-4 pb-2">
-            <Input 
-              v-model:value="searchText"
-              size="large"
-              placeholder="Search services by name/description... (Enter to search)"
-              class="flex-1 min-w-[250px] max-w-[400px]"
-              @input="handleSearchChange"
-              @pressEnter="triggerSearch"
-              @blur="triggerSearch"
-            />
-            <Button size="large" @click="fetchServices" :loading="loading">
-              <ReloadOutlined /> Refresh
-            </Button>
-          </div>
-        </template>
+    <!-- TABLE -->
+    <Card class="rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <Table
+          :columns="columns"
+          :data-source="services"
+          :loading="loading"
+          :pagination="pagination"
+          @change="handleTableChange"
+          row-key="id"
+          size="small"
+          :scroll="{ x: 900 }"
+          class="mobile-table"
+        >
+          <template #indexCell="{ index }">
+            <span class="text-xs font-semibold">
+              {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
+            </span>
+          </template>
 
-        <template #emptyText>
-          <div class="text-center py-8">
-            <div class="text-lg font-semibold text-gray-600 mb-1">No services found</div>
-            <div v-if="searchText" class="text-sm text-gray-500 mb-4">
-              No services match "<strong>{{ searchText }}</strong>"
+          <template #name="{ record }">
+            <div class="text-xs">
+              <div class="font-semibold truncate max-w-[220px]">{{ record.name }}</div>
+              <div class="text-gray-500 truncate max-w-[220px]">
+                {{ record.description }}
+              </div>
+              <Tag v-if="record.active" color="green" class="mt-1">Active</Tag>
             </div>
-            <div v-else class="text-sm text-gray-500 mb-4">
-              Services will appear here when added to the system
-            </div>
-            <Button type="primary" @click="fetchServices">
-              <ReloadOutlined /> Load Services
-            </Button>
-          </div>
-        </template>
+          </template>
 
-        <template #indexCell="{ index }">
-          <div class="font-semibold text-emerald-600">
-            {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
-          </div>
-        </template>
-
-        <template #name="{ record }">
-          <div>
-            <div class="font-semibold text-gray-900 text-sm">{{ record.name }}</div>
-            <div class="text-xs text-gray-500 truncate max-w-[350px]" :title="record.description">
-              {{ record.description }}
-            </div>
-            <Tag v-if="record.active" color="green" size="small" class="mt-1">Active</Tag>
-          </div>
-        </template>
-
-        <!-- ✅ ALL MONEY GREEN -->
-        <template #customerPrice="{ record }">
-          <div class="">
-            <div class="text-xl font-black text-emerald-600 mb-1">
+          <template #customerPrice="{ record }">
+            <div class="text-xs font-bold text-emerald-600">
               ₦{{ Number(record.customer_price || record.price || 0).toLocaleString() }}
             </div>
-            <div class="text-xs text-gray-500 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">
-              Customer
-            </div>
-          </div>
-        </template>
+          </template>
 
-        <template #adminPayout="{ record }">
-          <div class="">
-            <div class="text-xl font-black text-emerald-600 mb-1">
+          <template #adminPayout="{ record }">
+            <div class="text-xs font-bold text-emerald-600">
               ₦{{ Number(record.admin_payout || 0).toLocaleString() }}
             </div>
-            <div class="text-xs text-gray-500 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">
-              Admin
-            </div>
-          </div>
-        </template>
+          </template>
 
-        <template #platformProfit="{ record }">
-          <div class="">
-            <div class="text-xl font-black text-emerald-600 mb-1">
+          <template #platformProfit="{ record }">
+            <div class="text-xs font-bold text-emerald-600">
               ₦{{ Number(record.platform_profit || 0).toLocaleString() }}
             </div>
-            <div class="text-xs text-gray-500 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">
-              Platform
-            </div>
-          </div>
-        </template>
+          </template>
 
-        <template #actions="{ record }">
-          <Button 
-            type="text" 
-            size="small" 
-            shape="circle" 
-            class="!w-8 !h-8 !p-0 hover:bg-emerald-100 rounded-full"
-            @click="openUpdateModal(record)"
-          >
-            <EditOutlined class="text-emerald-600" />
-          </Button>
-        </template>
-      </Table>
+          <template #actions="{ record }">
+            <Button
+              type="text"
+              size="small"
+              class="!p-1 rounded-full hover:bg-emerald-100"
+              @click="openUpdateModal(record)"
+            >
+              <EditOutlined class="text-emerald-600" />
+            </Button>
+          </template>
+        </Table>
+      </div>
     </Card>
 
-    <!-- ✅ UPDATE MODAL -->
-    <Modal 
-      v-model:visible="updateModalVisible"
-      title="Update Service Prices" 
-      :width="420" 
-      :footer="null"
-      :closable="false"
-    >
-      <div v-if="currentService" class="p-4 space-y-4">
-        <div class="text-center py-3 border-b border-gray-100">
-          <div class="font-bold text-lg truncate mb-1">{{ currentService.name }}</div>
-          <div class="text-xs text-gray-500 truncate">{{ currentService.description }}</div>
+    <!-- MODAL -->
+    <Modal v-model:visible="updateModalVisible" title="Update Prices" :footer="null" width="380">
+      <div v-if="currentService" class="space-y-4 text-xs">
+
+        <div class="font-semibold text-sm truncate">
+          {{ currentService.name }}
         </div>
 
-        <div class="space-y-3">
-          <div>
-            <label class="block text-xs font-medium mb-1 text-gray-700">Customer Price</label>
-            <div class="text-xs text-gray-400 mb-1">What customers pay</div>
-            <InputNumber 
-              v-model:value="formData.customer_price"
-              :min="0" 
-              :precision="0" 
-              size="small"
-              class="w-full" 
-              placeholder="₦0"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-medium mb-1 text-gray-700">Admin Payout</label>
-            <div class="text-xs text-gray-400 mb-1">What admins receive</div>
-            <InputNumber 
-              v-model:value="formData.admin_payout"
-              :min="0" 
-              :precision="0" 
-              size="small"
-              class="w-full" 
-              placeholder="₦0"
-            />
-          </div>
+        <!-- CUSTOMER PRICE -->
+        <div class="space-y-1">
+          <label class="block text-gray-600 font-medium">
+            Customer Price
+          </label>
+          <InputNumber
+            v-model:value="formData.customer_price"
+            class="w-full"
+            placeholder="₦0"
+            :min="0"
+          />
         </div>
 
-        <div class="text-xs text-gray-500 bg-emerald-50 p-3 rounded-lg text-center font-medium">
-          💡 Update either or both prices. Platform profit auto-calculates.
+        <!-- ADMIN PAYOUT -->
+        <div class="space-y-1">
+          <label class="block text-gray-600 font-medium">
+            Admin Payout
+          </label>
+          <InputNumber
+            v-model:value="formData.admin_payout"
+            class="w-full"
+            placeholder="₦0"
+            :min="0"
+          />
         </div>
 
-        <div class="flex gap-2 pt-2">
-          <Button 
-            size="small" 
-            block 
-            @click="resetForm(); updateModalVisible = false" 
-            class="text-xs h-8"
-          >
+        <div class="flex gap-2 pt-3">
+          <Button block size="small" @click="updateModalVisible = false">
             Cancel
           </Button>
-          <Button 
-            type="primary" 
-            size="small" 
+          <Button
             block
-            :loading="loading"
+            type="primary"
+            size="small"
             :disabled="formData.customer_price === null && formData.admin_payout === null"
-            @click="handleUpdate" 
-            class="text-xs h-8"
+            @click="handleUpdate"
           >
-            💰 Update Prices
+            Update Prices
           </Button>
         </div>
+
       </div>
     </Modal>
+
+
   </div>
 </template>
 
 <style scoped>
-/* ✅ PLAIN HEADER - NO SHADOW, NO GRADIENT */
-/* ✅ GREEN EMERALD HEADER */
-.status-table :deep(.ant-table-thead th) {
-  @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
+.mobile-table :deep(.ant-table-thead th) {
+  @apply !bg-emerald-500 !text-white !text-xs !font-semibold;
 }
 
-.status-table :deep(.ant-table-tbody td) {
-  @apply !py-3 !px-4;
+.mobile-table :deep(.ant-table-tbody td) {
+  @apply !text-xs;
 }
 
-.status-table :deep(.ant-table-row:hover > td) {
-  @apply bg-emerald-50;
-}
-
-.font-mono {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-}
-/* ✅ Rounded table header corners */
-.status-table :deep(.ant-table-thead > tr > th:first-child) {
+.mobile-table :deep(.ant-table-thead > tr > th:first-child) {
   border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
 }
 
-.status-table :deep(.ant-table-thead > tr > th:last-child) {
+.mobile-table :deep(.ant-table-thead > tr > th:last-child) {
   border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
 }
-.status-table :deep(.ant-table-thead > tr > th) {
-  border-right: none !important;
-}
-
 </style>
