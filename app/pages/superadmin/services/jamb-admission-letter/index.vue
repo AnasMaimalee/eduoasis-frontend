@@ -282,9 +282,11 @@ onUnmounted(() => {
         <div class="flex gap-1 justify-center whitespace-nowrap">
           <template v-if="record.status === 'completed'">
             <Button size="small" type="primary" @click="openApproveModal(record.id)">
+              Approve
               <CheckOutlined />
             </Button>
             <Button size="small" danger @click="openRejectModal(record.id)">
+              Reject
               <CloseOutlined />
             </Button>
           </template>
