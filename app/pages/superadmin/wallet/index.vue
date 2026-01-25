@@ -180,7 +180,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-4 sm:p-6 lg:p-8 space-y-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 min-h-screen">
+  <div class="p-2 sm:p-6 lg:p-2 space-y-2 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 min-h-screen">
     
     <!-- ✅ MOBILE WALLET HEADER -->
     <Card class="!shadow-xl !border border-emerald-200/30">
@@ -218,16 +218,16 @@ onMounted(async () => {
 
     <!-- ✅ TRANSACTIONS SECTION -->
     <Card class="!shadow-xl border border-emerald-200/30 backdrop-blur-sm rounded-3xl">
-      <div class="p-4 sm:p-6 lg:p-8">
+      <div class="p-1 sm:p-2 lg:p-2">
         <!-- Header -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 mb-6">
           <div>
-            <Typography.Title level="3" class="!m-0 text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            <div class="!m-0 text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
               Transaction History
-            </Typography.Title>
-            <Typography.Text class="text-lg opacity-80">
+            </div>
+            <div class="text-lg opacity-80">
               {{ pagination.total.toLocaleString() }} total transactions
-            </Typography.Text>
+            </div>
           </div>
           
         </div>
@@ -282,26 +282,19 @@ onMounted(async () => {
             <Button 
               type="primary" 
               ghost 
-              size="large" 
+              size="small" 
               @click="exportPdf" 
               class="!h-12 px-8 rounded-xl shadow-sm border-emerald-300 "
             >
-              <FilePdfOutlined class="mr-1" /> Export PDF
+              <FilePdfOutlined class="mr-1" /> Export
             </Button>
-            <Button 
-            type="primary" 
-            @click="refreshAll" 
-            :loading="loading || walletLoading"
-            class="h-12 px-8 font-semibold shadow-lg  flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl w-full lg:w-auto"
-          >
-            <ReloadOutlined /> Refresh
-          </Button>
+            
           </div>
         </div>
 
         <!-- ✅ MOBILE TABLE + CUSTOM PAGINATION -->
        <!-- ✅ FULLY SCROLLABLE TABLE + PAGINATION -->
-<div class="space-y-4">
+<div class="space-y-1">
   <!-- ✅ PERFECTLY SCROLLABLE TABLE -->
   <div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
     <div class="min-w-[1400px]">
@@ -369,7 +362,7 @@ onMounted(async () => {
   </div>
 
   <!-- ✅ CUSTOM PAGINATION - Mobile Responsive -->
-  <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-emerald-200/50 bg-white/50 rounded-b-2xl p-4">
+  <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-emerald-200/50 bg-white/50 rounded-b-2xl p-2">
     <div class="text-sm text-gray-600 font-medium">
       Showing {{ (pagination.current - 1) * pagination.pageSize + 1 }} to 
       {{ Math.min(pagination.current * pagination.pageSize, pagination.total) }} of 
