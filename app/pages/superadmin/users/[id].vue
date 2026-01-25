@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { 
-  Table, Tag, Spin, Alert, Button, Typography, Input, Space, Card 
+  Table, Tag, Spin, Alert, Button, Input, Space, Card 
 } from 'ant-design-vue'
 import { ArrowLeftOutlined, CreditCardOutlined, HistoryOutlined } from '@ant-design/icons-vue'
 
@@ -10,7 +10,7 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['superadmin'],
-  title: 'User Info Page'
+  title: 'Administrator Info Page'
 })
 
 const router = useRouter()
@@ -118,6 +118,11 @@ const fetchLoginAudits = async () => {
   }
 }
 
+const formatCurrency = (value: number | string) => {
+  if (!value) return '₦0.00';
+  return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(Number(value));
+}
+
 const handleTransactionChange = (paginationConfig) => {
   Object.assign(paginationTransactions.value, paginationConfig)
 }
@@ -133,62 +138,63 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-6 space-y-6 bg-emerald-50">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center">
-        <Button type="text" @click="router.back()" class="mr-4 p-0 h-auto flex items-center">
-          <ArrowLeftOutlined class="text-xl" />
-          <span class="ml-1 font-medium">Back to Users</span>
-        </Button>
-        <div>
-          <Typography.Title level={3} class="!m-0 mb-1">User Activity Dashboard</Typography.Title>
-          <Typography.Text type="secondary">Wallet transactions & login history</Typography.Text>
-        </div>
+<div class="p-4 sm:p-6 space-y-6 bg-emerald-50">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <Button type="text" @click="router.back()" class="p-0 h-auto flex items-center">
+        <ArrowLeftOutlined class="text-sm" />
+      </Button>
+      <div class="flex flex-col">
+        <h2 class="text-sm font-bold text-gray-800">User Activity Dashboard</h2>
+        <span class="text-gray-600 text-sm">Wallet transactions & login history</span>
       </div>
     </div>
+  </div>
 
-    <!-- Current Balance Card -->
-    <Alert 
-      v-if="currentBalance && !transactionsLoading" 
-      type="success" 
-      :show-icon="true" 
-      class="!shadow-lg rounded-xl mb-6"
-    >
-      <template #message>
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-lg font-semibold block">Current Wallet Balance</span>
-            <span class="text-sm text-green-700 block">Updated {{ new Date().toLocaleDateString() }}</span>
-          </div>
-          <div class="text-right">
-            <div class="text-3xl font-bold text-green-600 mb-1">₦{{ currentBalance }}</div>
-            <CreditCardOutlined class="text-green-500 text-2xl" />
-          </div>
+  <!-- Current Balance Card -->
+  <Alert 
+    v-if="currentBalance && !transactionsLoading" 
+    type="success" 
+    :show-icon="true" 
+    class="!shadow-lg rounded-xl mb-4"
+  >
+    <template #message>
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <span class="block text-lg font-semibold">Current Wallet Balance</span>
+          <span class="block text-green-700 text-sm">Updated {{ new Date().toLocaleDateString() }}</span>
         </div>
-      </template>
-    </Alert>
-
-    <!-- Error Alert -->
-    <Alert v-if="error" type="error" :show-icon="true" class="mb-6 shadow-lg" dismissible>
-      {{ error }}
-    </Alert>
-
-    <!-- Transactions Section -->
-    <Card class="!shadow-lg !border-0 hover:shadow-xl transition-all duration-200">
-      <div class="flex items-center justify-between mb-6 pt-1">
-        <Space size={12}>
-          <CreditCardOutlined class="text-2xl text-blue-600" />
-          <Typography.Title level={4} class="!m-0">Wallet Transactions</Typography.Title>
-        </Space>
-        <Input.Search
-          v-model:value="searchTransactions"
-          placeholder="Search transactions, descriptions..."
-          allow-clear
-          size="large"
-          style="width: 320px"
-        />
+        <div class="flex items-center gap-2 text-green-600 text-2xl font-bold">
+          <span class="text-3xl font-extrabold">{{ formatCurrency(currentBalance) }}</span>
+          <CreditCardOutlined class="text-green-500 text-2xl" />
+        </div>
       </div>
+    </template>
+  </Alert>
+
+  <!-- Error Alert -->
+  <Alert v-if="error" type="error" :show-icon="true" class="mb-4 shadow-lg" dismissible>
+    {{ error }}
+  </Alert>
+
+  <!-- Transactions Section -->
+  <Card class="!shadow-lg !border-0 hover:shadow-xl transition-all duration-200 rounded-t-lg overflow-x-auto">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+      <Space size={12}>
+        <CreditCardOutlined class="text-2xl text-blue-600" />
+        <span class="text-lg font-bold text-gray-800">Wallet Transactions</span>
+      </Space>
+      <Input.Search
+        v-model:value="searchTransactions"
+        placeholder="Search transactions, descriptions..."
+        allow-clear
+        size="middle"
+        class="w-full sm:w-80"
+      />
+    </div>
+    <div class="min-w-[900px]">
       <Table
         :columns="transactionColumns"
         :data-source="filteredTransactions"
@@ -196,49 +202,36 @@ onMounted(() => {
         :pagination="paginationTransactions"
         @change="handleTransactionChange"
         row-key="id"
-        
-        :scroll="{ x: 1400 }"
+        class="antdv-table-custom"
+        :scroll="{ x: 'max-content' }"
         :row-class-name="getTransactionRowClass" 
       >
         <template #indexCell="{ index }">
-          <div class="font-semibold text-gray-800">
-            {{ (paginationTransactions.current - 1) * paginationTransactions.pageSize + index + 1 }}
-          </div>
+          {{ (paginationTransactions.current - 1) * paginationTransactions.pageSize + index + 1 }}
         </template>
-        
         <template #typeCell="{ record }">
-          <Tag 
-            :color="record.type === 'credit' ? 'green' : 'red'" 
-            class="!font-bold !px-3 !py-1 !text-sm shadow-sm"
-          >
+          <Tag :color="record.type === 'credit' ? 'green' : 'red'" class="!font-bold !px-3 !py-1 !text-sm shadow-sm">
             {{ record.type?.toUpperCase() || 'N/A' }}
           </Tag>
         </template>
-        
         <template #amountCell="{ record }">
-          <div class="font-bold text-lg flex items-center">
-            <span 
-              class="text-2xl mr-2 font-black"
-              :class="record.type === 'credit' ? 'text-green-500' : 'text-red-500'"
-            >
+          <div class="flex items-center font-bold text-lg">
+            <span :class="record.type === 'credit' ? 'text-green-500' : 'text-red-500'" class="mr-1 text-2xl font-black">
               {{ record.type === 'credit' ? '+' : '−' }}
             </span>
             ₦{{ Number(record.amount || 0).toLocaleString() }}
           </div>
         </template>
-        
         <template #balanceBeforeCell="{ record }">
           <div class="font-mono text-sm bg-gray-50 px-2 py-1 rounded-full">
             ₦{{ Number(record.balance_before || 0).toLocaleString() }}
           </div>
         </template>
-        
         <template #balanceAfterCell="{ record }">
           <div class="font-mono text-sm bg-blue-50 px-2 py-1 rounded-full font-semibold">
             ₦{{ Number(record.balance_after || 0).toLocaleString() }}
           </div>
         </template>
-        
         <template #descriptionCell="{ record }">
           <div class="max-w-[280px]">
             <div class="font-medium text-gray-900 truncate" :title="record.description">
@@ -249,80 +242,69 @@ onMounted(() => {
             </div>
           </div>
         </template>
-        
         <template #dateCell="{ record }">
           <div class="font-mono text-sm">
             {{ new Date(record.created_at).toLocaleString('en-US', { 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
+              year: 'numeric', month: 'short', day: 'numeric',
+              hour: '2-digit', minute: '2-digit'
             }) }}
           </div>
         </template>
       </Table>
-    </Card>
+    </div>
+  </Card>
 
-    <!-- Login Audits Section -->
-    <Card class="!shadow-lg !border-0 hover:shadow-xl transition-all duration-200">
-      <div class="flex items-center justify-between mb-6 pt-1">
-        <Space size={12}>
-          <HistoryOutlined class="text-2xl text-purple-600" />
-          <Typography.Title level={4} class="!m-0">Login Audits</Typography.Title>
-        </Space>
-        <Input.Search
-          v-model:value="searchAudits"
-          placeholder="Search IP, user agent, location..."
-          allow-clear
-          size="large"
-          style="width: 320px"
-        />
-      </div>
+  <!-- Login Audits Section -->
+  <Card class="!shadow-lg !border-0 hover:shadow-xl transition-all duration-200 rounded-t-lg overflow-x-auto">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+      <Space size={12}>
+        <HistoryOutlined class="text-2xl text-purple-600" />
+        <span class="text-lg font-bold text-gray-800">Login Audits</span>
+      </Space>
+      <Input.Search
+        v-model:value="searchAudits"
+        placeholder="Search IP, user agent, location..."
+        allow-clear
+        size="middle"
+        class="w-full sm:w-80"
+      />
+    </div>
+    <div class="min-w-[900px]">
       <Table
-  :columns="auditColumns"
-  :data-source="filteredAudits"
-  :loading="auditsLoading"
-  :pagination="paginationAudits"
-  @change="handleAuditChange"
-  row-key="id"
-   
-  :scroll="{ x: 1400 }"
->
+        :columns="auditColumns"
+        :data-source="filteredAudits"
+        :loading="auditsLoading"
+        :pagination="paginationAudits"
+        @change="handleAuditChange"
+        row-key="id"
+        class="antdv-table-custom"
+        :scroll="{ x: 'max-content' }"
+      >
         <template #auditIndexCell="{ index }">
-          <div class="font-semibold text-gray-800">
-            {{ (paginationAudits.current - 1) * paginationAudits.pageSize + index + 1 }}
-          </div>
+          {{ (paginationAudits.current - 1) * paginationAudits.pageSize + index + 1 }}
         </template>
-        
         <template #statusCell="{ record }">
-          <Tag 
-            :color="record.success ? 'green' : 'red'" 
-            class="!font-bold !px-3 !py-1 !text-sm shadow-sm"
-          >
+          <Tag :color="record.success ? 'green' : 'red'" class="!font-bold !px-3 !py-1 !text-sm shadow-sm">
             {{ record.success ? 'Success' : 'Failed' }}
           </Tag>
         </template>
-        
         <template #userCell="{ record }">
           <div class="font-medium text-gray-900">{{ record.user?.name || 'N/A' }}</div>
           <div class="text-xs text-gray-500 truncate">{{ record.user?.email || '' }}</div>
         </template>
-        
         <template #auditDateCell="{ record }">
           <div class="font-mono text-sm">
             {{ new Date(record.created_at).toLocaleString('en-US', { 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
+              year: 'numeric', month: 'short', day: 'numeric',
+              hour: '2-digit', minute: '2-digit'
             }) }}
           </div>
         </template>
       </Table>
-    </Card>
-  </div>
+    </div>
+  </Card>
+
+</div>
 </template>
 
 <style scoped>
@@ -330,19 +312,16 @@ onMounted(() => {
   @apply bg-gradient-to-r from-gray-50 to-gray-100 font-semibold border-b-2 border-gray-200 backdrop-blur-sm;
 }
 .antdv-table-custom :deep(.ant-table-tbody) td {
-  @apply border-b border-gray-100 py-4;
+  @apply border-b border-gray-100 py-3 px-2;
 }
 .antdv-table-custom :deep(.ant-table-row:hover > td) {
   @apply bg-blue-50/70 backdrop-blur-sm;
-}
-.antdv-table-custom :deep(.ant-card-body) {
-  @apply p-0;
 }
 .font-mono {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
-/* ✅ WALLET-STYLE ROW HIGHLIGHTING */
+/* WALLET-STYLE ROW HIGHLIGHTING */
 :deep(.credit-row) {
   @apply bg-green-50/90 border-l-4 border-green-400 shadow-sm;
 }
@@ -355,61 +334,10 @@ onMounted(() => {
 :deep(.debit-row:hover) {
   @apply bg-red-100/90 border-l-4 border-red-500 shadow-md;
 }
-/* YOUR EXISTING STYLES - KEEP ALL */
-.antdv-table-custom :deep(.ant-table-thead) th {
-  @apply bg-gradient-to-r from-gray-50 to-gray-100 font-semibold border-b-2 border-gray-200 backdrop-blur-sm;
-}
 
-/* ✅ NEW: GREEN HEADERS FOR TRANSACTIONS TABLE */
-.antdv-table-custom :deep(.ant-table-thead th) {
-  @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
-}
-
-/* ✅ NEW: GREEN HEADERS FOR AUDITS TABLE */
-.login-audits-table :deep(.ant-table-thead th) {
-  @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
-}
-
-.antdv-table-custom :deep(.ant-table-tbody) td {
-  @apply border-b border-gray-100 py-4;
-}
-/* ... keep all your other existing styles exactly the same ... */
-
-
-.fund-modal :deep(.ant-modal-content) {
-  @apply rounded-xl border border-emerald-200/50 shadow-lg;
-}
-
-.credit-row {
-  @apply !bg-emerald-50/90 hover:!bg-emerald-100/90 transition-all duration-200;
-}
-
-.debit-row {
-  @apply !bg-red-50/90 hover:!bg-red-100/90 transition-all duration-200;
-}
-
-.antdv-table-custom :deep(.ant-table-thead) {
-  @apply !bg-gradient-to-r !from-emerald-500 !to-teal-600 !border-none rounded-t-2xl;
-}
-
-.antdv-table-custom :deep(.ant-table-thead th) {
-  @apply !bg-transparent !text-white !font-black !py-4 !px-4 text-sm 
-         !border-none !shadow-none backdrop-blur-sm;
-}
-
-.antdv-table-custom :deep(.ant-table-tbody td) {
-  @apply !py-4 !px-4 border-t border-emerald-100/30 hover:!bg-emerald-50/50 transition-all duration-200;
-}
-
-.antdv-table-custom :deep(.ant-table-row:hover > td) {
-  @apply bg-gradient-to-r from-emerald-50/70 to-teal-50/70 shadow-sm;
-}
-
-.antdv-table-custom :deep(.ant-table-row:nth-child(even)) {
-  @apply bg-white/30;
-}
-
-.font-mono {
-  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+/* Rounded top edges for cards */
+.card {
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
 }
 </style>
