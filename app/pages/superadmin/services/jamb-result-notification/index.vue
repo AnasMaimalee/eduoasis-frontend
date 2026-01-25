@@ -144,7 +144,7 @@ const columns = [
   { title: 'Taken By', key: 'taken', width: 180, slots: { customRender: 'takenCell' } },
   { title: 'Result File', key: 'file', width: 140, slots: { customRender: 'fileCell' } },
   { title: 'Date', dataIndex: 'created_at', width: 170, slots: { customRender: 'dateCell' } },
-  { title: 'Actions', key: 'actions', width: 200, fixed: 'right', align: 'center', slots: { customRender: 'actionsCell' } },
+  { title: 'Actions', key: 'actions', width: 200, align: 'center', slots: { customRender: 'actionsCell' } },
 ]
 
 onMounted(fetchRequests)
