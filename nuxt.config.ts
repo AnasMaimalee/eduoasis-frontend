@@ -25,20 +25,16 @@ export default defineNuxtConfig({
       host: true,
       strictPort: true,
       allowedHosts: true,
-
       fs: {
         strict: false,
       },
-
       cors: true,
-
       hmr: {
-        protocol: 'ws',   // ✅ CHANGE THIS
+        protocol: 'ws',
         overlay: false,
       },
     },
   },
-
 
   devServer: {
     https: false
@@ -52,13 +48,19 @@ export default defineNuxtConfig({
   pinia: {
     autoImports: ['defineStore', 'acceptHMRUpdate', 'storeToRefs'],
   },
+
+  // ✅ FIXED: Added ALL your Pusher vars + kept your existing ones
   runtimeConfig: {
     public: {
-      apiBase:
-        process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
       appName: 'JAMB Portal',
-      appDescription:
-        'Print JAMB Original Results, Admission Letters & Check Status',
+      appDescription: 'Print JAMB Original Results, Admission Letters & Check Status',
+      
+      // ✅ PUSHER VARS ADDED HERE 👇
+      pusherAppKey: process.env.NUXT_PUBLIC_PUSHER_APP_KEY,
+      pusherAppCluster: process.env.NUXT_PUBLIC_PUSHER_APP_CLUSTER,
+      pusherAppId: process.env.NUXT_PUBLIC_PUSHER_APP_ID,
+      pusherAppSecret: process.env.NUXT_PUBLIC_PUSHER_APP_SECRET,
     },
   },
 
@@ -72,8 +74,7 @@ export default defineNuxtConfig({
       meta: [
         {
           name: 'description',
-          content:
-            'Official platform to print JAMB original results, admission letters, check admission status.',
+          content: 'Official platform to print JAMB original results, admission letters, check admission status.',
         },
         { name: 'theme-color', content: '#1e3a8a' },
       ],

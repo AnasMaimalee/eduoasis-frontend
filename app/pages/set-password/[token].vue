@@ -8,10 +8,8 @@ definePageMeta({ layout: 'default' })
 const route = useRoute()
 const { $api } = useNuxtApp()
 
-// ✅ Get token and email from query parameters
-const token = (route.query.token as string) || ''
-const emailFromQuery = (route.query.email as string) || ''
-
+const token = decodeURIComponent((route.query.token as string) || '')
+const emailFromQuery = decodeURIComponent((route.query.email as string) || '')
 const form = reactive({
   email: emailFromQuery,
   token, // actual token from query

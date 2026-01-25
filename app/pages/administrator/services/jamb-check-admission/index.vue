@@ -183,50 +183,51 @@ onMounted(refreshAll)
 
 <template>
   <div class="p-6 lg:p-8 space-y-8 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen">
-   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-1 sm:p-0">
-  <!-- TITLE -->
-  <div class="w-full sm:w-auto">
-    <div
-      class="!m-0 text-sm sm:text-base md:text-lg flex items-center gap-1.5 sm:gap-2
-             text-emerald-800 font-semibold"
-    >
-      🧾 JAMB Admission Status
-      <span
-        class="text-[9px] sm:text-xs bg-emerald-100/90 px-1.5 sm:px-2 py-px sm:py-0.5 
-               rounded-full text-emerald-700 font-medium shadow-sm"
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-1 sm:p-0">
+      <div class="w-full sm:w-auto">
+        <div
+          class="!m-0 text-sm sm:text-base md:text-lg flex items-center gap-1.5 sm:gap-2 text-emerald-800 font-semibold"
+        >
+          🧾 JAMB Admission Status
+          <span
+            class="text-[9px] sm:text-xs bg-emerald-100/90 px-1.5 sm:px-2 py-px sm:py-0.5 
+                   rounded-full text-emerald-700 font-medium shadow-sm"
+          >
+            {{ pendingJobs.length + myJobs.length + completedJobs.length }}
+          </span>
+        </div>
+        <div class="text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-0 block sm:inline text-gray-500">
+          Pending → Take → Complete → Track
+        </div>
+      </div>
+
+      <Button
+        type="primary"
+        ghost
+        size="small"
+        :loading="loading.refresh"
+        @click="refreshAll"
+        class="!text-xs sm:!text-sm border-emerald-500 text-emerald-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg"
       >
-        {{ pendingJobs.length + myJobs.length + completedJobs.length }}
-      </span>
+        🔄 Refresh
+      </Button>
     </div>
-
-    <div
-      class="text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-0 block sm:inline text-gray-500"
-    >
-      Pending → Take → Complete → Track
-    </div>
-  </div>
-
-  <!-- REFRESH -->
-  <Button
-    type="primary"
-    ghost
-    size="small"
-    :loading="loading.refresh"
-    @click="refreshAll"
-    class="!text-xs sm:!text-sm border-emerald-500 text-emerald-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg"
-  >
-    🔄 Refresh
-  </Button>
-</div>
-
 
     <!-- MAIN CONTENT -->
     <Card class="!shadow-xl !border-emerald-200/50">
       <Tabs v-model:activeKey="activeTab" class="!rounded-2xl overflow-hidden">
-
+        
         <!-- PENDING -->
         <Tabs.TabPane key="pending" :tab="`🕒 Pending (${pendingJobs.length})`">
-          <Table class="green-table" :data-source="pendingJobs" :loading="loading.pending" row-key="id" :scroll="{ x: 1000 }" size="middle">
+          <Table
+            class="green-table"
+            :data-source="pendingJobs"
+            :loading="loading.pending"
+            row-key="id"
+            :scroll="{ x: 1000 }"
+            size="middle"
+          >
             <Table.Column title="#" dataIndex="index" width="60">
               <template #default="{ index }">{{ index + 1 }}</template>
             </Table.Column>
@@ -252,27 +253,21 @@ onMounted(refreshAll)
                 >
                   Take Job
                 </Button>
-
               </template>
             </Table.Column>
           </Table>
-           <template #tabBarExtraContent>
-    <Button
-      v-if="activeTab === 'completed'"
-      size="small"
-      type="primary"
-      ghost
-      :loading="loading.completed"
-      @click="fetchCompleted"
-    >
-      🔄 Refresh
-    </Button>
-  </template>
         </Tabs.TabPane>
 
-        <!-- MY JOBS / PROCESSING -->
+        <!-- PROCESSING / MY JOBS -->
         <Tabs.TabPane key="processing" :tab="`⏳ Processing (${myJobs.length})`">
-          <Table class="green-table" :data-source="myJobs" :loading="loading.processing" row-key="id" :scroll="{ x: 1000 }" size="middle">
+          <Table
+            class="green-table"
+            :data-source="myJobs"
+            :loading="loading.myJobs"
+            row-key="id"
+            :scroll="{ x: 1000 }"
+            size="middle"
+          >
             <Table.Column title="#" dataIndex="index" width="60">
               <template #default="{ index }">{{ index + 1 }}</template>
             </Table.Column>
@@ -280,8 +275,8 @@ onMounted(refreshAll)
             <Table.Column title="Reg No" dataIndex="registration_number" />
             <Table.Column title="Profile Code" dataIndex="profile_code" />
             <Table.Column title="Status" width="120" align="center">
-              <template #default>
-                <Tag color="blue">PROCESSING</Tag>
+              <template #default="{ record }">
+                <Tag color="blue">{{ record.status?.toUpperCase() || 'PROCESSING' }}</Tag>
               </template>
             </Table.Column>
             <Table.Column title="Action" width="160" align="center">
@@ -294,88 +289,68 @@ onMounted(refreshAll)
           </Table>
         </Tabs.TabPane>
 
-      <Tabs.TabPane key="completed" :tab="`✅ Completed (${completedJobs.length})`">
-        <Table
+        <!-- COMPLETED -->
+        <Tabs.TabPane key="completed" :tab="`✅ Completed (${completedJobs.length})`">
+          <Table
             class="green-table"
             :data-source="completedJobs"
             :loading="loading.completed"
             row-key="id"
             :scroll="{ x: 1100 }"
             size="middle"
-        >
+          >
             <Table.Column title="#" width="60">
-            <template #default="{ index }">{{ index + 1 }}</template>
+              <template #default="{ index }">{{ index + 1 }}</template>
             </Table.Column>
 
-            <!-- CUSTOMER -->
             <Table.Column title="Customer" width="220">
-            <template #default="{ record }">
+              <template #default="{ record }">
                 <div class="font-semibold">{{ record.user?.name }}</div>
                 <div class="text-xs text-gray-500">{{ record.user?.email }}</div>
-            </template>
+              </template>
             </Table.Column>
 
-            <!-- SERVICE -->
             <Table.Column title="Service" dataIndex="service" />
 
-            <!-- STATUS -->
             <Table.Column title="Status" width="120" align="center">
-            <template #default="{ record }">
-                <Tag
-                :color="record.status === 'approved' ? 'green' : 'blue'"
-                >
-                {{ record.status?.toUpperCase() }}
+              <template #default="{ record }">
+                <Tag :color="record.status === 'approved' ? 'green' : 'blue'">
+                  {{ record.status?.toUpperCase() }}
                 </Tag>
-            </template>
+              </template>
             </Table.Column>
 
-            <!-- PAYMENT -->
             <Table.Column title="Payment" width="140" align="center">
-            <template #default="{ record }">
-                <Tag v-if="record.payment?.is_paid" color="green">
-                💰 PAID
-                </Tag>
-                <Tag v-else color="red">
-                ⏳ UNPAID
-                </Tag>
-            </template>
+              <template #default="{ record }">
+                <Tag v-if="record.payment?.is_paid" color="green">💰 PAID</Tag>
+                <Tag v-else color="red">⏳ UNPAID</Tag>
+              </template>
             </Table.Column>
 
-            <!-- FILE -->
             <Table.Column title="Result File" width="140" align="center">
-            <template #default="{ record }">
-               <a
-                href="#"
-                @click.prevent="
-                  viewFile(
-                    record.id,
-                    `/services/jamb-admission-status/${record.id}/download`
-                  )
-                "
-              >
-                <span v-if="viewingId === record.id">⏳ Opening…</span>
-                <span v-else>📄 View</span>
-              </a>
-            </template>
+              <template #default="{ record }">
+                <a
+                  href="#"
+                  @click.prevent="viewFile(record.id, `/services/jamb-admission-status/${record.id}/download`)"
+                >
+                  📄 View
+                </a>
+              </template>
             </Table.Column>
 
-            <!-- DATE -->
             <Table.Column title="Processed At" width="180">
-            <template #default="{ record }">
+              <template #default="{ record }">
                 {{ new Date(record.processed_at).toLocaleString() }}
-            </template>
+              </template>
             </Table.Column>
-        </Table>
+          </Table>
         </Tabs.TabPane>
-
-
       </Tabs>
     </Card>
 
     <!-- COMPLETE JOB MODAL -->
     <Modal v-model:open="actionModalVisible" title="Upload Result File" width="500" :footer="null" centered>
       <div class="space-y-4 pt-2">
-        <!-- Job Info -->
         <Card size="small" class="!border-blue-200/50 mb-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -400,9 +375,6 @@ onMounted(refreshAll)
           </Button>
         </Upload>
 
-
-
-        <!-- Buttons -->
         <div class="flex gap-3">
           <Button block size="large" @click="actionModalVisible = false; fileList = []" class="flex-1 h-12">Cancel</Button>
           <Button
@@ -414,19 +386,15 @@ onMounted(refreshAll)
             @click="completeJob"
             class="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-teal-500"
           >
-            <template v-if="!loading.complete">
-              ✅ Complete Job
-            </template>
-            <template v-else>
-              Uploading…
-            </template>
+            <template v-if="!loading.complete">✅ Complete Job</template>
+            <template v-else>Uploading…</template>
           </Button>
-
         </div>
       </div>
     </Modal>
   </div>
 </template>
+
 
 <style scoped>
 .job-table :deep(.ant-table-thead th) {

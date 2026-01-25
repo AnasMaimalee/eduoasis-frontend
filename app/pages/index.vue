@@ -191,11 +191,11 @@ const submitFeedback = async () => {
     loadingFeedback.value = false
   }
 }
+
 </script>
 
 <template>
   <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-blue-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-blue-900/20 overflow-hidden">
-    
     <!-- Animated Background -->
     <div class="fixed inset-0 pointer-events-none z-0">
       <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-green-500/10 to-blue-500/10 animate-pulse"></div>
