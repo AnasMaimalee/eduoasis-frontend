@@ -157,10 +157,27 @@ const columns = [
 ]
 
 onMounted(fetchRequests)
+let refreshInterval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  fetchRequests()
+
+  // ✅ Auto refresh every 30 seconds
+  refreshInterval = setInterval(() => {
+    fetchRequests()
+  }, 30_000)
+})
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+    refreshInterval = null
+  }
+})
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-6 space-y-6 bg-emerald-50">
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>

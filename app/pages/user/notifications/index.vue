@@ -47,7 +47,7 @@ onMounted(fetchNotifications)
 </script>
 
 <template>
-  <div class="w-full p-6">
+  <div class="w-full p-6 bg-emerald-50">
     <!-- HEADER -->
     <div
       class="flex items-center justify-between mb-6

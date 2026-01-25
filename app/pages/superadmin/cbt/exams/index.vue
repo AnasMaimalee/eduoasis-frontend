@@ -128,7 +128,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-6 space-y-6 bg-emerald-50">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">📝 Exam Management</h1>
       <Button

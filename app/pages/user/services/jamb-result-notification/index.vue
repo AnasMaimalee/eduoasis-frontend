@@ -235,7 +235,26 @@ const debouncedSearch = () => {
 }
 
 watch(() => searchText.value, debouncedSearch)
-onMounted(fetchRequests)
+let autoRefreshInterval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  fetchRequests()
+
+  // 🔄 Auto refresh every 5 seconds
+  autoRefreshInterval = setInterval(() => {
+    if (!loading.value) {
+      fetchRequests()
+    }
+  }, 30_000)
+})
+
+onUnmounted(() => {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval)
+    autoRefreshInterval = null
+  }
+})
+
 </script>
 
 <template>
@@ -282,7 +301,7 @@ onMounted(fetchRequests)
     </div>
 
     <!-- Table Section -->
-    <div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100">
+    <div class="w-full overflow-x-auto rounded-2xl border border-emerald-200/50 bg-white/80 backdrop-blur-sm scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-emerald-100 bg-emerald-50">
   <div class="min-w-[1600px]">
     <a-table
       :columns="[

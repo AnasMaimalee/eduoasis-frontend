@@ -14,7 +14,7 @@ if (reference) {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center">
+  <div class="min-h-screen flex items-center justify-center bg-emerald-50">
     <div class="text-center">
       <h1 class="text-xl font-bold text-green-600">
         Payment Successful

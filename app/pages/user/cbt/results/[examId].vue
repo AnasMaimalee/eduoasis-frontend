@@ -80,7 +80,7 @@ const downloadPDF = async () => {
 
 
 <template>
-  <div class="max-w-6xl mx-auto px-1 py-1">
+  <div class="max-w-6xl mx-auto px-1 py-1 bg-emerald-50">
 
     <!-- LOADING -->
     <div v-if="loading" :loader="loading" class="text-center py-12">

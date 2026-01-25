@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-8 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen">
+  <div class="p-6 lg:p-8 space-y-8 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen bg-emerald-50">
 
     <!-- HEADER -->
     <a-card class="!shadow-2xl !border-2 border-emerald-200/50">

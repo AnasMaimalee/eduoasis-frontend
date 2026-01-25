@@ -67,7 +67,7 @@ onMounted(() => fetchLeaderboard(1))
 </script>
 
 <template>
-  <div class="p-4 sm:p-6 space-y-6 w-full ml-0">
+  <div class="p-4 sm:p-6 space-y-6 w-full ml-0 bg-emerald-50">
     
     <div v-if="loading" class="text-center py-12">
       <LeaderboardLoading />

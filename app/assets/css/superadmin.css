@@ -1,0 +1,17 @@
+
+/* assets/css/superadmin.css */
+.jamb-table :deep(.ant-table-thead th) {
+  @apply !bg-emerald-500 !text-white !font-semibold !py-3 !px-4 text-sm;
+}
+
+.jamb-table :deep(.ant-table-tbody td) {
+  @apply !py-3 !px-4;
+}
+
+.jamb-table :deep(.ant-table-row:hover > td) {
+  @apply bg-emerald-50;
+}
+
+.font-mono {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}

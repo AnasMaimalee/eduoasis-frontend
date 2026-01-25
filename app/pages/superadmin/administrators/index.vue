@@ -199,7 +199,7 @@ onMounted(() => fetchUsers())
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-6 space-y-6 bg-emerald-50">
     <!-- Header -->
     <div class="flex justify-between items-center">
       <Typography.Title level="3" class="!m-0">Administrator Management</Typography.Title>

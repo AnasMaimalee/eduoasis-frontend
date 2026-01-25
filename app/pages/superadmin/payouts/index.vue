@@ -110,7 +110,7 @@ onMounted(fetchPayouts)
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-6 space-y-6 bg-emerald-50">
     <!-- Simple Header -->
     <div class="flex justify-between items-center">
       <Typography.Title level="3" class="!m-0">Payout Requests</Typography.Title>

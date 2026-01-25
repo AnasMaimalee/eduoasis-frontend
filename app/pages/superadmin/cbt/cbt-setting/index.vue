@@ -71,7 +71,7 @@ onMounted(fetchSettings)
 </script>
 
 <template>
-  <div class="p-4 sm:p-6 lg:p-8 space-y-8 w-full">
+  <div class="p-4 sm:p-6 lg:p-8 space-y-8 w-full bg-emerald-50">
 
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">

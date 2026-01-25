@@ -91,7 +91,7 @@ onMounted(fetchServices)
 </script>
 
 <template>
-  <div class="p-4 sm:p-6 space-y-4 text-[10px] sm:text-xs md:text-sm lg:text-base">
+  <div class="p-4 sm:p-6 space-y-4 text-[10px] sm:text-xs md:text-sm lg:text-base bg-emerald-50">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
       <Typography.Title level="3" class="!m-0 text-[12px] sm:text-sm md:text-base lg:text-lg">

@@ -224,7 +224,26 @@ const downloadFile = async (jobId: string) => {
 }
 
 watch(searchText, debouncedSearch)
-onMounted(fetchRequests)
+let autoRefreshInterval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  fetchRequests()
+
+  // 🔄 Auto refresh every 5 seconds
+  autoRefreshInterval = setInterval(() => {
+    if (!loading.value) {
+      fetchRequests()
+    }
+  }, 30_000)
+})
+
+onUnmounted(() => {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval)
+    autoRefreshInterval = null
+  }
+})
+
 
 /* ===================== VALIDATE SUBMIT ===================== */
 const canSubmit = computed(() => {
@@ -233,7 +252,7 @@ const canSubmit = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-emerald-50/50 to-teal-50/50 p-4 lg:p-8 space-y-8">
+  <div class="min-h-screen bg-gradient-to-br from-emerald-50/50 to-teal-50/50 p-4 lg:p-8 space-y-8 bg-emerald-50">
 
   <!-- PAGE HEADER -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">

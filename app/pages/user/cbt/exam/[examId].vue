@@ -85,7 +85,7 @@ onMounted(fetchExam)
 </script>
 
 <template>
-  <div class="p-4">
+  <div class="p-4 bg-emerald-50">
     <!-- EXAM HEADER -->
     <ExamHeader
       v-if="subjects.length && activeSubject"

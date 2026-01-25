@@ -9,7 +9,7 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="p-6">
+  <div class="p-6 bg-emerald-50">
     <h2 class="text-2xl font-bold text-emerald-600 mb-4">CBT Subjects</h2>
     <SubjectsTable />
   </div>

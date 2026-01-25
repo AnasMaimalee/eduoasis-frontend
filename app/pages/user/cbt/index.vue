@@ -32,7 +32,7 @@ onMounted(checkOngoingExam)
 </script>
 
 <template>
-  <div>
+  <div class="bg-emerald-50">
     <div v-if="loading" class="text-center p-10">
       <a-spin class="large"></a-spin>
     </div>

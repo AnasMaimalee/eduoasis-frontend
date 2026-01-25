@@ -40,7 +40,7 @@ onMounted(fetchResults)
 </script>
 
 <template>
-  <div class="p-4 space-y-4">
+  <div class="p-4 space-y-4 bg-emerald-50">
     <ResultHeader
       v-model:search="search"
       :loading="loading"

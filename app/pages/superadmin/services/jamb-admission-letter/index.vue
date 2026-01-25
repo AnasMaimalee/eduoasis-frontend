@@ -156,12 +156,28 @@ const columns = [
   { title: 'Date', dataIndex: 'created_at', width: 170, slots: { customRender: 'dateCell' } },
   { title: 'Actions', key: 'actions', width: 190, align: 'center', slots: { customRender: 'actionsCell' } },
 ]
+let refreshInterval: ReturnType<typeof setInterval> | null = null
 
+onMounted(() => {
+  fetchRequests()
+
+  // ✅ Auto refresh every 30 seconds
+  refreshInterval = setInterval(() => {
+    fetchRequests()
+  }, 30_000)
+})
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+    refreshInterval = null
+  }
+})
 onMounted(fetchRequests)
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-6 space-y-6 bg-emerald-50">
     <!-- Header -->
    <div class="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center">
       <div>
