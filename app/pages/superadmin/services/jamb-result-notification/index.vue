@@ -6,17 +6,12 @@ definePageMeta({
   title: 'JAMB Result Notification'
 })
 
-
-import { useFileDownloader } from '@/composables/useFileDownloader'
-const { downloadingId, downloadFile } = useFileDownloader()
-
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import {
   Table,
   Button,
   Tag,
   message,
-  Typography,
   Card,
   Modal,
   Input,
@@ -25,12 +20,12 @@ import {
   CheckOutlined,
   CloseOutlined,
   ReloadOutlined,
-  SearchOutlined,
-  DownloadOutlined,
 } from '@ant-design/icons-vue'
 
+import { useFileDownloader } from '@/composables/useFileDownloader'
+const { downloadingId, downloadFile } = useFileDownloader()
+
 const { $api } = useNuxtApp()
-const config = useRuntimeConfig()
 
 /* ================= STATE ================= */
 const requests = ref<any[]>([])
@@ -39,7 +34,7 @@ const searchText = ref('')
 
 /* Approve modal */
 const approveModalVisible = ref(false)
-const currentApproveId = ref<string | null>(null)
+const currentApproveRecord = ref<any | null>(null)
 const approveLoading = ref(false)
 
 /* Reject modal */
@@ -51,7 +46,7 @@ const rejectLoading = ref(false)
 /* Pagination */
 const pagination = ref({
   current: 1,
-  pageSize: 1000,
+  pageSize: 50,
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
@@ -59,17 +54,16 @@ const pagination = ref({
     `${range[0]}-${range[1]} of ${total} requests`,
 })
 
-/* ================= CLIENT-SIDE FILTERED DATA ✅ */
+/* ================= FILTER ================= */
 const filteredRequests = computed(() => {
   if (!searchText.value.trim()) return requests.value
-  
-  const query = searchText.value.toLowerCase()
-  return requests.value.filter(request => 
-    request.user?.name?.toLowerCase().includes(query) ||
-    request.email?.toLowerCase().includes(query) ||
-    request.service?.name?.toLowerCase().includes(query) ||
-    request.registration_number?.toLowerCase().includes(query) ||
-    request.status?.toLowerCase().includes(query)
+  const q = searchText.value.toLowerCase()
+  return requests.value.filter(r =>
+    r.user?.name?.toLowerCase().includes(q) ||
+    r.email?.toLowerCase().includes(q) ||
+    r.service?.name?.toLowerCase().includes(q) ||
+    r.registration_number?.toLowerCase().includes(q) ||
+    r.status?.toLowerCase().includes(q)
   )
 })
 
@@ -80,31 +74,27 @@ const fetchRequests = async () => {
     const res = await $api('/services/jamb-admission-result-notification/all')
     requests.value = Array.isArray(res) ? res : res.data || []
     pagination.value.total = filteredRequests.value.length
-  } catch (err) {
+  } catch {
     message.error('Failed to load requests')
   } finally {
     loading.value = false
   }
 }
 
-/* ================= APPROVE MODAL ================= */
-const openApproveModal = (id: string) => {
-  currentApproveId.value = id
+/* ================= APPROVE ================= */
+const openApproveModal = (record: any) => {
+  currentApproveRecord.value = record
   approveModalVisible.value = true
 }
 
 const handleApprove = async () => {
-  if (!currentApproveId.value) return
-
+  if (!currentApproveRecord.value) return
   approveLoading.value = true
-
   try {
-    await $api(`/services/jamb-admission-result-notification/${currentApproveId.value}/approve`, { 
-      method: 'POST' 
-    })
+    await $api(`/services/jamb-admission-result-notification/${currentApproveRecord.value.id}/approve`, { method: 'POST' })
     message.success('Request approved successfully')
     approveModalVisible.value = false
-    currentApproveId.value = null
+    currentApproveRecord.value = null
     fetchRequests()
   } catch (err: any) {
     message.error(err.data?.message || 'Approval failed')
@@ -113,7 +103,7 @@ const handleApprove = async () => {
   }
 }
 
-/* ================= REJECT MODAL ================= */
+/* ================= REJECT ================= */
 const openRejectModal = (id: string) => {
   currentRejectId.value = id
   rejectReason.value = ''
@@ -125,9 +115,7 @@ const handleReject = async () => {
     message.error('Rejection reason is required')
     return
   }
-
   rejectLoading.value = true
-
   try {
     await $api(`/services/jamb-admission-result-notification/${currentRejectId.value}/reject`, {
       method: 'POST',
@@ -145,257 +133,212 @@ const handleReject = async () => {
   }
 }
 
-
+/* ================= TABLE ================= */
 const columns = [
   { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
-  { title: 'Customer', key: 'user', width: 260, slots: { customRender: 'userCell' } },
-  { title: 'Service', key: 'service', width: 280, slots: { customRender: 'serviceCell' } },
-  { title: 'Pricing', key: 'pricing', width: 200, align: 'right', slots: { customRender: 'pricingCell' } },
+  { title: 'Customer', key: 'user', width: 240, slots: { customRender: 'userCell' } },
+  { title: 'Service', key: 'service', width: 260, slots: { customRender: 'serviceCell' } },
+  { title: 'Pricing', key: 'pricing', width: 180, align: 'right', slots: { customRender: 'pricingCell' } },
   { title: 'Status', dataIndex: 'status', width: 120, slots: { customRender: 'statusCell' } },
-  { title: 'Is Paid?', dataIndex: 'is_paid', width: 100, slots: { customRender: 'isPaidCell' } },
+  { title: 'Paid?', dataIndex: 'is_paid', width: 90, slots: { customRender: 'isPaidCell' } },
   { title: 'Taken By', key: 'taken', width: 180, slots: { customRender: 'takenCell' } },
-  { title: 'Result File', key: 'file', width: 150, slots: { customRender: 'fileCell' } },
+  { title: 'Result File', key: 'file', width: 140, slots: { customRender: 'fileCell' } },
   { title: 'Date', dataIndex: 'created_at', width: 170, slots: { customRender: 'dateCell' } },
-  { title: 'Actions', key: 'actions', width: 190, align: 'center', slots: { customRender: 'actionsCell' } },
+  { title: 'Actions', key: 'actions', width: 200, fixed: 'right', align: 'center', slots: { customRender: 'actionsCell' } },
 ]
 
 onMounted(fetchRequests)
 let refreshInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
-  fetchRequests()
-
-  // ✅ Auto refresh every 30 seconds
-  refreshInterval = setInterval(() => {
-    fetchRequests()
-  }, 30_000)
+  refreshInterval = setInterval(fetchRequests, 30_000)
 })
 
 onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-    refreshInterval = null
-  }
+  if (refreshInterval) clearInterval(refreshInterval)
 })
 </script>
 
 <template>
-  <div class="p-6 space-y-6 bg-emerald-50">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
-      <div>
-        <Typography.Title level="2" class="!m-0">
+  <div class="p-4 bg-emerald-50">
+    <div class="font-bold text-lg mb-5">
           JAMB Admission Result Notification Requests
-        </Typography.Title>
-        <Typography.Text type="secondary">
-          {{ filteredRequests.length }} total requests
-        </Typography.Text>
-      </div>
-    </div>
+          <div class="text-xs text-gray-500">{{ filteredRequests.length }} total</div>
+        </div>
+    <Card class="rounded-t-2xl overflow-hidden">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3">
+        
 
-    <!-- Table with Compact Search + Refresh -->
-    <Card>
-      <div class="flex justify-between items-center mb-4 p-4 pt-0">
-        <!-- ✅ COMPACT SEARCH + REFRESH -->
         <div class="flex items-center gap-2">
           <Input
             v-model:value="searchText"
-            placeholder="Search requests..."
-            size="middle"
-            class="!w-64"
+            placeholder="Search..."
+            size="small"
+            class="!w-56"
           />
-          <Button
-            type="primary"
-            :loading="loading"
-            @click="fetchRequests"
-          >
-            <ReloadOutlined /> Refresh
+          <Button size="small" type="primary" :loading="loading" @click="fetchRequests"> Refresh
+            <ReloadOutlined />
           </Button>
         </div>
       </div>
 
+      <!-- TABLE -->
       <Table
         :columns="columns"
         :data-source="filteredRequests"
         :loading="loading"
         :pagination="pagination"
         row-key="id"
-        :scroll="{ x: 1600 }"
+        size="small"
+        :scroll="{ x: 1700, y: 500 }"
         class="notification-table"
       >
-        <!-- ✅ GREEN NUMBERING -->
         <template #indexCell="{ index }">
-          <div class="font-semibold text-emerald-600">
+          <span class="text-emerald-600 font-semibold text-xs">
             {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
-          </div>
+          </span>
         </template>
 
-        <!-- User -->
         <template #userCell="{ record }">
-          <div>
+          <div class="text-xs">
             <div class="font-semibold">{{ record.user?.name }}</div>
-            <div class="text-xs text-gray-500">{{ record.email }}</div>
-            <div class="text-xs text-gray-400">{{ record.phone_number }}</div>
+            <div class="text-gray-500">{{ record.email }}</div>
           </div>
         </template>
 
-        <!-- Service -->
         <template #serviceCell="{ record }">
-          <div>
+          <div class="text-xs">
             <div class="font-semibold">{{ record.service?.name }}</div>
-            <div class="text-sm text-gray-500">
-              {{ record.registration_number }}
-            </div>
+            <div class="text-gray-500">{{ record.registration_number }}</div>
           </div>
         </template>
 
-        <!-- Pricing -->
         <template #pricingCell="{ record }">
-          <div class="text-right">
-            <div class="text-xl font-bold text-green-600">
-              ₦{{ Number(record.customer_price).toLocaleString() }}
-            </div>
-            <div class="text-xs text-gray-500">
-              Admin: ₦{{ Number(record.admin_payout).toLocaleString() }}
-            </div>
+          <div class="text-right text-xs">
+            <div class="font-bold text-green-600">₦{{ Number(record.customer_price).toLocaleString() }}</div>
+            <div class="text-gray-500">Admin: ₦{{ Number(record.admin_payout).toLocaleString() }}</div>
           </div>
         </template>
-
-        <!-- Status -->
+        
         <template #statusCell="{ record }">
-          <Tag
-            :color="
-              record.status === 'completed' || record.status === 'approved'
-                ? 'green'
-                : record.status === 'processing' || record.status === 'proceeding' || record.status === 'pending'
-                ? 'orange'
-                : 'red'
-            "
-            class="font-bold px-4 py-1"
-          >
+          <Tag :color="record.status === 'approved' || record.status === 'completed' ? 'green' : record.status === 'pending' ? 'orange' : 'red'">
             {{ record.status.toUpperCase() }}
           </Tag>
         </template>
 
-        <!-- Is Paid -->
         <template #isPaidCell="{ record }">
-          <Tag
-            :color="record.is_paid ? 'green' : 'red'"
-            class="font-bold px-4 py-1"
-          >
+          <Tag :color="record.is_paid ? 'green' : 'red'">
             {{ record.is_paid ? 'PAID' : 'UNPAID' }}
           </Tag>
         </template>
-
-        <!-- Taken by -->
         <template #takenCell="{ record }">
-          <div v-if="record.taken_by">
-            <div class="font-semibold text-sm">{{ record.taken_by.name }}</div>
-            <div class="text-xs text-gray-500">{{ record.taken_by.email }}</div>
+          <div v-if="record.taken_by" class="text-xs">
+            <div class="font-semibold">
+              {{ record.taken_by.name }}
+            </div>
+            <div class="text-gray-500">
+              {{ record.taken_by.email }}
+            </div>
           </div>
-          <span v-else class="text-gray-400 text-sm">—</span>
+          <span v-else class="text-xs text-gray-400">—</span>
         </template>
 
-        <!-- File Download -->
         <template #fileCell="{ record }">
           <Button
-              v-if="record.result_file"
-              type="primary"
-              size="small"
-              :loading="downloadingId === record.id"
-              @click="downloadFile({ 
-                id: record.id,
-                url: `/services/jamb-admission-result-notification/${record.id}/download`,
-                defaultFilename: 'jamb-admission-result-notification',
-                successMessage: 'Admission Admission Resut Notification downloaded',
-              })"
-            >
-              📥 Download
-            </Button>
-          <span v-else class="text-gray-400 text-sm">No file</span>
+            v-if="record.result_file"
+            type="primary"
+            size="small"
+            class="!text-xs"
+            :loading="downloadingId === record.id"
+            @click="downloadFile({ 
+              id: record.id,
+              url: `/services/jamb-admission-result-notification/${record.id}/download`,
+              defaultFilename: 'jamb-admission-result-notification'
+            })"
+          >
+            📥 Download
+          </Button>
+          <span v-else class="text-xs text-gray-400">No file</span>
         </template>
 
-        <!-- Date -->
         <template #dateCell="{ record }">
-          <span class="font-mono text-sm">
-            {{ new Date(record.created_at).toLocaleString() }}
-          </span>
+          <span class="text-xs font-mono">{{ new Date(record.created_at).toLocaleString() }}</span>
         </template>
 
-        <!-- Actions -->
         <template #actionsCell="{ record }">
           <div class="flex justify-center gap-2">
             <template v-if="record.status === 'completed'">
-              <Button
-                type="primary"
-                size="small"
-                :loading="approveLoading"
-                @click="openApproveModal(record.id)"
-              >
-                <CheckOutlined /> Approve
+              <Button size="small" type="primary" @click="openApproveModal(record)">
+                Approve
+                <CheckOutlined />
               </Button>
-
-              <Button
-                danger
-                size="small"
-                :loading="rejectLoading"
-                @click="openRejectModal(record.id)"
-              >
-                <CloseOutlined /> Reject
+              <Button size="small" danger @click="openRejectModal(record.id)">
+                Reject
+                <CloseOutlined />
               </Button>
             </template>
-
-            <CheckOutlined
-              v-else-if="record.status === 'approved'"
-              class="text-green-500 text-lg"
-              title="Approved"
-            />
-            <CloseOutlined
-              v-else
-              class="text-red-500 text-lg"
-              title="Rejected"
-            />
+            <CheckOutlined v-else-if="record.status === 'approved'" class="text-green-500" />
+            <CloseOutlined v-else class="text-red-500" />
           </div>
         </template>
       </Table>
     </Card>
 
-    <!-- Approve Modal -->
+    <!-- APPROVE MODAL -->
     <Modal
       v-model:visible="approveModalVisible"
       title="Confirm Approval"
-      ok-text="Approve Request"
-      cancel-text="Cancel"
+      ok-text="Approve"
       :ok-button-props="{ loading: approveLoading }"
       @ok="handleApprove"
     >
-      <p>Are you sure you want to approve this JAMB Admission Result Notification request?</p>
-      <p class="text-sm text-gray-500 mt-2">
-        This action cannot be undone.
-      </p>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span>Customer price</span>
+          <strong>₦{{ Number(currentApproveRecord?.customer_price || 0).toLocaleString() }}</strong>
+        </div>
+        <div class="flex justify-between">
+          <span>Admin payout</span>
+          <strong>₦{{ Number(currentApproveRecord?.admin_payout || 0).toLocaleString() }}</strong>
+        </div>
+        <p class="text-xs text-red-500">This action cannot be undone.</p>
+      </div>
     </Modal>
 
-    <!-- Reject Modal -->
+    <!-- REJECT MODAL -->
     <Modal
       v-model:visible="rejectModalVisible"
       title="Reject Request"
-      ok-text="Reject Request"
-      cancel-text="Cancel"
+      ok-text="Reject"
       :ok-button-props="{ loading: rejectLoading }"
       @ok="handleReject"
     >
-      <div>
-        <p>Provide a reason for rejecting this request:</p>
-        <Input.TextArea
-          v-model:value="rejectReason"
-          rows="4"
-          placeholder="Enter detailed rejection reason (required)..."
-          class="mt-3"
-        />
-      </div>
+      <Input.TextArea
+        v-model:value="rejectReason"
+        rows="4"
+        placeholder="Enter rejection reason (required)"
+      />
     </Modal>
   </div>
 </template>
+
+<style scoped>
+.notification-table :deep(.ant-table-thead th) {
+  background: #10b981;
+  color: white;
+  font-size: 12px;
+}
+
+.notification-table :deep(.ant-table-tbody td) {
+  font-size: 12px;
+}
+
+.font-mono {
+  font-family: Monaco, Menlo, monospace;
+}
+</style>
+
 
 <style scoped>
 /* ✅ GREEN EMERALD HEADER */
