@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-8 p-6 bg-emerald-50">
+  <div class="space-y-2 p-2 bg-emerald-50">
     <!-- Questions Management -->
     <div>
       <div class="">
