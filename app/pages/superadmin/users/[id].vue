@@ -10,7 +10,7 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['superadmin'],
-  title: 'Administrator Info Page'
+  title: 'User Info Page'
 })
 
 const router = useRouter()
