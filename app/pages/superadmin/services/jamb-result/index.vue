@@ -177,40 +177,41 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-6 space-y-6 bg-emerald-50">
+  <div class="p-4 sm:p-6 space-y-4 bg-emerald-50">
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
       <div>
-        <Typography.Title level="2" class="!m-0">
+        <div class="text-lg sm:text-xl font-bold text-gray-800">
           JAMB Result Requests
-        </Typography.Title>
-        <Typography.Text type="secondary">
+        </div>
+        <div class="text-xs sm:text-sm text-gray-500">
           {{ filteredRequests.length }} total requests
-        </Typography.Text>
+        </div>
       </div>
     </div>
 
-    <!-- Table with Compact Search + Refresh -->
-    <Card>
-      <div class="flex justify-between items-center mb-4 p-4 pt-0">
-        <!-- ✅ COMPACT SEARCH + REFRESH -->
-        <div class="flex items-center gap-2">
-          <Input
-            v-model:value="searchText"
-            placeholder="Search requests..."
-            size="middle"
-            class="!w-64"
-          />
-          <Button
-            type="primary"
-            :loading="loading"
-            @click="fetchRequests"
-          >
-            <ReloadOutlined /> Refresh
-          </Button>
-        </div>
+    <!-- Table with Search + Refresh -->
+    <Card class="!p-0">
+      <!-- Controls -->
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-3">
+        <Input
+          v-model:value="searchText"
+          placeholder="Search requests..."
+          size="small"
+          class="w-full sm:w-64 text-xs"
+        />
+
+        <Button
+          type="primary"
+          size="small"
+          :loading="loading"
+          @click="fetchRequests"
+        >
+          <ReloadOutlined /> Refresh
+        </Button>
       </div>
 
+      <!-- Table -->
       <Table
         :columns="columns"
         :data-source="filteredRequests"
@@ -218,29 +219,38 @@ onUnmounted(() => {
         :pagination="pagination"
         row-key="id"
         :scroll="{ x: 1600 }"
+        size="small"
         class="result-table"
       >
-        <!-- ✅ GREEN NUMBERING -->
+        <!-- Index -->
         <template #indexCell="{ index }">
-          <div class="font-semibold text-emerald-600">
+          <div class="font-semibold text-emerald-600 text-xs">
             {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
           </div>
         </template>
 
         <!-- User -->
         <template #userCell="{ record }">
-          <div>
-            <div class="font-semibold">{{ record.user?.name }}</div>
-            <div class="text-xs text-gray-500">{{ record.email }}</div>
-            <div class="text-xs text-gray-400">{{ record.phone_number }}</div>
+          <div class="text-xs space-y-0.5">
+            <div class="font-semibold text-gray-800">
+              {{ record.user?.name }}
+            </div>
+            <div class="text-gray-500 truncate">
+              {{ record.email }}
+            </div>
+            <div class="text-gray-400">
+              {{ record.phone_number }}
+            </div>
           </div>
         </template>
 
         <!-- Service -->
         <template #serviceCell="{ record }">
-          <div>
-            <div class="font-semibold">{{ record.service?.name }}</div>
-            <div class="text-sm text-gray-500">
+          <div class="text-xs space-y-0.5">
+            <div class="font-semibold text-gray-800">
+              {{ record.service?.name }}
+            </div>
+            <div class="text-gray-500">
               {{ record.registration_number }}
             </div>
           </div>
@@ -248,11 +258,11 @@ onUnmounted(() => {
 
         <!-- Pricing -->
         <template #pricingCell="{ record }">
-          <div class="text-right">
-            <div class="text-xl font-bold text-green-600">
+          <div class="text-right text-xs">
+            <div class="font-bold text-emerald-600">
               ₦{{ Number(record.customer_price).toLocaleString() }}
             </div>
-            <div class="text-xs text-gray-500">
+            <div class="text-gray-500">
               Admin: ₦{{ Number(record.admin_payout).toLocaleString() }}
             </div>
           </div>
@@ -268,7 +278,7 @@ onUnmounted(() => {
                 ? 'orange'
                 : 'red'
             "
-            class="font-bold px-4 py-1"
+            class="!text-xs !px-2 !py-0.5 font-semibold"
           >
             {{ record.status.toUpperCase() }}
           </Tag>
@@ -278,79 +288,84 @@ onUnmounted(() => {
         <template #isPaidCell="{ record }">
           <Tag
             :color="record.is_paid ? 'green' : 'red'"
-            class="font-bold px-4 py-1"
+            class="!text-xs !px-2 !py-0.5 font-semibold"
           >
             {{ record.is_paid ? 'PAID' : 'UNPAID' }}
           </Tag>
         </template>
 
-        <!-- Taken by -->
+        <!-- Taken By -->
         <template #takenCell="{ record }">
-          <div v-if="record.taken_by">
-            <div class="font-semibold text-sm">{{ record.taken_by.name }}</div>
-            <div class="text-xs text-gray-500">{{ record.taken_by.email }}</div>
+          <div v-if="record.taken_by" class="text-xs">
+            <div class="font-semibold">
+              {{ record.taken_by.name }}
+            </div>
+            <div class="text-gray-500">
+              {{ record.taken_by.email }}
+            </div>
           </div>
-          <span v-else class="text-gray-400 text-sm">—</span>
+          <span v-else class="text-xs text-gray-400">—</span>
         </template>
 
-        <!-- File Download -->
+        <!-- File -->
         <template #fileCell="{ record }">
           <Button
-              v-if="record.result_file"
-              type="primary"
-              size="small"
-              :loading="downloadingId === record.id"
-              @click="downloadFile({ 
-                id: record.id,
-                url: `/services/jamb-result/${record.id}/download`,
-                defaultFilename: 'jamb-result',
-                successMessage: 'Admission Result downloaded',
-              })"
-            >
-              📥 Download
-            </Button>
-          <span v-else class="text-gray-400 text-sm">No file</span>
+            v-if="record.result_file"
+            type="primary"
+            size="small"
+            class="!text-xs"
+            :loading="downloadingId === record.id"
+            @click="downloadFile({ 
+              id: record.id,
+              url: `/services/jamb-result/${record.id}/download`,
+              defaultFilename: 'jamb-result',
+              successMessage: 'Admission Result downloaded',
+            })"
+          >
+            📥 Download
+          </Button>
+          <span v-else class="text-xs text-gray-400">No file</span>
         </template>
 
         <!-- Date -->
         <template #dateCell="{ record }">
-          <span class="font-mono text-sm">
+          <span class="text-xs font-mono">
             {{ new Date(record.created_at).toLocaleString() }}
           </span>
         </template>
 
         <!-- Actions -->
         <template #actionsCell="{ record }">
-          <div class="flex justify-center gap-2">
+          <div class="flex justify-center gap-1">
             <template v-if="record.status === 'completed'">
               <Button
                 type="primary"
                 size="small"
+                class="!text-xs"
                 :loading="approveLoading"
                 @click="openApproveModal(record.id)"
-              >
-                <CheckOutlined /> Approve
+              >Approve
+                <CheckOutlined />
               </Button>
 
               <Button
                 danger
                 size="small"
+                class="!text-xs"
                 :loading="rejectLoading"
                 @click="openRejectModal(record.id)"
-              >
-                <CloseOutlined /> Reject
+              > Reject
+                <CloseOutlined />
               </Button>
             </template>
 
             <CheckOutlined
               v-else-if="record.status === 'approved'"
-              class="text-green-500 text-lg"
-              title="Approved"
+              class="text-green-500 text-base"
             />
             <CloseOutlined
               v-else
-              class="text-red-500 text-lg"
-              title="Rejected"
+              class="text-red-500 text-base"
             />
           </div>
         </template>
@@ -361,13 +376,15 @@ onUnmounted(() => {
     <Modal
       v-model:visible="approveModalVisible"
       title="Confirm Approval"
-      ok-text="Approve Request"
+      ok-text="Approve"
       cancel-text="Cancel"
       :ok-button-props="{ loading: approveLoading }"
       @ok="handleApprove"
     >
-      <p>Are you sure you want to approve this JAMB Result request?</p>
-      <p class="text-sm text-gray-500 mt-2">
+      <p class="text-sm">
+        Are you sure you want to approve this request?
+      </p>
+      <p class="text-xs text-gray-500 mt-2">
         This action cannot be undone.
       </p>
     </Modal>
@@ -376,23 +393,24 @@ onUnmounted(() => {
     <Modal
       v-model:visible="rejectModalVisible"
       title="Reject Request"
-      ok-text="Reject Request"
+      ok-text="Reject"
       cancel-text="Cancel"
       :ok-button-props="{ loading: rejectLoading }"
       @ok="handleReject"
     >
-      <div>
-        <p>Provide a reason for rejecting this request:</p>
-        <Input.TextArea
-          v-model:value="rejectReason"
-          rows="4"
-          placeholder="Enter detailed rejection reason (required)..."
-          class="mt-3"
-        />
-      </div>
+      <p class="text-sm mb-2">
+        Provide a rejection reason:
+      </p>
+      <Input.TextArea
+        v-model:value="rejectReason"
+        rows="4"
+        placeholder="Enter reason..."
+        class="text-xs"
+      />
     </Modal>
   </div>
 </template>
+
 
 <style scoped>
 /* ✅ GREEN EMERALD HEADER */
