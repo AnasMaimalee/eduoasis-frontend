@@ -2,7 +2,8 @@
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['administrator']
+  roles: ['administrator'],
+  title: 'Adminisrator Payout'
 })
 
 import { ref, onMounted, reactive, nextTick } from 'vue'
@@ -21,8 +22,8 @@ const currentService = ref<any>(null)
 const columns = [
   { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
   { title: 'Service Name', dataIndex: 'name', key: 'name', slots: { customRender: 'name' }, width: 400 },
-  { title: 'Description', key: 'description', width: 150, align: 'right', slots: { customRender: 'description' } },
-  { title: 'Admin Payout', key: 'adminPayout', width: 150, align: 'right', slots: { customRender: 'adminPayout' } },
+  { title: 'Description', key: 'description', width: 150,slots: { customRender: 'description' } },
+  { title: 'Admin Payout', key: 'adminPayout', width: 150, slots: { customRender: 'adminPayout' } },
   { title: 'Status', key: 'status', width: 150, align: 'center', slots: { customRender: 'status' } },
 ]
 
@@ -106,7 +107,7 @@ onMounted(fetchServices)
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
-        <Typography.Title level="3" class="!m-0">Services Management</Typography.Title>
+        <div class="!m-0">Services Management</div>
         <Typography.Text type="secondary">{{ pagination.total }} total services</Typography.Text>
       </div>
      
@@ -127,21 +128,32 @@ onMounted(fetchServices)
       >
         <!-- ✅ TABLE TITLE WITH SEARCH + REFRESH -->
         <template #title>
-          <div class="flex flex-wrap items-center gap-3 p-4 pb-2">
-            <Input 
-              v-model:value="searchText"
-              size="large"
-              placeholder="Search services by name/description... (Enter to search)"
-              class="flex-1 min-w-[250px] max-w-[400px]"
-              @input="handleSearchChange"
-              @pressEnter="triggerSearch"
-              @blur="triggerSearch"
-            />
-            <Button size="large" @click="fetchServices" :loading="loading">
-              <ReloadOutlined /> Refresh
-            </Button>
-          </div>
-        </template>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+          
+          <!-- SEARCH -->
+          <Input
+            v-model:value="searchText"
+            size="small"
+            placeholder="Search services"
+            class="w-full sm:w-64"
+            @input="handleSearchChange"
+            @pressEnter="triggerSearch"
+            @blur="triggerSearch"
+          />
+
+          <!-- REFRESH -->
+          <Button
+            size="small"
+            class="w-full sm:w-auto"
+            @click="fetchServices"
+            :loading="loading"
+          >
+            <ReloadOutlined /> Refresh
+          </Button>
+
+        </div>
+      </template>
+
 
         <template #emptyText>
           <div class="text-center py-8">

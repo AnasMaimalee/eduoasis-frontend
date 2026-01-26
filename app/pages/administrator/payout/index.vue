@@ -113,6 +113,7 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['administrator'],
+  title: 'Administrator Payout'
 })
 
 const totalRequests = computed(() => payoutRequests.value.length)
