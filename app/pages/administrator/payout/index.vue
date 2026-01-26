@@ -48,7 +48,7 @@
 
             <span class="text-emerald-600">
               Approved:
-              <b>{{ payoutRequests.filter(p => p.status === 'approved').length }}</b>
+              <b>{{ payoutRequests.filter(p => p.status === 'paid').length }}</b>
             </span>
           </div>
         </div>
