@@ -185,11 +185,20 @@ onMounted(fetchPayouts)
 
         <template #statusCell="{ record }">
           <Tag
-            :color="record.status === 'pending' ? 'orange' : record.status === 'approved' ? 'green' : 'red'"
-            class="text-xs font-semibold px-2 py-0.5"
-          >
-            {{ record.status }}
-          </Tag>
+          :color="
+            record.status === 'pending'
+              ? 'orange'
+              : record.status === 'approved'
+              ? 'green'
+              : record.status === 'paid'
+              ? 'green'
+              : 'red'
+          "
+          class="text-xs font-semibold px-2 py-0.5"
+        >
+          {{ record.status }}
+        </Tag>
+
         </template>
 
         <template #dateCell="{ record }">

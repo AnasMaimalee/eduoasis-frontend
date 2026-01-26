@@ -238,7 +238,7 @@ onMounted(async () => {
             v-model:value="searchText"
             placeholder="🔍 Search ID, description, reference..."
             size="large"
-            class="!h-12 rounded-xl shadow-sm border-emerald-300 w-full"
+            class="rounded-2xl shadow-sm border-emerald-300 w-full"
             @search="fetchTransactions"
             enter-button="Search"
           />
@@ -282,9 +282,9 @@ onMounted(async () => {
             <Button 
               type="primary" 
               ghost 
-              size="small" 
+              size="large" 
               @click="exportPdf" 
-              class="!h-12 px-8 rounded-xl shadow-sm border-emerald-300 "
+              class=" rounded-2xl shadow-sm border-emerald-300 "
             >
               <FilePdfOutlined class="mr-1" /> Export
             </Button>
