@@ -1,11 +1,11 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-8 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen bg-emerald-50">
+  <div class="p-2 lg:p-4 space-y-2 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen bg-emerald-50">
 
     <!-- HEADER -->
     <a-card class="!shadow-2xl !border-2 border-emerald-200/50">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="space-y-2">
-          <a-typography-title :level="2" class="!m-0">💰 Payout Management</a-typography-title>
+          <div class="!m-0">💰 Payout Management</div>
           <div class="text-gray-600">Available Balance</div>
           <div class="text-3xl font-black text-emerald-600">
             ₦{{ availableBalance.toLocaleString() }}
@@ -19,17 +19,42 @@
     </a-card>
 
     <!-- PAYOUT TABLE -->
-    <!-- PAYOUT TABLE -->
-    <a-card class="!shadow-xl !rounded-none">
     <a-table
-        row-key="id"
-        class="custom-table"
-        :columns="payoutColumns"
-        :data-source="payoutRequests"
-        :loading="loading"
-        :pagination="{ pageSize: 10 }"
-    />
-    </a-card>
+      row-key="id"
+      class="custom-table"
+      :columns="payoutColumns"
+      :data-source="payoutRequests"
+      :loading="loading"
+      :scroll="{ x: 1400, y: 500 }" 
+      :pagination="{ pageSize: 10 }"
+    >
+      <!-- TABLE TITLE -->
+      <template #title>
+        <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl">
+          <div class="font-bold text-gray-800">
+            📄 Payout Transactions
+          </div>
+
+          <div class="flex gap-4 text-sm">
+            <span class="text-gray-600">
+              Total:
+              <b class="text-gray-900">{{ payoutRequests.length }}</b>
+            </span>
+
+            <span class="text-orange-600">
+              Pending:
+              <b>{{ payoutRequests.filter(p => p.status === 'pending').length }}</b>
+            </span>
+
+            <span class="text-emerald-600">
+              Approved:
+              <b>{{ payoutRequests.filter(p => p.status === 'approved').length }}</b>
+            </span>
+          </div>
+        </div>
+      </template>
+    </a-table>
+
 
 
     <!-- PAYOUT MODAL -->
@@ -40,7 +65,7 @@
       :footer="null"
       centered
     >
-      <div class="space-y-6">
+      <div class="space-y-2">
         <div>
           <div class="text-sm text-gray-500 mb-1">Amount</div>
           <a-input
@@ -80,14 +105,25 @@
 
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
+import { message } from 'ant-design-vue'
+import { computed } from 'vue'
 import type { TableColumnsType } from 'ant-design-vue'
+
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['administrator'],
 })
-import { message } from 'ant-design-vue'
 
+const totalRequests = computed(() => payoutRequests.value.length)
+
+const pendingCount = computed(() =>
+  payoutRequests.value.filter(p => p.status === 'pending').length
+)
+
+const approvedCount = computed(() =>
+  payoutRequests.value.filter(p => p.status === 'approved').length
+)
 
 const { $api } = useNuxtApp()
 
@@ -103,11 +139,10 @@ import { Tag } from 'ant-design-vue'  // make sure Tag is imported
 const payoutColumns: TableColumnsType = [
   { title: '#', width: 60, customRender: ({ index }: any) => index + 1 },
   { title: 'Request ID', dataIndex: 'id', customRender: ({ text }: any) => `#${text.slice(-8)}` },
-  { title: 'Amount', dataIndex: 'amount', align: 'right', customRender: ({ text }: any) => `₦${Number(text).toLocaleString()}` },
+  { title: 'Amount', dataIndex: 'amount', customRender: ({ text }: any) => `₦${Number(text).toLocaleString()}` },
   {
     title: 'Status',
     dataIndex: 'status',
-    align: 'center',
     customRender: ({ text }: any) => {
       const colorMap: Record<string, string> = {
         approved: 'green',
@@ -118,7 +153,7 @@ const payoutColumns: TableColumnsType = [
       return h(Tag, { color: colorMap[text] || 'blue' }, () => text.toUpperCase())
     },
   },
-  { title: 'Balance Snapshot', dataIndex: 'balance_snapshot', align: 'right', customRender: ({ text }: any) => `₦${Number(text).toLocaleString()}` },
+  { title: 'Balance Snapshot', dataIndex: 'balance_snapshot', customRender: ({ text }: any) => `₦${Number(text).toLocaleString()}` },
   { title: 'Requested', dataIndex: 'created_at', customRender: ({ text }: any) => new Date(text).toLocaleString() },
 ]
 
@@ -181,7 +216,7 @@ onMounted(() => {
 
 /* HEADER */
 .custom-table :deep(.ant-table-thead) {
-  background: linear-gradient(90deg, #10b981, #14b8a6);
+  background: linear-gradient(90deg, #10b981, #10b981);
 }
 
 .custom-table :deep(.ant-table-thead > tr > th) {
