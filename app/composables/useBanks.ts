@@ -12,7 +12,6 @@ export function useBanks() {
 
       // 🔥 Backend should proxy Paystack (DO NOT call Paystack directly from frontend)
       const res = await $api('/banks')
-      console.log(res, "Banks")
       banks.value = res || []
     } catch (err: any) {
       message.error('Failed to load banks')

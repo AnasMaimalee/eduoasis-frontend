@@ -10,7 +10,7 @@ definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
   roles: ['administrator'],
-  title: 'JAMB Result'
+  title: 'JAMB Original Result'
 })
 
 const { viewFile } = useFileViewer()

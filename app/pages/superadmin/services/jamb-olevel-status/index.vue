@@ -82,17 +82,25 @@ const openApproveModal = (id: string) => {
   approveModalVisible.value = true
 }
 
+const approvingId = ref<string | null>(null)
 const handleApprove = async () => {
+  if (!currentApproveId.value) return
+
   approveLoading.value = true
+  approvingId.value = currentApproveId.value
+
   try {
-    await $api(`/services/jamb-upload-status/${currentApproveId.value}/approve`, {
-      method: 'POST',
-    })
+    await $api(
+      `/services/jamb-upload-status/${currentApproveId.value}/approve`,
+      { method: 'POST' }
+    )
+
     message.success('Request approved')
     approveModalVisible.value = false
     fetchRequests()
   } finally {
     approveLoading.value = false
+    approvingId.value = null
   }
 }
 
@@ -276,14 +284,14 @@ onMounted(fetchRequests)
           <div class="flex justify-center gap-2">
             <template v-if="record.status === 'completed'">
               <Button
-                type="primary"
                 size="small"
-                :loading="approveLoading"
+                type="primary"
+                :loading="approvingId === record.id"
                 @click="openApproveModal(record.id)"
               >
-                <CheckOutlined /> Approve
+                Approve
+                <CheckOutlined />
               </Button>
-
               <Button
                 danger
                 size="small"

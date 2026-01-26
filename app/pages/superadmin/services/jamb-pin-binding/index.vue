@@ -81,15 +81,25 @@ const openApproveModal = (id: string) => {
   approveModalVisible.value = true
 }
 
+const approvingId = ref<string | null>(null)
 const handleApprove = async () => {
+  if (!currentApproveId.value) return
+
   approveLoading.value = true
+  approvingId.value = currentApproveId.value
+
   try {
-    await $api(`/services/jamb-pin-binding/${currentApproveId.value}/approve`, { method: 'POST' })
-    message.success('Approved')
+    await $api(
+      `/services/jamb-pin-binding/${currentApproveId.value}/approve`,
+      { method: 'POST' }
+    )
+
+    message.success('Request approved')
     approveModalVisible.value = false
     fetchRequests()
   } finally {
     approveLoading.value = false
+    approvingId.value = null
   }
 }
 

@@ -91,23 +91,25 @@ const openApproveModal = (id: string) => {
   approveModalVisible.value = true
 }
 
+const approvingId = ref<string | null>(null)
 const handleApprove = async () => {
   if (!currentApproveId.value) return
 
   approveLoading.value = true
+  approvingId.value = currentApproveId.value
 
   try {
-    await $api(`/services/jamb-result/${currentApproveId.value}/approve`, { 
-      method: 'POST' 
-    })
-    message.success('Request approved successfully')
+    await $api(
+      `/services/jamb-result/${currentApproveId.value}/approve`,
+      { method: 'POST' }
+    )
+
+    message.success('Request approved')
     approveModalVisible.value = false
-    currentApproveId.value = null
     fetchRequests()
-  } catch (err: any) {
-    message.error(err.data?.message || 'Approval failed')
   } finally {
     approveLoading.value = false
+    approvingId.value = null
   }
 }
 
@@ -339,12 +341,12 @@ onUnmounted(() => {
           <div class="flex justify-center gap-1">
             <template v-if="record.status === 'completed'">
               <Button
-                type="primary"
                 size="small"
-                class="!text-xs"
-                :loading="approveLoading"
+                type="primary"
+                :loading="approvingId === record.id"
                 @click="openApproveModal(record.id)"
-              >Approve
+              >
+                Approve
                 <CheckOutlined />
               </Button>
 

@@ -34,8 +34,9 @@ const searchText = ref('')
 
 /* Approve modal */
 const approveModalVisible = ref(false)
-const currentApproveRecord = ref<any | null>(null)
+const currentApproveId = ref<string | null>(null)
 const approveLoading = ref(false)
+
 
 /* Reject modal */
 const rejectModalVisible = ref(false)
@@ -82,24 +83,30 @@ const fetchRequests = async () => {
 }
 
 /* ================= APPROVE ================= */
-const openApproveModal = (record: any) => {
-  currentApproveRecord.value = record
+const openApproveModal = (id: string) => {
+  currentApproveId.value = id
   approveModalVisible.value = true
 }
 
+const approvingId = ref<string | null>(null)
 const handleApprove = async () => {
-  if (!currentApproveRecord.value) return
+  if (!currentApproveId.value) return
+
   approveLoading.value = true
+  approvingId.value = currentApproveId.value
+
   try {
-    await $api(`/services/jamb-admission-result-notification/${currentApproveRecord.value.id}/approve`, { method: 'POST' })
-    message.success('Request approved successfully')
+    await $api(
+      `/services/jamb-admission-result-notification/${currentApproveId.value}/approve`,
+      { method: 'POST' }
+    )
+
+    message.success('Request approved')
     approveModalVisible.value = false
-    currentApproveRecord.value = null
     fetchRequests()
-  } catch (err: any) {
-    message.error(err.data?.message || 'Approval failed')
   } finally {
     approveLoading.value = false
+    approvingId.value = null
   }
 }
 
@@ -269,7 +276,12 @@ onUnmounted(() => {
         <template #actionsCell="{ record }">
           <div class="flex justify-center gap-2">
             <template v-if="record.status === 'completed'">
-              <Button size="small" type="primary" @click="openApproveModal(record)">
+             <Button
+                size="small"
+                type="primary"
+                :loading="approvingId === record.id"
+                @click="openApproveModal(record.id)"
+              >
                 Approve
                 <CheckOutlined />
               </Button>
@@ -294,14 +306,10 @@ onUnmounted(() => {
       @ok="handleApprove"
     >
       <div class="space-y-2 text-sm">
-        <div class="flex justify-between">
-          <span>Customer price</span>
-          <strong>₦{{ Number(currentApproveRecord?.customer_price || 0).toLocaleString() }}</strong>
-        </div>
-        <div class="flex justify-between">
-          <span>Admin payout</span>
-          <strong>₦{{ Number(currentApproveRecord?.admin_payout || 0).toLocaleString() }}</strong>
-        </div>
+        <p class="text-sm">
+        Are you sure you want to approve this request?
+      </p>
+      
         <p class="text-xs text-red-500">This action cannot be undone.</p>
       </div>
     </Modal>
