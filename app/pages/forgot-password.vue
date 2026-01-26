@@ -1,16 +1,14 @@
 <!-- pages/forgot-password.vue -->
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { usePublicApi } from '~/composables/useApi'
+import { ref, reactive, computed } from 'vue'
 import { message } from 'ant-design-vue'
 
 definePageMeta({
   layout: 'default',
-   auth: false 
+  auth: false,
 })
 
 const { $api } = useNuxtApp()
-
 
 /* -------------------- FORM MODEL -------------------- */
 const form = reactive({
@@ -19,7 +17,14 @@ const form = reactive({
 
 const loading = ref(false)
 
+/* -------------------- VALIDATION -------------------- */
+const canSubmit = computed(() => {
+  return form.email.trim().length > 0
+})
+
 async function submit() {
+  if (!canSubmit.value) return
+
   loading.value = true
 
   try {
@@ -28,7 +33,6 @@ async function submit() {
       body: { email: form.email },
     })
 
-    // ✅ TOP SCREEN MESSAGE (better UX)
     message.success(
       'If this email exists, a password reset link has been sent.'
     )
@@ -57,7 +61,6 @@ async function submit() {
         Enter your email and we’ll send you a reset link.
       </p>
 
-      <!-- ✅ MODEL ADDED -->
       <a-form
         layout="vertical"
         :model="form"
@@ -83,7 +86,7 @@ async function submit() {
             html-type="submit"
             block
             :loading="loading"
-            :disabled="loading"
+            :disabled="loading || !canSubmit"
           >
             {{ loading ? 'Sending...' : 'Send Reset Link' }}
           </a-button>
