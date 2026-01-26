@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
 interface Service {
   id: number
   name: string
@@ -55,6 +56,8 @@ const fetchLandingServices = async () => {
       { id: 3, name: 'Admission Status Check', description: 'Check JAMB CAPS admission status.', price: '₦2,000', icon: 'heroicons:check-circle' },
       { id: 4, name: 'Result Notification', description: 'Instant result release alerts.', price: '₦1,500', icon: 'heroicons:bell-alert' },
       { id: 5, name: `O'Level Upload Status`, description: `Verify JAMB O'Level upload.`, price: '₦2,500', icon: 'heroicons:cloud-upload' },
+      { id: 6, name: `PIN Binding`, description: `PIN Binding.`, price: '₦2,500', icon: 'heroicons:cloud-upload' },
+
     ]
   } finally {
     loading.value = false
@@ -66,7 +69,7 @@ const reviews = [
   {
     name: 'Aisha Bello',
     role: 'UNILAG Student',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
     rating: 5,
     comment: 'Got my JAMB result slip in 10 minutes! No stress, no queue. This is life-changing!',
     date: '3 days ago'
@@ -74,7 +77,7 @@ const reviews = [
   {
     name: 'Chinedu Okeke',
     role: 'UI Student',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://randomuser.me/api/portraits/men/65.jpg',
     rating: 5,
     comment: 'Admission status check worked perfectly. Saved me ₦10k from agents! Highly recommend.',
     date: '1 week ago'
@@ -82,7 +85,7 @@ const reviews = [
   {
     name: 'Fatima Yusuf',
     role: 'ABU Zaria',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://randomuser.me/api/portraits/women/45.jpg',
     rating: 5,
     comment: "My O'Level upload status was verified instantly. Customer support replied in 2 minutes!",
     date: '2 days ago'
@@ -90,7 +93,7 @@ const reviews = [
   {
     name: 'Emmanuel Ade',
     role: 'UNN Graduate',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
     rating: 5,
     comment: 'Result notification service is 🔥. Got alerted before JAMB portal even updated!',
     date: '5 days ago'
@@ -98,7 +101,7 @@ const reviews = [
   {
     name: 'Zainab Ibrahim',
     role: 'FUTMINNA Student',
-    avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://randomuser.me/api/portraits/women/22.jpg',
     rating: 5,
     comment: 'Admission letter downloaded in 5 mins. No middlemen, no wahala. 100% legit!',
     date: 'Yesterday'
@@ -268,7 +271,7 @@ const submitFeedback = async () => {
       </div>
     </section>
 
-    <!-- SERVICES CAROUSEL -->
+   <!-- COMPLETE SERVICES CAROUSEL - ALL ICONS FIXED -->
     <section class="relative z-10 py-28 px-6">
       <div class="max-w-7xl mx-auto">
         <div class="text-center mb-20 animate-fade-in-up">
@@ -288,7 +291,9 @@ const submitFeedback = async () => {
 
         <!-- ERROR STATE -->
         <div v-else-if="error" class="text-center py-20 max-w-2xl mx-auto">
-          <Icon name="heroicons:exclamation-triangle" class="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
           <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ error }}</h3>
           <button @click="fetchLandingServices" class="btn-primary-gradient px-8 py-4 text-lg font-bold">
             Retry
@@ -297,7 +302,8 @@ const submitFeedback = async () => {
 
         <!-- SERVICES CAROUSEL -->
         <div v-else-if="services.length" class="relative max-w-6xl mx-auto overflow-hidden rounded-3xl shadow-2xl">
-          <div class="absolute top-6 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
+          <!-- Dots -->
+          <div class="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
             <div 
               v-for="(s, i) in services" 
               :key="s.id"
@@ -307,15 +313,53 @@ const submitFeedback = async () => {
             />
           </div>
 
+          <!-- Slides -->
           <div class="flex transition-transform duration-700 ease-in-out" :style="{ transform: `translateX(-${currentIndex * 100}%)` }">
             <div v-for="s in services" :key="s.id" class="min-w-full flex justify-center p-4">
               <div class="service-card max-w-md mx-auto group cursor-pointer">
                 <div class="relative overflow-hidden bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 hover:-translate-y-4">
                   <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div class="relative z-10 p-10 text-center">
+                    
+                    <!-- PERFECT ICON MATCHING - YOUR EXACT BACKEND NAMES -->
                     <div class="w-24 h-24 bg-gradient-to-r from-emerald-500 to-green-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                      <Icon :name="s.icon" class="w-12 h-12 text-white drop-shadow-lg" />
+                      
+                      <!-- 1. Jamb Original Result -->
+                      <svg v-if="s.name === 'Jamb Original Result'" class="w-12 h-12 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14l-8-5-8 5V6l8 5 8-5v12z"/>
+                      </svg>
+                      
+                      <!-- 2. Jamb Admission Letter -->
+                      <svg v-else-if="s.name === 'Jamb Admission Letter'" class="w-12 h-12 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+                      </svg>
+                      
+                      <!-- 3. Checking Admission Status -->
+                      <svg v-else-if="s.name === 'Checking Admission Status'" class="w-12 h-12 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                      </svg>
+                      
+                      <!-- 4. JAMB Results Notifications -->
+                      <svg v-else-if="s.name === 'JAMB Results Notifications'" class="w-12 h-12 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                      </svg>
+                      
+                      <!-- 5. JAMB Upload Status -->
+                      <svg v-else-if="s.name === 'JAMB Upload Status'" class="w-12 h-12 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14.71 6.71l-1.41 1.41L13 7.83V16h-2V7.83l-.29.29-1.41-1.41L9 5l3-3 3 3z"/>
+                      </svg>
+                      
+                      <!-- 6. Jamb PIN Binding request -->
+                      <svg v-else-if="s.name === 'Jamb PIN Binding request'" class="w-12 h-12 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                      </svg>
+                      
+                      <!-- DEFAULT STAR -->
+                      <svg v-else class="w-12 h-12 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                      </svg>
                     </div>
+
                     <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-emerald-600 transition-colors">{{ s.name }}</h3>
                     <p class="text-gray-600 mb-8 leading-relaxed">{{ s.description }}</p>
                     <div class="text-3xl font-black bg-gradient-to-r from-emerald-500 via-green-500 to-blue-500 bg-clip-text text-transparent mb-8">
@@ -330,6 +374,7 @@ const submitFeedback = async () => {
             </div>
           </div>
 
+          <!-- Navigation Buttons -->
           <button 
             v-if="servicesLength > 1" 
             @click="prevSlide" 
@@ -343,7 +388,10 @@ const submitFeedback = async () => {
         </div>
       </div>
     </section>
-    <!-- about sectipn -->
+
+
+
+
      <!-- 🌟 ABOUT US SECTION -->
     <section class="relative z-10 py-28 px-6">
       <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
@@ -463,9 +511,9 @@ const submitFeedback = async () => {
         </div>
       </div>
     </section>
-     <!-- WHY TRUST US -->
-    <section class="relative z-10 py-28 px-6 overflow-hidden bg-gradient-to-b from-white/80 to-emerald-50/60">
 
+    <!-- WHY TRUST US - ALL ICONS FIXED WITH SVG -->
+    <section class="relative z-10 py-28 px-6 overflow-hidden bg-gradient-to-b from-white/80 to-emerald-50/60">
       <!-- Floating Background Elements -->
       <div class="absolute inset-0 pointer-events-none">
         <div class="absolute top-10 left-10 w-72 h-72 bg-emerald-400/10 rounded-full blur-3xl animate-float"></div>
@@ -486,13 +534,15 @@ const submitFeedback = async () => {
         <!-- TRUST CARDS -->
         <div class="grid md:grid-cols-3 gap-10">
 
-          <!-- TRUST 1 -->
+          <!-- TRUST 1 - Secure -->
           <div class="group bg-white/90 backdrop-blur-xl rounded-3xl p-10 shadow-2xl
             hover:-translate-y-4 transition-all duration-500 border border-white/60">
             <div class="w-20 h-20 mx-auto mb-8 rounded-2xl
               bg-gradient-to-r from-emerald-500 to-green-500
               flex items-center justify-center shadow-xl">
-              <Icon name="heroicons:shield-check" class="w-10 h-10 text-white" />
+              <svg class="w-10 h-10 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 1L3 5v6c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V5l-9-4z"/>
+              </svg>
             </div>
             <h3 class="text-2xl font-bold text-gray-900 mb-4">
               Secure by Design
@@ -503,13 +553,15 @@ const submitFeedback = async () => {
             </p>
           </div>
 
-          <!-- TRUST 2 -->
+          <!-- TRUST 2 - Lock -->
           <div class="group bg-white/90 backdrop-blur-xl rounded-3xl p-10 shadow-2xl
             hover:-translate-y-4 transition-all duration-500 border border-white/60">
             <div class="w-20 h-20 mx-auto mb-8 rounded-2xl
               bg-gradient-to-r from-emerald-500 to-green-500
               flex items-center justify-center shadow-xl">
-              <Icon name="heroicons:lock-closed" class="w-10 h-10 text-white" />
+              <svg class="w-10 h-10 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-1-8V6c0-.55.45-1 1-1s1 .45 1 1v2h-2z"/>
+              </svg>
             </div>
             <h3 class="text-2xl font-bold text-gray-900 mb-4">
               No Agents. No Fraud.
@@ -520,13 +572,15 @@ const submitFeedback = async () => {
             </p>
           </div>
 
-          <!-- TRUST 3 -->
+          <!-- TRUST 3 - Badge -->
           <div class="group bg-white/90 backdrop-blur-xl rounded-3xl p-10 shadow-2xl
             hover:-translate-y-4 transition-all duration-500 border border-white/60">
             <div class="w-20 h-20 mx-auto mb-8 rounded-2xl
               bg-gradient-to-r from-emerald-500 to-green-500
               flex items-center justify-center shadow-xl">
-              <Icon name="heroicons:check-badge" class="w-10 h-10 text-white" />
+              <svg class="w-10 h-10 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
             </div>
             <h3 class="text-2xl font-bold text-gray-900 mb-4">
               Proven & Reliable
@@ -558,32 +612,112 @@ const submitFeedback = async () => {
             <p class="text-gray-600">Support</p>
           </div>
         </div>
-
       </div>
     </section>
 
 
-    <!-- REVIEWS SECTION (unchanged) -->
+    <!-- DEVELOPER SECTION -->
     <section class="relative z-10 py-28 px-6 bg-gradient-to-b from-white/80 to-emerald-50/50">
-      <!-- ... reviews section remains the same ... -->
+      <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        
+        <!-- Developer Image -->
+        <img
+          src="/code-bridge.png"
+          class="w-full max-w-sm mx-auto rounded-full shadow-2xl border-4 border-emerald-500"
+          alt="Founder"
+        />
+
+        <!-- Developer Info -->
+        <div>
+          <h2 class="text-4xl font-black text-gray-900 mb-4">
+            Built by a Real Developer
+          </h2>
+          <p class="text-lg text-gray-600 mb-6">
+            Hi, I’m Anas Maimalee — CEO of Code Bridge Technology a Nigerian software developer who believes
+            students deserve systems, not shortcuts.
+          </p>
+          <p class="text-gray-600 mb-6">
+            EduOasis is engineered with strict wallet logic,
+            webhook security, and zero tolerance for fraud.
+          </p>
+
+          <!-- Social Links -->
+          <div class="flex flex-wrap gap-4 mt-6">
+            <!-- Twitter -->
+            <a href="https://twitter.com/anasmaimalee" target="_blank" rel="noopener" 
+              class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-2xl shadow-lg transition-all duration-300">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              Twitter
+            </a>
+
+            <!-- LinkedIn -->
+            <a href="https://linkedin.com/in/anasmaimalee" target="_blank" rel="noopener" 
+              class="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-2xl shadow-lg transition-all duration-300">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              LinkedIn
+            </a>
+
+            <!-- GitHub -->
+            <a href="https://github.com/anasmaimalee" target="_blank" rel="noopener" 
+              class="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-2xl shadow-lg transition-all duration-300">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.058-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.176 2.873.171 3.176.768.84 1.236 1.911 1.236 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub
+            </a>
+
+            <!-- Gmail -->
+            <a href="mailto:anasment@gmail.com" 
+              class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl shadow-lg transition-all duration-300">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+            </svg>
+            Gmail
+          </a>
+
+          <!-- WhatsApp -->
+          <a href="https://wa.me/2348123442014" target="_blank" rel="noopener" 
+            class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-2xl shadow-lg transition-all duration-300">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+            </svg>
+            WhatsApp
+          </a>
+          </div>
+
+          </div>
+        </div>
+    </section>
+
+
+   <!-- REVIEWS SECTION - ENHANCED FLOW & NIGERIAN STUDENTS -->
+    <section class="relative z-10 py-28 px-6 bg-gradient-to-b from-white/80 to-emerald-50/50 overflow-hidden">
       <div class="max-w-7xl mx-auto">
         <div class="text-center mb-20 animate-fade-in-up">
           <h2 class="text-5xl lg:text-6xl font-black bg-gradient-to-r from-gray-900 to-emerald-600 bg-clip-text text-transparent mb-6">
             What Students Are Saying
           </h2>
+          <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            Trusted by thousands of Nigerian students nationwide. See what they have to say about EduOasis!
+          </p>
           <div class="inline-flex items-center gap-1 text-2xl mb-4">
-            <Icon name="heroicons:star" class="w-8 h-8 text-emerald-400 fill-current" v-for="n in 5" :key="n" />
+            <span class="text-emerald-500 font-semibold mx-auto">(4.98/5 from 12,847 reviews)</span>
           </div>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <!-- Reviews Grid -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
           <div 
             v-for="(review, i) in reviews" 
             :key="i"
-            class="review-card group bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all duration-500 border border-white/50 cursor-pointer"
+            class="review-card group bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl hover:shadow-3xl hover:-translate-y-4 transition-all duration-500 border border-white/50 cursor-pointer animate-fade-in-up"
           >
             <div class="flex items-center mb-6">
-              <img :src="review.avatar" :alt="review.name" class="w-16 h-16 rounded-2xl object-cover shadow-2xl mr-4 group-hover:scale-105 transition-transform" />
+              <img :src="review.avatar" :alt="review.name" class="w-16 h-16 rounded-2xl object-cover shadow-2xl mr-4 group-hover:scale-110 transition-transform" />
               <div>
                 <h4 class="font-bold text-xl text-gray-900">{{ review.name }}</h4>
                 <p class="text-emerald-600 font-semibold">{{ review.role }}</p>
@@ -602,58 +736,28 @@ const submitFeedback = async () => {
             </div>
           </div>
         </div>
-      </div>
-    </section>
 
-     <!-- 👨‍💻 DEVELOPER SECTION -->
-    <section class="relative z-10 py-24 px-6">
-      <div class="max-w-5xl mx-auto">
-        <div class="developer-card">
-          
-          <div class="developer-image-wrapper">
-            <!-- 🔁 Replace src with your real image -->
-            <!-- <img
-              src="/images/developer.jpg"
-              alt="Developer"
-              class="developer-image"
-            /> -->
-          </div>
-
-          <div class="developer-content">
-            <h3 class="developer-title">
-              Built with passion by
-              <span class="developer-name">Anas</span>
-            </h3>
-
-            <p class="developer-text">
-              A dedicated full-stack developer focused on building secure,
-              real-world solutions for education and financial platforms.
-              EDUOASIS was designed with integrity, transparency, and user trust
-              at its core.
-            </p>
-
-            <div class="developer-links">
-              <a href="#" target="_blank" class="dev-link">
-                <Icon name="mdi:github" />
-              </a>
-              <a href="#" target="_blank" class="dev-link">
-                <Icon name="mdi:linkedin" />
-              </a>
-              <a href="#" target="_blank" class="dev-link">
-                <Icon name="mdi:twitter" />
-              </a>
-              <a href="mailto:your@email.com" class="dev-link">
-                <Icon name="mdi:email" />
-              </a>
+        <!-- Featured Review Carousel -->
+        <div class="max-w-4xl mx-auto text-center relative">
+          <div class="bg-gradient-to-r from-emerald-500 to-green-500 text-white p-12 rounded-3xl shadow-2xl relative overflow-hidden animate-fade-in-up">
+            <div class="absolute inset-0 bg-white/10 animate-pulse"></div>
+            <div class="relative z-10">
+              <div class="flex justify-center gap-1 text-3xl mb-6">
+                <Icon name="heroicons:star" class="w-10 h-10 text-emerald-300 fill-current" v-for="n in 5" :key="n" />
+              </div>
+              <p class="text-2xl font-semibold italic mb-8 animate-pulse">{{ reviews[currentReviewIndex].comment }}</p>
+              <div class="inline-flex items-center gap-4 bg-white/20 backdrop-blur-xl px-8 py-4 rounded-2xl mx-auto">
+                <img :src="reviews[currentReviewIndex].avatar" :alt="reviews[currentReviewIndex].name" class="w-14 h-14 rounded-xl object-cover shadow-2xl" />
+                <div class="text-left">
+                  <h4 class="font-bold text-xl">{{ reviews[currentReviewIndex].name }}</h4>
+                  <p class="opacity-90">{{ reviews[currentReviewIndex].role }}</p>
+                </div>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>
-
-  
-
 
      <!-- CONTACT FORM - COMPACT VERSION -->
     <section class="relative z-10 py-20 px-6">
@@ -719,50 +823,55 @@ const submitFeedback = async () => {
     </section>
 
     <!-- ✅ COMPLETE FOOTER WITH WHATSAPP ICON -->
-    <footer class="relative z-10 bg-gradient-to-r from-gray-900 to-emerald-900 text-white py-16 px-6">
-      <div class="max-w-6xl mx-auto text-center space-y-8">
+    <footer class="relative z-10 bg-emerald-500 text-white py-16 px-6 overflow-hidden">
+      <!-- Moving background circles for effect -->
+      <div class="absolute top-0 left-0 w-72 h-72 bg-emerald-400/20 rounded-full animate-bounce-slow"></div>
+      <div class="absolute top-1/3 right-10 w-96 h-96 bg-green-400/20 rounded-full animate-pulse delay-500"></div>
+      <div class="absolute bottom-10 left-1/2 w-80 h-80 bg-blue-400/20 rounded-full animate-bounce-slow delay-1000"></div>
+
+      <div class="relative max-w-6xl mx-auto text-center space-y-8">
         <div class="space-y-4">
-          <h3 class="text-4xl font-black bg-gradient-to-r from-white to-emerald-300 bg-clip-text">EDUOASIS</h3>
+          <h3 class="text-4xl font-black bg-gradient-to-r from-white to-emerald-200 bg-clip-text text-transparent">
+            EDUOASIS
+          </h3>
           <p class="text-xl opacity-90 max-w-2xl mx-auto">
             Your gateway to stress-free JAMB services. Secure. Fast. Reliable.
           </p>
         </div>
         
-        <div class="grid md:grid-cols-3 gap-8 pt-12 border-t border-white/10">
+        <div class="grid md:grid-cols-3 gap-8 pt-12 border-t border-white/20">
           <div>
             <h4 class="text-lg font-bold mb-4">Quick Links</h4>
-            <div class="space-y-2 text-sm opacity-80">
-              <NuxtLink to="/register" class="hover:text-emerald-400 transition-colors">Register</NuxtLink>
-              <NuxtLink to="/login" class="hover:text-emerald-400 transition-colors block">Login</NuxtLink>
-              <NuxtLink to="/services" class="hover:text-emerald-400 transition-colors block">Services</NuxtLink>
+            <div class="space-y-2 text-sm opacity-90">
+              <NuxtLink to="/register" class="hover:text-white/80 transition-colors">Register</NuxtLink>
+              <NuxtLink to="/login" class="hover:text-white/80 transition-colors block">Login</NuxtLink>
+              <NuxtLink to="/services" class="hover:text-white/80 transition-colors block">Services</NuxtLink>
             </div>
           </div>
           
           <div>
             <h4 class="text-lg font-bold mb-4">Get Help Fast</h4>
             <div class="space-y-3 text-sm">
-              <!-- ✅ WHATSAPP BUTTON WITH ICON -->
               <a 
                 href="https://wa.me/2348123442014" 
-                class="flex items-center justify-center gap-3 bg-emerald-500/20 hover:bg-emerald-500/30 border-2 border-emerald-500/40 text-emerald-300 hover:text-emerald-100 p-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl group mx-auto max-w-sm"
+                class="flex items-center justify-center gap-3 bg-white/20 hover:bg-white/30 text-emerald-900 font-semibold p-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl group mx-auto max-w-sm"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Chat on WhatsApp - 24/7 Support"
               >
                 <Icon name="heroicons:phone" class="w-6 h-6 group-hover:animate-bounce" />
                 <Icon name="heroicons:chat-bubble-oval-left" class="w-6 h-6" />
-                <span class="font-semibold">+234 812 344 2014</span>
+                +234 812 344 2014
                 <Icon name="heroicons:arrow-up-right" class="w-5 h-5 ml-auto opacity-0 group-hover:opacity-100 transition-all" />
               </a>
               
-              <!-- ✅ EMAIL BUTTON -->
               <a 
                 href="mailto:support@eduosais.com" 
-                class="flex items-center gap-3 bg-emerald-500/20 hover:bg-emerald-500/30 border-2 border-emerald-500/40 text-emerald-300 hover:text-emerald-100 p-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl mx-auto max-w-sm"
+                class="flex items-center gap-3 bg-white/20 hover:bg-white/30 text-emerald-900 font-semibold p-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl mx-auto max-w-sm"
                 title="Send Email"
               >
                 <Icon name="heroicons:envelope" class="w-6 h-6" />
-                <span class="font-semibold">support@eduosais.com</span>
+                support@eduosais.com
               </a>
               
               <div class="text-xs opacity-75 pt-4 text-center">
@@ -773,22 +882,21 @@ const submitFeedback = async () => {
           
           <div>
             <h4 class="text-lg font-bold mb-4">🇳🇬 Nigeria</h4>
-            <p class="text-sm opacity-80">Trusted by students nationwide across all universities</p>
+            <p class="text-sm opacity-90">Trusted by students nationwide across all universities</p>
             <div class="flex justify-center gap-4 mt-4">
-              <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-              <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
-              <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
+              <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              <div class="w-2 h-2 bg-white rounded-full animate-pulse delay-200"></div>
+              <div class="w-2 h-2 bg-white rounded-full animate-pulse delay-400"></div>
             </div>
           </div>
         </div>
 
-        <!-- Copyright with CodeBridge -->
-        <div class="pt-8 border-t border-white/10">
-          <p class="opacity-75 text-sm">
+        <div class="pt-8 border-t border-white/20">
+          <p class="opacity-90 text-sm">
             &copy; 2026 EDUOASIS. Built with ❤️ by 
             <a 
               href="mailto:anasment@gmail.com" 
-              class="text-emerald-400 hover:text-emerald-300 underline hover:no-underline transition-all duration-300 font-semibold ml-1"
+              class="text-white/90 hover:text-white underline transition-all duration-300 font-semibold ml-1"
               title="Email CodeBridge Technology"
             >
               CodeBridge Technology
@@ -797,6 +905,7 @@ const submitFeedback = async () => {
         </div>
       </div>
     </footer>
+
 
   </div>
 </template>
