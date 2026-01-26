@@ -2,7 +2,7 @@ export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: 'https://engaged-launch-locale-social.trycloudflare.com/api',
+    baseURL: 'https://gender-somerset-wallpapers-reference.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {

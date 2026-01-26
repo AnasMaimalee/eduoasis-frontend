@@ -70,7 +70,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'JAMB Portal - Print Results & Admission Letters',
+      title: 'EduOasis Portal - Print Results & Admission Letters',
       meta: [
         {
           name: 'description',
