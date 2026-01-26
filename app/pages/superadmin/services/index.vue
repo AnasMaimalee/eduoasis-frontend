@@ -109,7 +109,7 @@ onMounted(fetchServices)
 </script>
 
 <template>
-  <div class="p-4 md:p-6 space-y-4 bg-emerald-50 min-h-screen">
+  <div class="p-4 md:p-6 space-y-4 bg-emerald-50 min-h-screen lg:w-2/3">
 
     <!-- HEADER -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">

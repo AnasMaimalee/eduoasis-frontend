@@ -17,9 +17,38 @@ const loading = ref(false)
 const searchText = ref('')
 const statusFilter = ref<string | null>(null)
 
+const approveModalVisible = ref(false)
+const currentApprovePayout = ref<any>(null)
+const approveLoading = ref(false)
+
 const rejectModalVisible = ref(false)
 const currentRejectPayoutId = ref<string | null>(null)
 const rejectReason = ref('')
+
+const openApproveModal = (record: any) => {
+  currentApprovePayout.value = record
+  approveModalVisible.value = true
+}
+
+const handleApproveConfirm = async () => {
+  if (!currentApprovePayout.value) return
+
+  approveLoading.value = true
+  try {
+    await $api(`/superadmin/payout/${currentApprovePayout.value.id}/approve`, {
+      method: 'POST'
+    })
+    message.success('Payout approved successfully')
+    approveModalVisible.value = false
+    currentApprovePayout.value = null
+    fetchPayouts()
+  } catch {
+    message.error('Approval failed')
+  } finally {
+    approveLoading.value = false
+  }
+}
+
 
 const pagination = ref({
   current: 1,
@@ -56,6 +85,7 @@ const approvePayout = async (id: string) => {
     message.error('Approval failed')
   }
 }
+const rejectLoading = ref(false)
 
 const openRejectModal = (id: string) => {
   currentRejectPayoutId.value = id
@@ -64,19 +94,28 @@ const openRejectModal = (id: string) => {
 }
 
 const handleReject = async () => {
-  if (!rejectReason.value.trim()) return message.error('Enter reason')
+  if (!rejectReason.value.trim()) {
+    return message.error('Rejection reason is required')
+  }
+
+  rejectLoading.value = true
   try {
     await $api(`/admin/payout/${currentRejectPayoutId.value}/reject`, {
       method: 'POST',
       body: { reason: rejectReason.value }
     })
-    message.success('Rejected')
+    message.success('Payout rejected')
     rejectModalVisible.value = false
+    currentRejectPayoutId.value = null
+    rejectReason.value = ''
     fetchPayouts()
   } catch {
     message.error('Rejection failed')
+  } finally {
+    rejectLoading.value = false
   }
 }
+
 
 const handleTableChange = (p: any) => {
   pagination.value.current = p.current
@@ -93,7 +132,7 @@ onMounted(fetchPayouts)
 </script>
 
 <template>
-<div class="p-4 sm:p-6 space-y-6 bg-emerald-50">
+<div class="p-4 sm:p-6 space-y-6 bg-emerald-50 lg:w-2/3">
 
   <!-- Header -->
   <div class="flex flex-wrap items-center justify-between gap-3">
@@ -141,7 +180,7 @@ onMounted(fetchPayouts)
         :columns="[
           { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
           { title: 'Admin', key: 'admin', width: 220, slots: { customRender: 'adminCell' } },
-          { title: 'Amount', key: 'amount', width: 140, align: 'right', slots: { customRender: 'amountCell' } },
+          { title: 'Amount', key: 'amount', width: 140, slots: { customRender: 'amountCell' } },
           { title: 'Status', dataIndex: 'status', width: 100, slots: { customRender: 'statusCell' } },
           { title: 'Date', dataIndex: 'created_at', width: 140, slots: { customRender: 'dateCell' } },
           { title: 'Actions', key: 'actions', width: 90, align: 'center', slots: { customRender: 'actionsCell' } }
@@ -173,7 +212,7 @@ onMounted(fetchPayouts)
         </template>
 
         <template #amountCell="{ record }">
-          <div class="text-right">
+          <div class="">
             <div class="font-semibold text-emerald-600 text-sm">
               ₦{{ Number(record.amount).toLocaleString() }}
             </div>
@@ -215,9 +254,15 @@ onMounted(fetchPayouts)
             <template #overlay>
               <div class="p-2 space-y-1 min-w-[120px]">
                 <template v-if="record.status === 'pending'">
-                  <Popconfirm title="Approve?" @confirm="approvePayout(record.id)">
-                    <Button block size="small" type="primary">Approve</Button>
-                  </Popconfirm>
+                  <Button
+                    block
+                    size="small"
+                    type="primary"
+                    @click="openApproveModal(record)"
+                  >
+                    Approve
+                  </Button>
+
                   <Button block size="small" danger @click="openRejectModal(record.id)">Reject</Button>
                 </template>
                 <div v-else class="text-center text-xs font-medium text-gray-500 py-2">
@@ -232,10 +277,122 @@ onMounted(fetchPayouts)
     </div>
   </Card>
 
-  <!-- Reject Modal -->
-  <Modal v-model:visible="rejectModalVisible" title="Reject Reason" @ok="handleReject">
-    <Input.TextArea v-model:value="rejectReason" rows="3" placeholder="Enter rejection reason..." />
-  </Modal>
+ <Modal
+  v-model:visible="rejectModalVisible"
+  :footer="null"
+  centered
+  width="400"
+>
+  <div class="space-y-4 text-center">
+    <!-- Icon -->
+    <div class="mx-auto w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+      <span class="text-2xl">⚠️</span>
+    </div>
+
+    <!-- Title -->
+    <div class="text-lg font-semibold text-gray-800">
+      Reject Payout Request
+    </div>
+
+    <!-- Warning -->
+    <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
+      This action will <b>permanently reject</b> this payout request.
+      The administrator will be notified and must submit a new request.
+    </div>
+
+    <!-- Reason -->
+    <div class="text-left space-y-1">
+      <label class="text-xs font-medium text-gray-600">
+        Rejection Reason <span class="text-red-500">*</span>
+      </label>
+      <Input.TextArea
+        v-model:value="rejectReason"
+        rows="4"
+        placeholder="Clearly explain why this payout is being rejected..."
+      />
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-2 pt-2">
+      <Button
+        block
+        @click="rejectModalVisible = false"
+        :disabled="rejectLoading"
+      >
+        Cancel
+      </Button>
+      <Button
+        block
+        danger
+        :loading="rejectLoading"
+        @click="handleReject"
+      >
+        Reject Payout
+      </Button>
+    </div>
+  </div>
+</Modal>
+
+<Modal
+  v-model:visible="approveModalVisible"
+  :footer="null"
+  centered
+  width="380"
+>
+  <div class="space-y-4 text-center">
+    <!-- Icon -->
+    <div class="mx-auto w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+      <span class="text-2xl">💸</span>
+    </div>
+
+    <!-- Title -->
+    <div class="text-lg font-semibold text-gray-800">
+      Approve Payout
+    </div>
+
+    <!-- Admin Info -->
+    <div class="text-sm text-gray-500">
+      You are about to approve a payout for
+    </div>
+
+    <div class="font-medium">
+      {{ currentApprovePayout?.administrator?.name }}
+    </div>
+
+    <!-- Amount -->
+    <div class="bg-emerald-50 rounded-lg p-3">
+      <div class="text-xs text-gray-500">Amount</div>
+      <div class="text-2xl font-bold text-emerald-600">
+        ₦{{ Number(currentApprovePayout?.amount || 0).toLocaleString() }}
+      </div>
+    </div>
+
+    <!-- Warning -->
+    <div class="text-xs text-gray-500">
+      This will mark the payout as <b>PAID</b>.<br />
+      Ensure payment is sent manually.
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-2 pt-2">
+      <Button
+        block
+        @click="approveModalVisible = false"
+        :disabled="approveLoading"
+      >
+        Cancel
+      </Button>
+      <Button
+        block
+        type="primary"
+        :loading="approveLoading"
+        @click="handleApproveConfirm"
+      >
+        Confirm Approval
+      </Button>
+    </div>
+  </div>
+</Modal>
 
 </div>
 </template>

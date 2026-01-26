@@ -103,7 +103,7 @@ onMounted(fetchServices)
 </script>
 
 <template>
-  <div class="p-6 space-y-6 bg-emerald-50">
+  <div class="p-6 space-y-6 bg-emerald-50 lg:w-2/3">
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
