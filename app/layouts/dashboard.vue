@@ -298,7 +298,7 @@ const pageLoading = ref(false)
               {{ firstName.charAt(0).toUpperCase() }}
             </a-avatar>
             <div class="hidden sm:block min-w-0">
-              <p class="text-xs sm:text-sm text-emerald-600 font-medium truncate">{{ auth.userRole }}</p>
+              <p class="text-xs sm:text-sm text-emerald-600 font-medium mt-4 truncate">{{ auth.userRole }}</p>
             </div>
             <LogoutOutlined
               class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 sm:ml-2"
