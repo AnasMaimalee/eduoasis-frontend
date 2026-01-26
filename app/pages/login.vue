@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { reactive, ref, nextTick } from 'vue'
-import { Form, notification } from 'ant-design-vue'
+import { reactive, ref, computed } from 'vue'
+import { Form, notification, message } from 'ant-design-vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+
+/* ---------------- MESSAGE CONFIG (TOP CENTER) ---------------- */
+message.config({
+  top: '24px',
+  duration: 4,
+  maxCount: 1,
+})
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -16,7 +23,6 @@ const modelRef = reactive({
 const twoFaCode = ref('')
 const show2FAModal = ref(false)
 const lockedMessage = ref<string | null>(null)
-const loadingDevice = ref(false)
 
 /* ---------------- FORM RULES ---------------- */
 const rulesRef = reactive({
@@ -26,12 +32,16 @@ const rulesRef = reactive({
       validator: (_, value) => {
         if (!value) return Promise.reject('Please enter your email')
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        return regex.test(value) ? Promise.resolve() : Promise.reject('Invalid email format')
+        return regex.test(value)
+          ? Promise.resolve()
+          : Promise.reject('Invalid email format')
       },
       trigger: 'blur',
     },
   ],
-  password: [{ required: true, message: 'Please enter your password', trigger: 'blur' }],
+  password: [
+    { required: true, message: 'Please enter your password', trigger: 'blur' },
+  ],
 })
 
 const { validate, validateInfos } = Form.useForm(modelRef, rulesRef)
@@ -47,18 +57,22 @@ const redirectUser = () => {
 /* ---------------- LOGIN STEP 1 ---------------- */
 const handleLogin = async () => {
   lockedMessage.value = null
+
   try {
     await validate()
     auth.loading = true
 
-    // Check if user has 2FA enabled
     const { $api } = useNuxtApp()
+
     const res = await $api('/auth/login/check', {
       method: 'POST',
-      body: { email: modelRef.email, password: modelRef.password },
+      body: {
+        email: modelRef.email,
+        password: modelRef.password,
+      },
     })
 
-    // 🔐 If 2FA is enabled, show modal
+    // 🔐 2FA REQUIRED
     if (res.requires_2fa) {
       show2FAModal.value = true
       notification.info({
@@ -68,20 +82,18 @@ const handleLogin = async () => {
       return
     }
 
-    // ✅ Otherwise, no 2FA, log in directly
+    // ✅ NORMAL LOGIN
     await auth.login({
       email: modelRef.email,
       password: modelRef.password,
     })
 
-    notification.success({
-      message: 'Login Successful',
-      description: `Welcome back, ${auth.user?.name}`,
-    })
+    // ✅ TOP-CENTER SUCCESS MESSAGE
+    message.success(`Welcome back, ${auth.user?.name}`)
+
     redirectUser()
   } catch (err: any) {
-    const response = err?.response
-    const status = response?.status
+    const status = err?.response?.status
 
     if (status === 429) {
       lockedMessage.value =
@@ -102,10 +114,7 @@ const handleLogin = async () => {
   }
 }
 
-
-
-
-/* ---------------- LOGIN STEP 2 (2FA CONFIRM) ---------------- */
+/* ---------------- LOGIN STEP 2 (2FA) ---------------- */
 const confirm2FA = async () => {
   if (!twoFaCode.value || twoFaCode.value.length !== 6) {
     notification.warning({
@@ -126,10 +135,8 @@ const confirm2FA = async () => {
 
     show2FAModal.value = false
 
-    notification.success({
-      message: 'Login Successful',
-      description: `Welcome back, ${auth.user?.name}`,
-    })
+    // ✅ TOP-CENTER SUCCESS MESSAGE
+    message.success(`Welcome back, ${auth.user?.name}`)
 
     redirectUser()
   } catch {
@@ -142,17 +149,20 @@ const confirm2FA = async () => {
   }
 }
 
-
-
+/* ---------------- COMPUTED ---------------- */
 const isLoginDisabled = computed(() => {
   return !modelRef.email.trim() || !modelRef.password.trim() || auth.loading
 })
+
 /* ---------------- DEVICE LOGIN ---------------- */
 const handleDeviceLogin = async () => {
   auth.loadingWithDevice = true
   try {
     await auth.loginWithDevice()
-    notification.success({ message: '✅ Logged in with device!' })
+
+    // ✅ TOP-CENTER SUCCESS MESSAGE
+    message.success(`Welcome back, ${auth.user?.name}`)
+
     redirectUser()
   } catch (err: any) {
     notification.error({
@@ -168,6 +178,7 @@ const handleDeviceLogin = async () => {
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
     <a-card title="Login to EduOasis Portal" class="w-full max-w-md shadow-xl rounded-xl">
+      
       <a-alert
         v-if="lockedMessage"
         type="error"
@@ -202,24 +213,27 @@ const handleDeviceLogin = async () => {
           :loading="auth.loadingWithDevice"
           @click="handleDeviceLogin"
         >
-          🔐 Login with Device (Face / Fingerprint)
+          🔐 Login with Device
         </a-button>
       </a-form>
-       <div class="mt-4 flex justify-between text-sm">
-        <router-link to="/forgot-password" class="text-blue-500 hover:underline">
-          Forgot Password?
-        </router-link>
 
-        <router-link to="/register" class="text-blue-500 hover:underline">
+      <div class="mt-4 flex justify-between text-sm">
+        <NuxtLink to="/forgot-password" class="text-blue-500 hover:underline">
+          Forgot Password?
+        </NuxtLink>
+        <NuxtLink to="/register" class="text-blue-500 hover:underline">
           Register
-        </router-link>
+        </NuxtLink>
       </div>
     </a-card>
-   
-
 
     <!-- 🔐 2FA MODAL -->
-    <a-modal v-model:open="show2FAModal" title="Two-Factor Authentication" :footer="null" destroy-on-close>
+    <a-modal
+      v-model:open="show2FAModal"
+      title="Two-Factor Authentication"
+      :footer="null"
+      destroy-on-close
+    >
       <a-card class="text-center">
         <p class="mb-4">
           🔐 Open <strong>Google Authenticator</strong> and enter the 6-digit code
@@ -233,11 +247,15 @@ const handleDeviceLogin = async () => {
           style="letter-spacing: 0.5rem"
         />
 
-        <a-button type="primary" block :loading="auth.loading" @click="confirm2FA">
+        <a-button
+          type="primary"
+          block
+          :loading="auth.loading"
+          @click="confirm2FA"
+        >
           Verify & Login
         </a-button>
       </a-card>
     </a-modal>
-
   </div>
 </template>
