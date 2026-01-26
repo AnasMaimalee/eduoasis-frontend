@@ -6,6 +6,7 @@ import { message } from 'ant-design-vue'
 
 definePageMeta({
   layout: 'default',
+   auth: false 
 })
 
 const { $api } = useNuxtApp()

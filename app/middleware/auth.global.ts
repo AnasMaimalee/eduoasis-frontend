@@ -2,7 +2,7 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
 
-  const publicPages = ['/login', '/register', '/']
+  const publicPages = ['/login', '/register', '/', '/forgot-password']
   if (publicPages.includes(to.path)) return
 
   // 🔹 Wait for Pinia persisted state to restore
