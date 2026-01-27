@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
+    "@antv/g2plot": "^2.4.35",
     "@iconify-icons/mdi": "^1.2.48",
     "@iconify/vue": "^5.0.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
@@ -25,6 +26,7 @@
     "pusher-js": "^8.4.0",
     "vue": "^3.5.26",
     "vue-chartjs": "^5.3.3",
+    "vue-count-to2": "^1.0.6",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
