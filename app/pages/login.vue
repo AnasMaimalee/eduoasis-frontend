@@ -218,10 +218,10 @@ const handleDeviceLogin = async () => {
       </a-form>
 
       <div class="mt-4 flex justify-between text-sm">
-        <NuxtLink to="/forgot-password" class="text-blue-500 hover:underline" :disabled="isLoginDisabled">
+        <NuxtLink to="/forgot-password" class="text-blue-500 hover:underline" :hidden="auth.loading">
           Forgot Password?
         </NuxtLink>
-        <NuxtLink to="/register" class="text-blue-500 hover:underline" :disabled="isLoginDisabled">
+        <NuxtLink to="/register" class="text-blue-500 hover:underline" :hidden="auth.loading">
           Register
         </NuxtLink>
       </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useNetworkStatus } from '@/composables/useNetworkStatus'
 
 
 import { useRouter, useRoute } from 'vue-router'
@@ -14,7 +15,7 @@ import {
 } from '@ant-design/icons-vue'
 
 
-
+const { isOnline, showBackOnline } = useNetworkStatus()
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
@@ -321,11 +322,12 @@ const pageLoading = ref(false)
           </template>
         </a-dropdown>
       </header>
-
-      
-    
       <!-- Page Content -->
         <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+          <NetworkStatusBanner
+            :isOnline="isOnline"
+            :showBackOnline="showBackOnline"
+          />
             <slot />
         </main>
     </div>
