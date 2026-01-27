@@ -274,4 +274,9 @@ onMounted(fetchServices)
 .mobile-table :deep(.ant-table-thead > tr > th:last-child) {
   border-top-right-radius: 12px;
 }
+.price-modal :deep(.ant-modal) {
+  width: 380px !important;
+  max-width: calc(100vw - 32px);
+}
+
 </style>
