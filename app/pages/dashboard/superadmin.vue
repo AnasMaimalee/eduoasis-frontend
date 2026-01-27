@@ -119,7 +119,7 @@ const jobStatusChart = computed(() => ({
   </div>
 
   <!-- DASHBOARD -->
-  <div v-else class="space-y-10 p-6">
+  <div v-else class="lg:space-y-10 lg:p-10 bg-emerald-100 border border-emerald-100 rounded-3xl">
 
     <!-- HEADER -->
     <div class="bg-emerald-500  rounded-3xl p-8 text-white shadow-xl">
@@ -266,7 +266,7 @@ const jobStatusChart = computed(() => ({
         </a-table-column>
       </a-table>
     </div>
-    
+
     <!-- SYSTEM HEALTH -->
     <div class="bg-white rounded-3xl p-6 shadow-xl mt-8">
       <h3 class="chart-title mb-4 text-gray-700 font-bold text-xl">System Health</h3>

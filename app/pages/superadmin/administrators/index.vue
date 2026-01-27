@@ -199,7 +199,7 @@ onMounted(() => fetchUsers())
 </script>
 
 <template>
-  <div class="p-2 space-y-2 bg-emerald-50">
+  <div class="lg:p-4 bg-emerald-50">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div class="text-2xl font-bold text-emerald-700">Administrator Management</div>
