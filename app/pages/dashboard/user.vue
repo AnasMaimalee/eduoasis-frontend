@@ -57,6 +57,13 @@ const serviceData = computed(() => {
       icon: BarChartOutlined,
       color: 'from-pink-500 to-pink-600',
       textColor: 'text-pink-600'
+    },
+    {
+      name: 'JAMB PIN Binding',
+      jobs: services.find((s: any) => s.service === 'JAMB PIN Binding')?.total_jobs || 0,
+      icon: BarChartOutlined,
+      color: 'from-pink-500 to-pink-600',
+      textColor: 'text-pink-600'
     }
   ]
 })

@@ -212,6 +212,7 @@ const handleDeviceLogin = async () => {
           class="mt-2"
           :loading="auth.loadingWithDevice"
           @click="handleDeviceLogin"
+          :hidden="auth.loading"
         >
           🔐 Login with Device
         </a-button>

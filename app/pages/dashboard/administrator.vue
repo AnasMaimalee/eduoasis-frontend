@@ -5,6 +5,7 @@ definePageMeta({
   roles: ['administrator']
 })
 
+
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { 
   ProfileOutlined, CheckCircleOutlined, CloseCircleOutlined, 
@@ -27,7 +28,8 @@ const serviceTotals = computed(() => {
     admissionLetter: services.find((s: any) => s.service.includes('Letter'))?.jobs || 0,
     olevel: services.find((s: any) => s.service.includes("O'Level"))?.jobs || 0,
     admissionStatus: services.find((s: any) => s.service.includes('Status Check'))?.jobs || 0,
-    resultNotification: services.find((s: any) => s.service.includes('Notification'))?.jobs || 0
+    resultNotification: services.find((s: any) => s.service.includes('Notification'))?.jobs || 0,
+    pin: services.find((s: any) => s.service.includes('pin'))?.jobs || 0
   }
 })
 
@@ -43,6 +45,7 @@ const serviceColors = {
   "O'Level Upload Status": { bg: 'from-blue-500 to-blue-600', text: 'text-blue-600', icon: NotificationOutlined },
   'Admission Status Check': { bg: 'from-emerald-500 to-emerald-600', text: 'text-emerald-600', icon: CheckCircleOutlined },
   'Result Notification': { bg: 'from-pink-500 to-pink-600', text: 'text-pink-600', icon: BarChartOutlined }
+
 }
 
 const serviceColumns: TableColumnsType = [
@@ -127,7 +130,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-2 lg:p-8 space-y-2 lg:space-y-2 bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50/50 min-h-screen">
+  <div class="p-2 lg:p-8 space-y-2 lg:space-y-2 bg-emerald-50 to-teal-50/50 min-h-screen border border-emerald-50 rounded-2xl">
     
     <!-- Error State -->
     <Card v-if="error" class="!shadow-2xl !border-2 border-red-200/50 bg-gradient-to-br from-red-50/80 to-red-100/50 backdrop-blur-sm">
@@ -169,7 +172,7 @@ onUnmounted(() => {
                 <span>{{ dashboardData?.stats?.processed_jobs?.toLocaleString() || 0 }} Total Jobs</span>
               </div>
             </div>
-            <Button 
+            <!-- <Button 
               type="primary" 
               @click="fetchDashboardData"
               :loading="loading"
@@ -177,17 +180,17 @@ onUnmounted(() => {
               size="large"
             >
               <ReloadOutlined /> Refresh Data
-            </Button>
+            </Button> -->
           </div>
         </div>
       </Card>
 
       <!-- Services Stats Grid - Beautiful Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 ">
         <Card 
           v-for="(service, index) in dashboardData?.jobs_by_service" 
           :key="service.service"
-          class="!shadow-2xl !border-2 h-full transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 hover:scale-[1.02] group"
+          class="!shadow-2xl !border-2 border rounded-xl h-full transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 hover:scale-[1.02] group"
           :class="`bg-gradient-to-br from-white/80 to-slate-50/50 backdrop-blur-xl border-[${serviceColors[service.service]?.bg || 'emerald-100/50'}]`"
         >
           <div class="p-6 h-full flex flex-col justify-between">
@@ -237,6 +240,59 @@ onUnmounted(() => {
           </div>
         </Card>
       </div>
+      <!-- STATISTICS -->
+      <!-- <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
+
+        <div class="stat-card bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200">
+          <div class="stat-label">Processed</div>
+          <div class="stat-value text-slate-800">
+            {{ dashboardData?.stats?.processed_jobs || 0 }}
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
+          <div class="stat-label text-emerald-700">Completed</div>
+          <div class="stat-value text-emerald-700">
+            {{ dashboardData?.stats?.completed_jobs || 0 }}
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+          <div class="stat-label text-amber-700">Pending</div>
+          <div class="stat-value text-amber-700">
+            {{ dashboardData?.stats?.pending_jobs || 0 }}
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <div class="stat-label text-red-700">Rejected</div>
+          <div class="stat-value text-red-700">
+            {{ dashboardData?.stats?.rejected_jobs || 0 }}
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200">
+          <div class="stat-label text-teal-700">Performance</div>
+          <div class="stat-value text-teal-700">
+            {{ dashboardData?.stats?.performance || '0%' }}
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
+          <div class="stat-label text-indigo-700">Earnings</div>
+          <div class="stat-value text-indigo-700 text-xl">
+            ₦{{ Number(dashboardData?.stats?.earnings || 0).toLocaleString() }}
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
+          <div class="stat-label">Avg Time</div>
+          <div class="stat-value text-gray-800 text-lg">
+            {{ dashboardData?.stats?.avg_processing_time || 'N/A' }}
+          </div>
+        </div>
+
+      </div> -->
 
       <!-- Enhanced Tables Section -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -369,4 +425,19 @@ onUnmounted(() => {
 .admin-table :deep(.ant-table-tbody tr:hover > td) {
   @apply bg-gradient-to-r from-emerald-50/70 to-teal-50/70 shadow-sm;
 }
+.stat-card {
+  @apply p-4 rounded-2xl border shadow-lg backdrop-blur-sm
+         flex flex-col justify-between
+         transition-all duration-300
+         hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02];
+}
+
+.stat-label {
+  @apply text-xs font-semibold uppercase tracking-wide text-gray-500;
+}
+
+.stat-value {
+  @apply mt-2 text-2xl font-black;
+}
+
 </style>
