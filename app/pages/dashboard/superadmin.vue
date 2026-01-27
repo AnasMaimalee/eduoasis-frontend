@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
@@ -6,7 +8,6 @@ definePageMeta({
   title: 'Super Admin Dashboard'
 })
 
-import { ref, onMounted, computed } from 'vue'
 import {
   UserOutlined,
   DollarCircleOutlined,
@@ -102,6 +103,22 @@ const jobStatusChart = computed(() => ({
     }
   ]
 }))
+let refreshInterval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  fetchDashboard()
+
+  refreshInterval = setInterval(() => {
+    fetchDashboard()
+  }, 30000) // 30 seconds
+})
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+    refreshInterval = null
+  }
+})
 </script>
 
 <template>
