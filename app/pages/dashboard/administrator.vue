@@ -2,7 +2,8 @@
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-  roles: ['administrator']
+  roles: ['administrator'],
+  title: 'Administrator Dashboard'
 })
 
 
@@ -24,12 +25,12 @@ const dashboardData = ref<any>(null)
 const serviceTotals = computed(() => {
   const services = dashboardData.value?.jobs_by_service || []
   return {
-    jamb: services.find((s: any) => s.service.includes('JAMB'))?.jobs || 0,
+    jambOriginalResult: services.find((s: any) => s.service.includes('JAMB'))?.jobs || 0,
     admissionLetter: services.find((s: any) => s.service.includes('Letter'))?.jobs || 0,
-    olevel: services.find((s: any) => s.service.includes("O'Level"))?.jobs || 0,
+    olevelUplaodStatus: services.find((s: any) => s.service.includes("O'Level"))?.jobs || 0,
     admissionStatus: services.find((s: any) => s.service.includes('Status Check'))?.jobs || 0,
     resultNotification: services.find((s: any) => s.service.includes('Notification'))?.jobs || 0,
-    pin: services.find((s: any) => s.service.includes('pin'))?.jobs || 0
+    pinBinding: services.find((s: any) => s.service.includes('PIN'))?.jobs || 0
   }
 })
 
@@ -241,7 +242,7 @@ onUnmounted(() => {
         </Card>
       </div>
       <!-- STATISTICS -->
-      <!-- <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
+     <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
 
         <div class="stat-card bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200">
           <div class="stat-label">Processed</div>
@@ -292,7 +293,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-      </div> -->
+      </div> 
 
       <!-- Enhanced Tables Section -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

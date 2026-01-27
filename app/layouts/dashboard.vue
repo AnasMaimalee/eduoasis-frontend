@@ -187,20 +187,50 @@ const pageLoading = ref(false)
       </div>
 
     <div class="flex-1 overflow-y-auto py-6 px-2">
-    <a-menu
-      mode="inline"
-      :inline-collapsed="collapsed"
-      :selected-keys="[currentRoute]"
-      class="border-none bg-transparent"
-    >
-      <template v-for="menu in menus" :key="menu.key || menu.route || menu.title">
-        
-       <!-- SUBMENU (Parent with children) -->
-        <a-sub-menu 
-          v-if="menu.children && menu.children.length" 
-          :key="menu.key || menu.route || menu.title"
-        >
-          <template #title>
+      <a-menu
+        mode="inline"
+        :inline-collapsed="collapsed"
+        :selected-keys="[currentRoute]"
+        class="border-none bg-transparent"
+      >
+        <template v-for="menu in menus" :key="menu.key || menu.route || menu.title">
+          
+        <!-- SUBMENU (Parent with children) -->
+          <a-sub-menu 
+            v-if="menu.children && menu.children.length" 
+            :key="menu.key || menu.route || menu.title"
+          >
+            <template #title>
+              <div class="flex items-center gap-4">
+                <component
+                  :is="iconComponents[menu.icon] || BoxPlotOutlined"
+                  class="w-6 h-6 text-emerald-600"
+                />
+                <!-- REMOVE v-if -->
+                <span>{{ menu.title }}</span>
+              </div>
+            </template>
+            <a-menu-item
+              v-for="child in menu.children"
+              :key="child.key || child.route || child.title"
+              @click="navigate(child.route || child.key || child.title)"
+            >
+              <div class="flex items-center gap-4">
+                <component
+                  :is="iconComponents[child.icon] || BoxPlotOutlined"
+                  class="w-5 h-5 text-emerald-500"
+                />
+                <span>{{ child.title }}</span>
+              </div>
+            </a-menu-item>
+          </a-sub-menu>
+
+          <!-- REGULAR MENU ITEM -->
+          <a-menu-item
+            v-else
+            :key="menu.key || menu.route || menu.title"
+            @click="navigate(menu.route || menu.key || menu.title)"
+          >
             <div class="flex items-center gap-4">
               <component
                 :is="iconComponents[menu.icon] || BoxPlotOutlined"
@@ -209,42 +239,12 @@ const pageLoading = ref(false)
               <!-- REMOVE v-if -->
               <span>{{ menu.title }}</span>
             </div>
-          </template>
-          <a-menu-item
-            v-for="child in menu.children"
-            :key="child.key || child.route || child.title"
-            @click="navigate(child.route || child.key || child.title)"
-          >
-            <div class="flex items-center gap-4">
-              <component
-                :is="iconComponents[child.icon] || BoxPlotOutlined"
-                class="w-5 h-5 text-emerald-500"
-              />
-              <span>{{ child.title }}</span>
-            </div>
           </a-menu-item>
-        </a-sub-menu>
-
-        <!-- REGULAR MENU ITEM -->
-        <a-menu-item
-          v-else
-          :key="menu.key || menu.route || menu.title"
-          @click="navigate(menu.route || menu.key || menu.title)"
-        >
-          <div class="flex items-center gap-4">
-            <component
-              :is="iconComponents[menu.icon] || BoxPlotOutlined"
-              class="w-6 h-6 text-emerald-600"
-            />
-            <!-- REMOVE v-if -->
-            <span>{{ menu.title }}</span>
-          </div>
-        </a-menu-item>
 
 
-      </template>
-    </a-menu>
-  </div>
+        </template>
+      </a-menu>
+    </div>
 
 
 
