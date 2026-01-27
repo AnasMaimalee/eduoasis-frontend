@@ -5,7 +5,7 @@ definePageMeta({
   roles: ['superadmin'],
   title: 'Administrator Payouts'
 })
-
+import { CopyOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import { ref, onMounted, watch } from 'vue'
 import { Table, Button, Tag, Popconfirm, message, Input, Card, Dropdown, Modal } from 'ant-design-vue'
 import { ReloadOutlined, FilterOutlined, MoreOutlined } from '@ant-design/icons-vue'
@@ -128,11 +128,32 @@ watch([searchText, statusFilter], () => {
   fetchPayouts()
 })
 
+const copiedAccountId = ref<string | null>(null)
+
+const copyAccountNumber = async (record: any) => {
+  const acc = record.bank_account?.account_number
+  if (!acc) return
+
+  await navigator.clipboard.writeText(acc)
+
+  copiedAccountId.value = record.id
+
+  message.success({
+    content: 'Account number copied',
+    duration: 2,
+    style: { marginTop: '20px' } // top-center feel
+  })
+
+  setTimeout(() => {
+    copiedAccountId.value = null
+  }, 2000)
+}
+
 onMounted(fetchPayouts)
 </script>
 
 <template>
-<div class="p-4 sm:p-6 space-y-6 bg-emerald-50 lg:w-2/3">
+<div class="p-4 sm:p-6 space-y-6 bg-emerald-50 ">
 
   <!-- Header -->
   <div class="flex flex-wrap items-center justify-between gap-3">
@@ -174,56 +195,107 @@ onMounted(fetchPayouts)
   </Card>
 
   <!-- Table -->
-  <Card class="!border-0 !shadow-lg rounded-xl">
-    <div class="overflow-x-auto">
-      <Table
-        :columns="[
-          { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
-          { title: 'Admin', key: 'admin', width: 220, slots: { customRender: 'adminCell' } },
-          { title: 'Amount', key: 'amount', width: 140, slots: { customRender: 'amountCell' } },
-          { title: 'Status', dataIndex: 'status', width: 100, slots: { customRender: 'statusCell' } },
-          { title: 'Date', dataIndex: 'created_at', width: 140, slots: { customRender: 'dateCell' } },
-          { title: 'Actions', key: 'actions', width: 90, align: 'center', slots: { customRender: 'actionsCell' } }
-        ]"
-        :data-source="payouts"
-        :loading="loading"
-        :pagination="pagination"
-        @change="handleTableChange"
-        row-key="id"
-        size="small"
-        :scroll="{ x: 900 }"
-        class="compact-table"
-      >
+  <!-- Table -->
+<Card class="!border-0 !shadow-lg rounded-xl">
+  <div class="overflow-x-auto">
+    <Table
+      :columns="[
+        { title: '#', key: 'index', width: 60, slots: { customRender: 'indexCell' } },
+        { title: 'Admin', key: 'admin', width: 220, slots: { customRender: 'adminCell' } },
+        { title: 'Bank Name', key: 'bankName', width: 180, slots: { customRender: 'bankNameCell' } },
+        { title: 'Account Name', key: 'accountName', width: 180, slots: { customRender: 'accountNameCell' } },
+        { title: 'Account Number', key: 'accountNumber', width: 140, slots: { customRender: 'accountNumberCell' } },
+        { title: 'Amount', key: 'amount', width: 140, slots: { customRender: 'amountCell' } },
+        { title: 'Status', dataIndex: 'status', width: 100, slots: { customRender: 'statusCell' } },
+        { title: 'Date', dataIndex: 'created_at', width: 140, slots: { customRender: 'dateCell' } },
+        { title: 'Actions', key: 'actions', width: 90, align: 'center', slots: { customRender: 'actionsCell' } }
+      ]"
+      :data-source="payouts"
+      :loading="loading"
+      :pagination="pagination"
+      @change="handleTableChange"
+      row-key="id"
+      size="small"
+      :scroll="{ x: 1200 }"
+      class="compact-table"
+    >
 
-        <template #indexCell="{ index }">
-          {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
-        </template>
+      <!-- Index -->
+      <template #indexCell="{ index }">
+        {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
+      </template>
 
-        <template #adminCell="{ record }">
-          <div class="flex gap-2 items-center">
-            <div class="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-              {{ record.administrator?.name?.charAt(0) || 'A' }}
-            </div>
-            <div class="truncate">
-              <div class="text-sm font-medium">{{ record.administrator?.name }}</div>
-              <div class="text-xs text-gray-500">{{ record.administrator?.email }}</div>
-            </div>
+      <!-- Admin -->
+      <template #adminCell="{ record }">
+        <div class="flex gap-2 items-center">
+          <div class="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+            {{ record.administrator?.name?.charAt(0) || 'A' }}
           </div>
-        </template>
-
-        <template #amountCell="{ record }">
-          <div class="">
-            <div class="font-semibold text-emerald-600 text-sm">
-              ₦{{ Number(record.amount).toLocaleString() }}
-            </div>
-            <div class="text-xs text-gray-500">
-              Bal ₦{{ Number(record.balance_snapshot || 0).toLocaleString() }}
-            </div>
+          <div class="truncate">
+            <div class="text-sm font-medium">{{ record.administrator?.name }}</div>
+            <div class="text-xs text-gray-500">{{ record.administrator?.email }}</div>
           </div>
-        </template>
+        </div>
+      </template>
 
-        <template #statusCell="{ record }">
-          <Tag
+      <!-- Bank Name -->
+      <template #bankNameCell="{ record }">
+        <div class="text-sm text-gray-700">
+          {{ record.bank_account?.bank_name || 'N/A' }}
+        </div>
+      </template>
+
+      <!-- Account Name -->
+      <template #accountNameCell="{ record }">
+        <div class="text-sm text-gray-700">
+          {{ record.bank_account?.account_name || 'N/A' }}
+        </div>
+      </template>
+
+      <!-- Account Number -->
+     <template #accountNumberCell="{ record }">
+        <div class="flex items-center gap-2 text-sm text-gray-700 leading-none">
+          <span class="leading-none">
+            {{ record.bank_account?.account_number || 'N/A' }}
+          </span>
+
+          <Button
+            v-if="record.bank_account?.account_number"
+            type="text"
+            size="small"
+            class="!p-0 !h-auto flex items-center"
+            @click="copyAccountNumber(record)"
+          >
+            <CheckOutlined
+              v-if="copiedAccountId === record.id"
+              class="text-emerald-600 text-sm"
+            />
+            <CopyOutlined
+              v-else
+              class="text-gray-400 hover:text-emerald-600 text-sm"
+            />
+          </Button>
+        </div>
+      </template>
+
+
+
+
+      <!-- Amount -->
+      <template #amountCell="{ record }">
+        <div class="">
+          <div class="font-semibold text-emerald-600 text-sm">
+            ₦{{ Number(record.amount).toLocaleString() }}
+          </div>
+          <div class="text-xs text-gray-500">
+            Bal ₦{{ Number(record.balance_snapshot || 0).toLocaleString() }}
+          </div>
+        </div>
+      </template>
+
+      <!-- Status -->
+      <template #statusCell="{ record }">
+        <Tag
           :color="
             record.status === 'pending'
               ? 'orange'
@@ -237,45 +309,39 @@ onMounted(fetchPayouts)
         >
           {{ record.status }}
         </Tag>
+      </template>
 
-        </template>
+      <!-- Date -->
+      <template #dateCell="{ record }">
+        <div class="text-xs">
+          {{ new Date(record.created_at).toLocaleDateString() }}
+        </div>
+      </template>
 
-        <template #dateCell="{ record }">
-          <div class="text-xs">
-            {{ new Date(record.created_at).toLocaleDateString() }}
-          </div>
-        </template>
-
-        <template #actionsCell="{ record }">
-          <Dropdown trigger="click">
-            <Button type="text" size="small">
-              <MoreOutlined />
-            </Button>
-            <template #overlay>
-              <div class="p-2 space-y-1 min-w-[120px]">
-                <template v-if="record.status === 'pending'">
-                  <Button
-                    block
-                    size="small"
-                    type="primary"
-                    @click="openApproveModal(record)"
-                  >
-                    Approve
-                  </Button>
-
-                  <Button block size="small" danger @click="openRejectModal(record.id)">Reject</Button>
-                </template>
-                <div v-else class="text-center text-xs font-medium text-gray-500 py-2">
-                  {{ record.status }}
-                </div>
+      <!-- Actions -->
+      <template #actionsCell="{ record }">
+        <Dropdown trigger="click">
+          <Button type="text" size="small">
+            <MoreOutlined />
+          </Button>
+          <template #overlay>
+            <div class="p-2 space-y-1 min-w-[120px]">
+              <template v-if="record.status === 'pending'">
+                <Button block size="small" type="primary" @click="openApproveModal(record)">Approve</Button>
+                <Button block size="small" danger @click="openRejectModal(record.id)">Reject</Button>
+              </template>
+              <div v-else class="text-center text-xs font-medium text-gray-500 py-2">
+                {{ record.status }}
               </div>
-            </template>
-          </Dropdown>
-        </template>
+            </div>
+          </template>
+        </Dropdown>
+      </template>
 
-      </Table>
-    </div>
-  </Card>
+    </Table>
+  </div>
+</Card>
+
 
  <Modal
   v-model:visible="rejectModalVisible"
