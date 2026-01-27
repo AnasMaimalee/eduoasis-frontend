@@ -630,7 +630,7 @@ const submitFeedback = async () => {
         <!-- Developer Info -->
         <div>
           <h2 class="text-4xl font-black text-gray-900 mb-4">
-            Built by a Real Developer
+            Built by a Full Stack Developer
           </h2>
           <p class="text-lg text-gray-600 mb-6">
             Hi, I’m Anas Maimalee — CEO of Code Bridge Technology a Nigerian software developer who believes
@@ -1332,7 +1332,7 @@ const submitFeedback = async () => {
   height: 64px;
   margin: 0 auto 1.5rem;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  background: linear-gradient(135deg, #10b981, #10b981);
   display: grid;
   place-items: center;
   color: white;

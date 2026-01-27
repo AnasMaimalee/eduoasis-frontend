@@ -195,7 +195,15 @@ onMounted(fetchServices)
     </Card>
 
     <!-- MODAL -->
-    <Modal v-model:visible="updateModalVisible" title="Update Prices" :footer="null" width="380">
+   <Modal
+      v-model:visible="updateModalVisible"
+      title="Update Prices"
+      :footer="null"
+      width="480"
+      wrapClassName="price-modal"
+      centered
+    >
+
       <div v-if="currentService" class="space-y-4 text-xs">
 
         <div class="font-semibold text-sm truncate">
