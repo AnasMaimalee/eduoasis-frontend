@@ -643,15 +643,6 @@ const submitFeedback = async () => {
 
           <!-- Social Links -->
           <div class="flex flex-wrap gap-4 mt-6">
-            <!-- Twitter -->
-            <a href="https://twitter.com/anasmaimalee" target="_blank" rel="noopener" 
-              class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-2xl shadow-lg transition-all duration-300">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-              Twitter
-            </a>
-
             <!-- LinkedIn -->
             <a href="https://linkedin.com/in/anas-abdussalam-91a66a374" target="_blank" rel="noopener" 
               class="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-2xl shadow-lg transition-all duration-300">
