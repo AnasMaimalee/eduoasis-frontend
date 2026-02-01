@@ -389,9 +389,6 @@ const submitFeedback = async () => {
       </div>
     </section>
 
-
-
-
      <!-- 🌟 ABOUT US SECTION -->
     <section class="relative z-10 py-28 px-6">
       <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
@@ -521,7 +518,7 @@ const submitFeedback = async () => {
       </div>
 
       <div class="relative max-w-7xl mx-auto text-center">
-        <h2 class="text-5xl lg:text-6xl font-black mb-6
+        <h2 class="text-xl lg:text-6xl font-black mb-6
           bg-gradient-to-r from-gray-900 to-emerald-600
           bg-clip-text text-transparent">
           Why Trust Us?
@@ -901,7 +898,6 @@ const submitFeedback = async () => {
   </div>
 </template>
 
-<!-- Keep all your existing styles -->
 <style scoped>
 /* Your existing styles remain unchanged */
 @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
