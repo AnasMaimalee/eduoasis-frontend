@@ -1,9 +1,8 @@
 export default defineNuxtPlugin(() => {
-  const config = useRuntimeConfig()
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: config.public.apiBase,  // Uses NUXT_PUBLIC_API_BASE
+    baseURL: 'https://robertson-boot-opportunities-orientation.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {
