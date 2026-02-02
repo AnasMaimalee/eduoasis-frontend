@@ -136,7 +136,7 @@ onUnmounted(() => {
   </div>
 
   <!-- DASHBOARD -->
-  <div v-else class="lg:space-y-10 lg:p-10 bg-emerald-100 border border-emerald-100 rounded-3xl">
+  <div v-else class="p-4 lg:space-y-10 lg:p-10 bg-emerald-100 border border-emerald-100 rounded-3xl">
 
     <!-- HEADER -->
     <div class="bg-emerald-500  rounded-3xl p-8 text-white shadow-xl">
@@ -249,7 +249,7 @@ onUnmounted(() => {
     </div>
 
     <!-- ADMIN LEADERBOARD -->
-    <div class="bg-white rounded-3xl p-6 shadow-xl">
+    <div class="bg-white rounded-3xl p-6 shadow-xl mt-2">
       <h3 class="chart-title mb-4 text-gray-700 font-bold text-xl">Admin Performance</h3>
       <a-table
         :data-source="dashboardData.admin_leaderboard"
