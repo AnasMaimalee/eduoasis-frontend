@@ -25,6 +25,7 @@ const emit = defineEmits<{
     :data-source="exams"
     row-key="id"
     :pagination="{ pageSize: 10 }"
+    :scroll="{ x: 900 }"
     class="rounded-xl shadow-sm overflow-hidden live-table"
   >
     <!-- Candidate -->

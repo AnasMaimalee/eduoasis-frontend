@@ -93,6 +93,7 @@ onMounted(() => {
       <a-table
         :dataSource="rankings"
         rowKey="id"
+        :scroll="{ x: 900 }"
         :pagination="{ pageSize: 10 }"
         class="rounded-xl overflow-hidden live-table"
       >
@@ -100,8 +101,8 @@ onMounted(() => {
 
         <a-table-column title="Candidate">
           <template #default="{ record }">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
+            <div class="flex gap-2">
+              <div class="w-8 h-8 bg-emerald-500 rounded-full flex text-white font-bold">
                 {{ record.user_name?.charAt(0) }}
               </div>
               <div>

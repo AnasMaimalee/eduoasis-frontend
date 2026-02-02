@@ -144,6 +144,7 @@ watchEffect(() => {
           :dataSource="analytics.subjects"
           :rowKey="record => record.name"
           bordered
+          :scroll="{ x: 900 }"
           class="bg-white rounded-lg"
         />
       </div>
