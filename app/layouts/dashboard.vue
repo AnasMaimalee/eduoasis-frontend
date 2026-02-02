@@ -11,7 +11,7 @@ import {
   TeamOutlined, SettingOutlined as SettingIcon, AppstoreOutlined,
   FileSearchOutlined, FileTextOutlined, IdcardOutlined, CheckCircleOutlined,BookOutlined,FormOutlined,
   BellOutlined, BoxPlotOutlined, ClockCircleOutlined,BarChartOutlined,PlayCircleOutlined,TrophyOutlined,NotificationOutlined,
-  LinkOutlined
+  LinkOutlined, CommentOutlined
 } from '@ant-design/icons-vue'
 
 
@@ -56,7 +56,8 @@ const iconComponents: Record<string, any> = {
   'PlayCircleOutlined' : PlayCircleOutlined,
   'TrophyOutlined': TrophyOutlined,
   'NotificationOutlined' : NotificationOutlined,
-  'LinkOutlined': LinkOutlined
+  'LinkOutlined': LinkOutlined,
+  'CommentOutlined': CommentOutlined
 }
 
 const firstName = computed(() => auth.user?.name?.split(' ')[0] || 'Admin')
