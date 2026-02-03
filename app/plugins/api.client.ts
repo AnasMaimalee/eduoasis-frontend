@@ -2,7 +2,7 @@ export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: 'https://antarctica-lens-hear-sub.trycloudflare.com/api',
+    baseURL: 'https://appears-desired-elect-capacity.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {
