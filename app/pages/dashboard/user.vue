@@ -125,7 +125,7 @@ onUnmounted(() => {
     <template v-else>
 
       <!-- Hero Header -->
-      <Card class="!shadow-2xl !border-2 border-emerald-200/60 bg-white/90 backdrop-blur-xl rounded-3xl">
+      <Card class="!shadow-2xl !border-2 border-emerald-200/60 bg-white/90 backdrop-blur-xl rounded-3xl rounded-2xl">
         <div class="p-2 lg:p-2">
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
 
@@ -136,7 +136,7 @@ onUnmounted(() => {
                 </div>
 
                 <div class="min-w-0">
-                  <div class="text-3xl lg:text-4xl font-black bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 bg-clip-text text-transparent break-words">
+                  <div class="text-xl lg:text-4xl font-black bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 bg-clip-text text-transparent break-words">
                     Welcome Back!
                   </div>
                   <div class="text-xl text-gray-700 font-semibold mt-1 break-words">
