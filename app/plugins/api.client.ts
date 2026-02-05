@@ -2,7 +2,7 @@ export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
 
   const api = $fetch.create({
-    baseURL: 'https://competitions-triple-organization-pride.trycloudflare.com/api',
+    baseURL: 'https://knowledgestorm-best-refresh-dts.trycloudflare.com/api',
 
     onRequest({ options }) {
       if (authStore.token) {
